@@ -480,43 +480,439 @@ impl<'a> RedisOpt<'a> {
         Ok(())
     }
 
-    //RPUSH RPUSHX RPOP
-    pub fn opt_rpush_rpushx_rpop(&mut self) -> RedisResult<()> {
+    //RPUSH RPUSHX RPOP rpoplpush
+    // ToDo add LMOVE LMPOP
+    pub fn opt_rpush_rpushx_rpop_rpoplpush(&mut self) -> RedisResult<()> {
+        let rpush = "rpush_".to_string() + &*self.KeySuffix.clone();
+        let rpushx = "rpushx_".to_string() + &*self.KeySuffix.clone();
+        let mut elementsvec = vec![];
+        let mut rng = rand::thread_rng();
+
+        for i in 0..self.Loopstep {
+            let element = rpush.clone() + &*i.to_string();
+            elementsvec.push(element);
+        }
+
+        let mut cmd_rpush = redis::cmd("rpush");
+        let mut cmd_rpushx = redis::cmd("rpushx");
+        let mut cmd_rpoplpush = redis::cmd("rpoplpush");
+        let mut cmd_rpop = redis::cmd("rpop");
+
+        self.RedisConn.req_command(cmd_rpush.clone()
+            .arg(rpush.clone())
+            .arg(elementsvec.clone()))?;
+        self.RedisConn.req_command(cmd_rpushx.clone()
+            .arg(rpushx.clone())
+            .arg(elementsvec.clone()))?;
+        self.RedisConn.req_command(cmd_rpushx.clone()
+            .arg(rpush.clone())
+            .arg(elementsvec.clone()))?;
+
+        //rpoplpush 操作同一个key相当于将列表逆转
+        for _ in 0..self.Loopstep {
+            if rng.gen_range(0..self.Loopstep) % 2 == 0 {
+                self.RedisConn.req_command(cmd_rpoplpush.clone()
+                    .arg(rpush.clone())
+                    .arg(rpush.clone()))?;
+            }
+        }
+
+        for _ in 0..self.Loopstep {
+            if rng.gen_range(0..self.Loopstep) % 2 == 0 {
+                self.RedisConn.req_command(cmd_rpop.clone()
+                    .arg(rpush.clone()))?;
+            }
+        }
+
+        let mut cmd_expire = redis::cmd("expire");
+        self.RedisConn.req_command(cmd_expire.clone()
+            .arg(rpush.clone())
+            .arg(&*self.EXPIRE.to_redis_args()))?;
+
+        self.RedisConn.req_command(cmd_expire.clone()
+            .arg(rpushx.clone())
+            .arg(&*self.EXPIRE.to_redis_args()))?;
+
         Ok(())
     }
 
-    //BLPOP BRPOP
-    pub fn opt_blpop_brpop(&mut self) -> RedisResult<()> {
+    //BLPOP BRPOP BRPOPLPUSH
+    // ToDo add BLMOVE BLMPOP
+    pub fn opt_blpop_brpop_brpoplpush(&mut self) -> RedisResult<()> {
+        let blpop = "blpop_".to_string() + &*self.KeySuffix.clone();
+        let brpop = "brpop_".to_string() + &*self.KeySuffix.clone();
+        let mut rng = rand::thread_rng();
+        let mut elementvec = vec![];
+        for i in 0..self.Loopstep {
+            let element = blpop.clone() + &*i.to_string();
+            elementvec.push(element);
+        }
+
+        let mut cmd_rpush = redis::cmd("rpush");
+        let mut cmd_blpop = redis::cmd("blpop");
+        let mut cmd_brpop = redis::cmd("brpop");
+        let mut cmd_brpoplpush = redis::cmd("brpoplpush");
+
+        self.RedisConn.req_command(cmd_rpush.clone()
+            .arg(blpop.clone())
+            .arg(elementvec.clone()))?;
+        self.RedisConn.req_command(cmd_rpush.clone()
+            .arg(brpop.clone())
+            .arg(elementvec.clone()))?;
+
+        for _ in 0..self.Loopstep {
+            if rng.gen_range(0..self.Loopstep) % 2 == 0 {
+                self.RedisConn.req_command(cmd_brpoplpush.clone()
+                    .arg(blpop.clone())
+                    .arg(blpop.clone())
+                    .arg(self.EXPIRE.clone()))?;
+            }
+        }
+
+        for _ in 0..self.Loopstep {
+            if rng.gen_range(0..self.Loopstep) % 2 == 0 {
+                self.RedisConn.req_command(cmd_brpop.clone()
+                    .arg(brpop.clone())
+                    .arg(self.EXPIRE.clone()))?;
+                self.RedisConn.req_command(cmd_blpop.clone()
+                    .arg(blpop.clone())
+                    .arg(self.EXPIRE.clone()))?;
+            }
+        }
+
+
+        let mut cmd_expire = redis::cmd("expire");
+        self.RedisConn.req_command(cmd_expire.clone()
+            .arg(blpop.clone())
+            .arg(&*self.EXPIRE.to_redis_args()))?;
+
+        self.RedisConn.req_command(cmd_expire.clone()
+            .arg(brpop.clone())
+            .arg(&*self.EXPIRE.to_redis_args()))?;
+
         Ok(())
     }
 
     //SADD SMOVE SPOP SREM
     pub fn opt_sadd_smove_spop_srem(&mut self) -> RedisResult<()> {
+        let sadd = "sadd_".to_string() + &*self.KeySuffix.clone();
+        let smove = "smove_".to_string() + &*self.KeySuffix.clone();
+        let spop = "spop_".to_string() + &*self.KeySuffix.clone();
+        let srem = "srem_".to_string() + &*self.KeySuffix.clone();
+
+        let mut cmd_sadd = redis::cmd("sadd");
+        let mut cmd_smove = redis::cmd("smove");
+        let mut cmd_spop = redis::cmd("smove");
+        let mut cmd_srem = redis::cmd("srem");
+
+        let mut rng = rand::thread_rng();
+
+        for i in 0..self.Loopstep {
+            self.RedisConn.req_command(cmd_sadd.clone()
+                .arg(sadd.clone())
+                .arg(sadd.clone() + &*i.to_string()))?;
+            self.RedisConn.req_command(cmd_sadd.clone()
+                .arg(smove.clone())
+                .arg(smove.clone() + &*i.to_string()))?;
+            self.RedisConn.req_command(cmd_sadd.clone()
+                .arg(spop.clone())
+                .arg(spop.clone() + &*i.to_string()))?;
+            self.RedisConn.req_command(cmd_sadd.clone()
+                .arg(srem.clone())
+                .arg(srem.clone() + &*i.to_string()))?;
+        }
+
+        for _ in 0..self.Loopstep {
+            if rng.gen_range(0..self.Loopstep) % 2 == 0 {
+                self.RedisConn.req_command(cmd_spop.clone()
+                    .arg(spop.clone()))?;
+                self.RedisConn.req_command(cmd_srem.clone()
+                    .arg(srem.clone())
+                    .arg(srem.clone() + &*rng.gen_range(0..self.Loopstep).to_string()))?;
+                self.RedisConn.req_command(cmd_smove.clone()
+                    .arg(smove.clone())
+                    .arg(smove.clone())
+                    .arg(smove.clone() + &*rng.gen_range(0..self.Loopstep).to_string()))?;
+            }
+        }
+
+        let mut cmd_del = redis::cmd("del");
+        let mut cmd_expire = redis::cmd("expire");
+        self.RedisConn.req_command(cmd_del.clone()
+            .arg(sadd.clone()))?;
+
+        self.RedisConn.req_command(cmd_expire.clone()
+            .arg(spop.clone())
+            .arg(&*self.EXPIRE.to_redis_args()))?;
+        self.RedisConn.req_command(cmd_expire.clone()
+            .arg(srem.clone())
+            .arg(&*self.EXPIRE.to_redis_args()))?;
+        self.RedisConn.req_command(cmd_expire.clone()
+            .arg(smove.clone())
+            .arg(&*self.EXPIRE.to_redis_args()))?;
         Ok(())
     }
 
-    //SDIFFSTORE SINTERSTORE SUNIONSTORE 集群模式下key分布在不同节点会报错(error) CROSSSLOT Keys in request don't hash to the same slot
+    // SDIFFSTORE SINTERSTORE SUNIONSTORE
+    // 集群模式下key分布在不同节点会报错(error) CROSSSLOT Keys in request don't hash to the same slot
     pub fn opt_sdiffstore_sinertstore_sunionstore(&mut self) -> RedisResult<()> {
+        let sdiff1 = "sdiff1_".to_string() + &*self.KeySuffix.clone();
+        let sdiff2 = "sdiff2_".to_string() + &*self.KeySuffix.clone();
+        let sdiffstore = "sdiffstore_".to_string() + &*self.KeySuffix.clone();
+        let sinterstore = "sinterstore_".to_string() + &*self.KeySuffix.clone();
+        let sunionstore = "sunionstore_".to_string() + &*self.KeySuffix.clone();
+
+        let mut rng = rand::thread_rng();
+
+        let mut cmd_sadd = redis::cmd("sadd");
+        let mut cmd_del = redis::cmd("del");
+        let mut cmd_sdiffstore = redis::cmd("sdiffstore");
+        let mut cmd_sintersore = redis::cmd("sinterstore");
+        let mut cmd_sunionstore = redis::cmd("sunionstore");
+
+        for _ in 0..self.Loopstep {
+            self.RedisConn.req_command(cmd_sadd.clone()
+                .arg(sdiff1.clone())
+                .arg(self.KeySuffix.clone() + &*rng.gen_range(0..2 * self.Loopstep).to_string()))?;
+            self.RedisConn.req_command(cmd_sadd.clone()
+                .arg(sdiff2.clone())
+                .arg(self.KeySuffix.clone() + &*rng.gen_range(0..2 * self.Loopstep).to_string()))?;
+        }
+
+        self.RedisConn.req_command(cmd_sdiffstore.clone()
+            .arg(sdiffstore.clone())
+            .arg(sdiff1.clone())
+            .arg(sdiff2.clone()))?;
+        self.RedisConn.req_command(cmd_sintersore.clone()
+            .arg(sinterstore.clone())
+            .arg(sdiff1.clone())
+            .arg(sdiff2.clone()))?;
+        self.RedisConn.req_command(cmd_sunionstore.clone()
+            .arg(sunionstore.clone())
+            .arg(sdiff1.clone())
+            .arg(sdiff2.clone()))?;
+
+        let mut cmd_expire = redis::cmd("expire");
+
+        self.RedisConn.req_command(cmd_expire.clone()
+            .arg(sdiffstore.clone())
+            .arg(&*self.EXPIRE.to_redis_args()))?;
+        self.RedisConn.req_command(cmd_expire.clone()
+            .arg(sinterstore.clone())
+            .arg(&*self.EXPIRE.to_redis_args()))?;
+        self.RedisConn.req_command(cmd_expire.clone()
+            .arg(sunionstore.clone())
+            .arg(&*self.EXPIRE.to_redis_args()))?;
+
+        self.RedisConn.req_command(cmd_del.clone()
+            .arg(sdiff1.clone())
+            .arg(sdiff2.clone()))?;
+
         Ok(())
     }
 
     //ZADD ZINCRBY ZREM
     pub fn opt_zadd_zincrby_zerm(&mut self) -> RedisResult<()> {
+        let zadd = "zadd_".to_string() + &*self.KeySuffix.clone();
+        let zincrby = "zincrby_".to_string() + &*self.KeySuffix.clone();
+        let zrem = "zrem_".to_string() + &*self.KeySuffix.clone();
+        let mut rng = rand::thread_rng();
+
+        let mut cmd_zadd = redis::cmd("zadd");
+        let mut cmd_zincrby = redis::cmd("zincrby");
+        let mut cmd_zrem = redis::cmd("zrem");
+
+        for i in 0..self.Loopstep {
+            self.RedisConn.req_command(cmd_zadd.clone()
+                .arg(zadd.clone())
+                .arg(i)
+                .arg(zadd.clone() + &*i.clone().to_string()))?;
+            self.RedisConn.req_command(cmd_zadd.clone()
+                .arg(zincrby.clone())
+                .arg(i)
+                .arg(zincrby.clone() + &*i.clone().to_string()))?;
+            self.RedisConn.req_command(cmd_zadd.clone()
+                .arg(zrem.clone())
+                .arg(i)
+                .arg(zrem.clone() + &*i.clone().to_string()))?;
+        }
+
+        for _ in 0..self.Loopstep {
+            if rng.gen_range(0..self.Loopstep) % 2 == 0 {
+                self.RedisConn.req_command(cmd_zincrby.clone()
+                    .arg(zincrby.clone())
+                    .arg(rng.gen_range(0..2 * self.Loopstep) - self.Loopstep)
+                    .arg(zadd.clone() + &*rng.gen_range(0..self.Loopstep).to_string()))?;
+                self.RedisConn.req_command(cmd_zrem.clone()
+                    .arg(zrem.clone())
+                    .arg(zadd.clone() + &*rng.gen_range(0..self.Loopstep).to_string()))?;
+            }
+        }
+        let mut cmd_expire = redis::cmd("expire");
+
+        self.RedisConn.req_command(cmd_expire.clone()
+            .arg(zincrby.clone())
+            .arg(&*self.EXPIRE.to_redis_args()))?;
+        self.RedisConn.req_command(cmd_expire.clone()
+            .arg(zrem.clone())
+            .arg(&*self.EXPIRE.to_redis_args()))?;
+
+
         Ok(())
     }
 
     //ZPOPMAX ZPOPMIN
     pub fn opt_zpopmax_zpopmin(&mut self) -> RedisResult<()> {
+        let zpopmax = "zpopmax_".to_string() + &*self.KeySuffix.clone();
+        let zpopmin = "zpopmin_".to_string() + &*self.KeySuffix.clone();
+        let mut rng = rand::thread_rng();
+
+        let mut cmd_zadd = redis::cmd("zadd");
+        let mut cmd_zpopmax = redis::cmd("zpopmax");
+        let mut cmd_zpopmin = redis::cmd("zpopmin");
+
+        for i in 0..self.Loopstep {
+            self.RedisConn.req_command(cmd_zadd.clone()
+                .arg(zpopmax.clone())
+                .arg(i)
+                .arg(zpopmax.clone() + &*i.to_string()))?;
+            self.RedisConn.req_command(cmd_zadd.clone()
+                .arg(zpopmin.clone())
+                .arg(i)
+                .arg(zpopmin.clone() + &*i.to_string()))?;
+        }
+
+        self.RedisConn.req_command(cmd_zpopmax.clone()
+            .arg(zpopmax.clone())
+            .arg(&*rng.gen_range(0..self.Loopstep).to_string()))?;
+        self.RedisConn.req_command(cmd_zpopmin.clone()
+            .arg(zpopmin.clone())
+            .arg(&*rng.gen_range(0..self.Loopstep).to_string()))?;
+
+        let mut cmd_expire = redis::cmd("expire");
+
+        self.RedisConn.req_command(cmd_expire.clone()
+            .arg(zpopmax.clone())
+            .arg(&*self.EXPIRE.to_redis_args()))?;
+        self.RedisConn.req_command(cmd_expire.clone()
+            .arg(zpopmin.clone())
+            .arg(&*self.EXPIRE.to_redis_args()))?;
+
         Ok(())
     }
 
+    //ToDo BZPOPMAX BZPOPMIN
+
     //ZREMRANGEBYLEX ZREMRANGEBYRANK ZREMRANGEBYSCORE
     pub fn opt_zremrangebylex_zremrangebyrank_zermrangebyscore(&mut self) -> RedisResult<()> {
+        let zremrangebylex = "zremrangebylex_".to_string() + &*self.KeySuffix.clone();
+        let zremrangebyrank = "zremrangebyrank_".to_string() + &*self.KeySuffix.clone();
+        let zremrangebyscore = "zremrangebyscore_".to_string() + &*self.KeySuffix.clone();
+        let mut rng = rand::thread_rng();
+
+        let mut cmd_zadd = redis::cmd("zadd");
+        let mut cmd_zremrangebylex = redis::cmd("zremrangebylex");
+        let mut cmd_zremrangebyrank = redis::cmd("zremrangebyrank");
+        let mut cmd_zremrangebyscore = redis::cmd("zremrangebyscore");
+
+        for i in 0..self.Loopstep {
+            self.RedisConn.req_command(cmd_zadd.clone()
+                .arg(zremrangebylex.clone())
+                .arg(i)
+                .arg(zremrangebylex.clone() + &*i.to_string()))?;
+            self.RedisConn.req_command(cmd_zadd.clone()
+                .arg(zremrangebyrank.clone())
+                .arg(i)
+                .arg(zremrangebyrank.clone() + &*i.to_string()))?;
+            self.RedisConn.req_command(cmd_zadd.clone()
+                .arg(zremrangebyscore.clone())
+                .arg(i)
+                .arg(zremrangebyscore.clone() + &*i.to_string()))?;
+        }
+
+        self.RedisConn.req_command(cmd_zremrangebylex.clone()
+            .arg(zremrangebylex.clone())
+            .arg("[".to_string() + &*zremrangebylex.clone() + &*0.to_string())
+            .arg("[".to_string() + &*zremrangebylex.clone() + &*rng.gen_range(0..self.Loopstep).to_string()))?;
+        self.RedisConn.req_command(cmd_zremrangebyrank.clone()
+            .arg(zremrangebyrank.clone())
+            .arg((rng.gen_range(0..2 * self.Loopstep) - self.Loopstep).to_redis_args())
+            .arg((rng.gen_range(0..2 * self.Loopstep) - self.Loopstep).to_redis_args()))?;
+        self.RedisConn.req_command(cmd_zremrangebyscore.clone()
+            .arg(zremrangebyscore.clone())
+            .arg(rng.gen_range(0..self.Loopstep))
+            .arg(rng.gen_range(0..self.Loopstep)))?;
+
+        let mut cmd_expire = redis::cmd("expire");
+
+        self.RedisConn.req_command(cmd_expire.clone()
+            .arg(zremrangebylex.clone())
+            .arg(&*self.EXPIRE.to_redis_args()))?;
+        self.RedisConn.req_command(cmd_expire.clone()
+            .arg(zremrangebyrank.clone())
+            .arg(&*self.EXPIRE.to_redis_args()))?;
+        self.RedisConn.req_command(cmd_expire.clone()
+            .arg(zremrangebyscore.clone())
+            .arg(&*self.EXPIRE.to_redis_args()))?;
+
         Ok(())
     }
 
     // BO_ZUNIONSTORE_ZINTERSTORE,集群模式下key分布在不同节点会报错(error) CROSSSLOT Keys in request don't hash to the same slot
     pub fn opt_zunionstore_zinterstore(&mut self) -> RedisResult<()> {
+        let zset1 = "zset1_".to_string() + &*self.KeySuffix.clone();
+        let zset2 = "zset2_".to_string() + &*self.KeySuffix.clone();
+        let zset3 = "zset3_".to_string() + &*self.KeySuffix.clone();
+        let zinterstore = "zinterstore_".to_string() + &*self.KeySuffix.clone();
+        let zunionstore = "zunionstore_".to_string() + &*self.KeySuffix.clone();
+
+        let mut cmd_del = redis::cmd("del");
+        let mut cmd_zadd = redis::cmd("zadd");
+        let mut cmd_zinterstore = redis::cmd("zinterstore");
+        let mut cmd_zunionstore = redis::cmd("zunionstore");
+
+        for i in 0..self.Loopstep {
+            self.RedisConn.req_command(cmd_zadd.clone()
+                .arg(zset1.clone())
+                .arg(i)
+                .arg(zset1.clone() + &*i.to_string()))?;
+            self.RedisConn.req_command(cmd_zadd.clone()
+                .arg(zset2.clone())
+                .arg(i)
+                .arg(zset2.clone() + &*i.to_string()))?;
+            self.RedisConn.req_command(cmd_zadd.clone()
+                .arg(zset3.clone())
+                .arg(i)
+                .arg(zset3.clone() + &*i.to_string()))?;
+        }
+
+        self.RedisConn.req_command(cmd_zinterstore.clone()
+            .arg(zinterstore.clone())
+            .arg(3)
+            .arg(zset1.clone())
+            .arg(zset2.clone())
+            .arg(zset3.clone()))?;
+        self.RedisConn.req_command(cmd_zunionstore.clone()
+            .arg(zunionstore.clone())
+            .arg(3)
+            .arg(zset1.clone())
+            .arg(zset2.clone())
+            .arg(zset3.clone()))?;
+
+        self.RedisConn.req_command(cmd_del.clone()
+            .arg(zset1.clone())
+            .arg(zset2.clone())
+            .arg(zset3.clone()))?;
+
+
+        let mut cmd_expire = redis::cmd("expire");
+        self.RedisConn.req_command(cmd_expire.clone()
+            .arg(zinterstore.clone())
+            .arg(&*self.EXPIRE.to_redis_args()))?;
+        self.RedisConn.req_command(cmd_expire.clone()
+            .arg(zunionstore.clone())
+            .arg(&*self.EXPIRE.to_redis_args()))?;
+
         Ok(())
     }
 }
@@ -531,7 +927,7 @@ mod test {
     #[test]
     fn test_opt_append() {
         let subffix = rand_string(16);
-        let client = redis::Client::open("redis://:redistest0102@114.67.76.82:16375/").unwrap();
+        let client = redis::Client::open("redis://:redistest0102@114.67.76.82:16376/").unwrap();
         let mut conn = client.get_connection().unwrap();
 
         let mut opt = RedisOpt {

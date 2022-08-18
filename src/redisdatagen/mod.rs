@@ -4,3 +4,5 @@ mod gencmddata;
 
 pub use generator::gen_string;
 pub use generator::RedisKeyType;
+pub use gencmddata::RedisOpt;
+pub use gencmddata::OptType;

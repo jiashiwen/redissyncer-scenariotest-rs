@@ -11,6 +11,7 @@ use redis::aio::{Connection};
 use redis::ConnectionLike;
 use redis::{AsyncCommands, AsyncIter};
 use std::string::String;
+use std::time::Instant;
 use rand::Rng;
 use redis::cluster::ClusterClient;
 
@@ -36,6 +37,7 @@ use redis::cluster::ClusterClient;
 
 #[tokio::main]
 async fn main() -> redis::RedisResult<()> {
+    let start = Instant::now();
     let i: usize = 10;
 
     let mut rng = rand::thread_rng();
@@ -92,6 +94,8 @@ async fn main() -> redis::RedisResult<()> {
     // let mut cmd_info = redis::cmd("info");
     // let r_info: String = cmd_info.query_async(&mut con).await?;
     // println!("{:?}", r_info);
+
+    println!("elapsed: {:?}", start.elapsed());
 
     Ok(())
 }

@@ -1,13 +1,11 @@
-use core::fmt;
-use std::fmt::{Formatter, write};
+use std::fmt::{Display, Formatter, write};
 use redis::{aio, Connection, ErrorKind, FromRedisValue, RedisError, RedisResult, Value};
 use crate::util::rand_string;
-use strum::IntoEnumIterator;
-use strum_macros::EnumIter;
+use enum_iterator::{all, Sequence};
 use redis::ToRedisArgs;
 
 
-#[derive(Debug, EnumIter)]
+#[derive(Debug, PartialEq, Sequence)]
 pub enum RedisKeyType {
     TypeString,
     TypeList,
@@ -31,7 +29,6 @@ impl FromRedisValue for RedisKeyType {
                     format!("{:?} (response was {:?})", "Response type not string compatible.", val),
                 )))
             },
-            // _ => invalid_type_error!(v, "Response type not string compatible."),
             _ => Err(RedisError::from((
                 ErrorKind::TypeError,
                 "Response was of incompatible type",
@@ -41,7 +38,7 @@ impl FromRedisValue for RedisKeyType {
     }
 }
 
-impl fmt::Display for RedisKeyType {
+impl Display for RedisKeyType {
     fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
         match self {
             RedisKeyType::TypeString => { write!(f, "string") }
@@ -178,7 +175,6 @@ pub fn gen_hash<C>(key_len: usize, hash_size: usize, conn: &mut C) -> RedisResul
 #[cfg(test)]
 mod test {
     use futures::TryFutureExt;
-    use strum::IntoEnumIterator;
     use tokio::runtime::Runtime;
     use crate::init_log;
     use super::*;
@@ -187,7 +183,8 @@ mod test {
     #[test]
     fn test_gen_key() {
         let len = 8 as usize;
-        let mut ri = RedisKeyType::iter();
+        // let mut ri = RedisKeyType::itor();
+        let ri = all::<RedisKeyType>().collect::<Vec<_>>();
         for key_type in ri {
             let gen_k = gen_key(key_type, len);
             println!("{}", gen_k);

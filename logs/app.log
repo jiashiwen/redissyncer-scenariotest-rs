@@ -998,3 +998,275 @@
 2022-07-21T12:54:00.767440+08:00 - ok
 2022-07-21T12:54:00.802086+08:00 - ok
 2022-07-21T12:54:00.836493+08:00 - ok
+2022-08-17T09:51:52.061380+08:00 - test exec
+2022-08-17T10:27:35.949592+08:00 - test exec
+2022-08-17T10:28:43.833215+08:00 - test exec, result is Ok(())
+2022-08-17T10:40:27.147156+08:00 - elapsed: 1.487325197s
+2022-08-17T12:42:28.610794+08:00 - "opt_append";elapsed: 798.452563ms
+2022-08-17T12:50:08.627609+08:00 - "opt_append";elapsed: 1.196517106s
+2022-08-17T12:50:10.133439+08:00 - "opt_bitop";elapsed: 1.505331431s
+2022-08-17T12:50:10.328831+08:00 - "opt_decr_decrby";elapsed: 195.26131ms
+2022-08-17T12:50:10.373591+08:00 - "opt_incr_incrby_incrbyfloat";elapsed: 44.634587ms
+2022-08-17T12:50:10.470648+08:00 - "opt_mset_msetnx";elapsed: 96.914649ms
+2022-08-17T12:50:11.146851+08:00 - "opt_pfadd";elapsed: 676.063845ms
+2022-08-17T12:50:12.643503+08:00 - "opt_pfmerge";elapsed: 1.49646715s
+2022-08-17T12:50:13.022659+08:00 - "opt_set_setnx";elapsed: 379.022503ms
+2022-08-17T12:50:13.141770+08:00 - "opt_setbit";elapsed: 118.977403ms
+2022-08-17T12:50:13.356483+08:00 - "opt_setrange";elapsed: 214.551567ms
+2022-08-17T12:50:14.538503+08:00 - "opt_hincrby_hincrbyfloat";elapsed: 1.181832688s
+2022-08-17T12:50:16.688916+08:00 - "opt_hset_hmset_hsetnx_hdel";elapsed: 2.150228669s
+2022-08-17T12:50:17.065013+08:00 - "opt_lpush_lpop_lpushx_lset";elapsed: 375.961587ms
+2022-08-17T12:50:17.840454+08:00 - "opt_lrem_ltrim_linsert";elapsed: 775.293488ms
+2022-08-17T12:50:19.024897+08:00 - "opt_rpush_rpushx_rpop_rpoplpush";elapsed: 1.184284162s
+2022-08-17T12:50:20.372136+08:00 - "opt_blpop_brpop_brpoplpush";elapsed: 1.347076517s
+2022-08-17T12:50:23.584063+08:00 - "opt_sadd_smove_spop_srem";elapsed: 3.211712209s
+2022-08-17T12:50:25.287868+08:00 - "opt_sdiffstore_sinertstore_sunionstore";elapsed: 1.703638352s
+2022-08-17T12:52:28.268719+08:00 - "opt_append";elapsed: 779.507372ms
+2022-08-17T12:52:28.953204+08:00 - "opt_bitop";elapsed: 684.349874ms
+2022-08-17T12:52:29.051343+08:00 - "opt_decr_decrby";elapsed: 98.009878ms
+2022-08-17T12:52:29.087510+08:00 - "opt_incr_incrby_incrbyfloat";elapsed: 36.041711ms
+2022-08-17T12:52:29.143529+08:00 - "opt_mset_msetnx";elapsed: 55.896394ms
+2022-08-17T12:52:29.550839+08:00 - "opt_pfadd";elapsed: 407.181695ms
+2022-08-17T12:52:30.312012+08:00 - "opt_pfmerge";elapsed: 761.038751ms
+2022-08-17T12:52:30.445036+08:00 - "opt_set_setnx";elapsed: 132.9096ms
+2022-08-17T12:52:30.532337+08:00 - "opt_setbit";elapsed: 87.178084ms
+2022-08-17T12:52:30.640128+08:00 - "opt_setrange";elapsed: 107.666419ms
+2022-08-17T12:52:31.435941+08:00 - "opt_hincrby_hincrbyfloat";elapsed: 795.672908ms
+2022-08-17T12:52:32.465273+08:00 - "opt_hset_hmset_hsetnx_hdel";elapsed: 1.02917704s
+2022-08-17T12:52:32.825751+08:00 - "opt_lpush_lpop_lpushx_lset";elapsed: 360.334679ms
+2022-08-17T12:52:33.350630+08:00 - "opt_lrem_ltrim_linsert";elapsed: 524.725267ms
+2022-08-17T12:52:33.837018+08:00 - "opt_rpush_rpushx_rpop_rpoplpush";elapsed: 486.233111ms
+2022-08-17T12:52:34.474804+08:00 - "opt_blpop_brpop_brpoplpush";elapsed: 637.655542ms
+2022-08-17T12:52:35.958908+08:00 - "opt_sadd_smove_spop_srem";elapsed: 1.48391483s
+2022-08-17T12:52:36.942245+08:00 - "opt_sdiffstore_sinertstore_sunionstore";elapsed: 983.169326ms
+2022-08-17T12:52:38.342770+08:00 - "opt_zadd_zincrby_zerm";elapsed: 1.400369856s
+2022-08-17T12:52:39.504868+08:00 - "opt_zpopmax_zpopmin";elapsed: 1.161954476s
+2022-08-17T14:33:56.002133+08:00 - "opt_append";elapsed: 813.298846ms
+2022-08-17T14:33:56.706113+08:00 - "opt_bitop";elapsed: 703.056989ms
+2022-08-17T14:33:56.817151+08:00 - "opt_decr_decrby";elapsed: 110.906515ms
+2022-08-17T14:33:56.859909+08:00 - "opt_incr_incrby_incrbyfloat";elapsed: 42.639207ms
+2022-08-17T14:33:56.901270+08:00 - "opt_mset_msetnx";elapsed: 41.245259ms
+2022-08-17T14:33:57.283498+08:00 - "opt_pfadd";elapsed: 382.100719ms
+2022-08-17T14:33:58.114676+08:00 - "opt_pfmerge";elapsed: 831.026956ms
+2022-08-17T14:33:58.257507+08:00 - "opt_set_setnx";elapsed: 142.71142ms
+2022-08-17T14:33:58.345756+08:00 - "opt_setbit";elapsed: 88.124321ms
+2022-08-17T14:33:58.474339+08:00 - "opt_setrange";elapsed: 128.456543ms
+2022-08-17T14:33:59.222390+08:00 - "opt_hincrby_hincrbyfloat";elapsed: 747.908912ms
+2022-08-17T14:34:00.243330+08:00 - "opt_hset_hmset_hsetnx_hdel";elapsed: 1.020772753s
+2022-08-17T14:34:00.624050+08:00 - "opt_lpush_lpop_lpushx_lset";elapsed: 380.582697ms
+2022-08-17T14:34:01.152266+08:00 - "opt_lrem_ltrim_linsert";elapsed: 528.072244ms
+2022-08-17T14:34:01.702731+08:00 - "opt_rpush_rpushx_rpop_rpoplpush";elapsed: 550.324518ms
+2022-08-17T14:34:02.468637+08:00 - "opt_blpop_brpop_brpoplpush";elapsed: 765.750116ms
+2022-08-17T14:34:04.064983+08:00 - "opt_sadd_smove_spop_srem";elapsed: 1.596188743s
+2022-08-17T14:34:05.122963+08:00 - "opt_sdiffstore_sinertstore_sunionstore";elapsed: 1.057824904s
+2022-08-17T14:34:06.630619+08:00 - "opt_zadd_zincrby_zerm";elapsed: 1.507463481s
+2022-08-17T14:34:07.607001+08:00 - "opt_zpopmax_zpopmin";elapsed: 976.223076ms
+2022-08-17T14:34:09.037019+08:00 - "opt_zremrangebylex_zremrangebyrank_zermrangebyscore";elapsed: 1.429865144s
+2022-08-17T14:34:10.498501+08:00 - "opt_zunionstore_zinterstore";elapsed: 1.461292474s
+2022-08-17T14:34:38.268138+08:00 - "opt_append";elapsed: 743.466547ms
+2022-08-17T14:34:38.943419+08:00 - "opt_bitop";elapsed: 675.146602ms
+2022-08-17T14:34:39.054291+08:00 - "opt_decr_decrby";elapsed: 110.748224ms
+2022-08-17T14:34:39.086619+08:00 - "opt_incr_incrby_incrbyfloat";elapsed: 32.197038ms
+2022-08-17T14:34:39.121500+08:00 - "opt_mset_msetnx";elapsed: 34.734519ms
+2022-08-17T14:34:39.517073+08:00 - "opt_pfadd";elapsed: 395.432961ms
+2022-08-17T14:34:40.318727+08:00 - "opt_pfmerge";elapsed: 801.504702ms
+2022-08-17T14:34:40.472526+08:00 - "opt_set_setnx";elapsed: 153.679451ms
+2022-08-17T14:34:40.552594+08:00 - "opt_setbit";elapsed: 79.940892ms
+2022-08-17T14:34:40.658898+08:00 - "opt_setrange";elapsed: 106.171324ms
+2022-08-17T14:34:41.406458+08:00 - "opt_hincrby_hincrbyfloat";elapsed: 747.403236ms
+2022-08-17T14:34:42.387828+08:00 - "opt_hset_hmset_hsetnx_hdel";elapsed: 981.215448ms
+2022-08-17T14:34:42.752095+08:00 - "opt_lpush_lpop_lpushx_lset";elapsed: 364.125116ms
+2022-08-17T14:34:43.272134+08:00 - "opt_lrem_ltrim_linsert";elapsed: 519.884536ms
+2022-08-17T14:34:43.859532+08:00 - "opt_rpush_rpushx_rpop_rpoplpush";elapsed: 587.258128ms
+2022-08-17T14:34:44.628318+08:00 - "opt_blpop_brpop_brpoplpush";elapsed: 768.651176ms
+2022-08-17T14:34:46.074036+08:00 - "opt_sadd_smove_spop_srem";elapsed: 1.445554139s
+2022-08-17T14:34:47.077707+08:00 - "opt_sdiffstore_sinertstore_sunionstore";elapsed: 1.003429539s
+2022-08-17T14:34:48.545556+08:00 - "opt_zadd_zincrby_zerm";elapsed: 1.467649063s
+2022-08-17T14:34:49.403312+08:00 - "opt_zpopmax_zpopmin";elapsed: 857.596353ms
+2022-08-17T14:34:51.092170+08:00 - "opt_zremrangebylex_zremrangebyrank_zermrangebyscore";elapsed: 1.68865307s
+2022-08-17T14:34:53.076968+08:00 - "opt_zunionstore_zinterstore";elapsed: 1.984584568s
+2022-08-17T14:47:49.322133+08:00 - "opt_append";elapsed: 827.973105ms
+2022-08-17T14:47:50.061072+08:00 - "opt_bitop";elapsed: 738.802412ms
+2022-08-17T14:47:50.198657+08:00 - "opt_decr_decrby";elapsed: 137.465911ms
+2022-08-17T14:47:50.236857+08:00 - "opt_incr_incrby_incrbyfloat";elapsed: 38.065527ms
+2022-08-17T14:47:50.270020+08:00 - "opt_mset_msetnx";elapsed: 33.05347ms
+2022-08-17T14:47:50.681327+08:00 - "opt_pfadd";elapsed: 411.194533ms
+2022-08-17T14:47:51.457760+08:00 - "opt_pfmerge";elapsed: 776.314557ms
+2022-08-17T14:47:51.623643+08:00 - "opt_set_setnx";elapsed: 165.773021ms
+2022-08-17T14:47:51.694755+08:00 - "opt_setbit";elapsed: 70.999589ms
+2022-08-17T14:47:51.810317+08:00 - "opt_setrange";elapsed: 115.446104ms
+2022-08-17T14:47:52.736536+08:00 - "opt_hincrby_hincrbyfloat";elapsed: 926.071566ms
+2022-08-17T14:47:53.772455+08:00 - "opt_hset_hmset_hsetnx_hdel";elapsed: 1.035791024s
+2022-08-17T14:47:54.210900+08:00 - "opt_lpush_lpop_lpushx_lset";elapsed: 438.319895ms
+2022-08-17T14:47:54.775343+08:00 - "opt_lrem_ltrim_linsert";elapsed: 564.328673ms
+2022-08-17T14:47:55.412162+08:00 - "opt_rpush_rpushx_rpop_rpoplpush";elapsed: 636.68356ms
+2022-08-17T14:47:56.289359+08:00 - "opt_blpop_brpop_brpoplpush";elapsed: 877.035344ms
+2022-08-17T14:47:57.956786+08:00 - "opt_sadd_smove_spop_srem";elapsed: 1.667291275s
+2022-08-17T14:47:59.063352+08:00 - "opt_sdiffstore_sinertstore_sunionstore";elapsed: 1.106419187s
+2022-08-17T14:48:00.649560+08:00 - "opt_zadd_zincrby_zerm";elapsed: 1.586046409s
+2022-08-17T14:48:02.716057+08:00 - "opt_zpopmax_zpopmin";elapsed: 2.066326635s
+2022-08-17T14:48:04.198537+08:00 - "opt_zremrangebylex_zremrangebyrank_zermrangebyscore";elapsed: 1.482332086s
+2022-08-17T14:48:05.601402+08:00 - "opt_zunionstore_zinterstore";elapsed: 1.402713867s
+2022-08-17T14:49:08.653697+08:00 - "opt_append";elapsed: 855.412948ms
+2022-08-17T14:49:09.362179+08:00 - "opt_bitop";elapsed: 708.332094ms
+2022-08-17T14:49:09.499604+08:00 - "opt_decr_decrby";elapsed: 137.296615ms
+2022-08-17T14:49:09.552422+08:00 - "opt_incr_incrby_incrbyfloat";elapsed: 52.693085ms
+2022-08-17T14:49:09.599268+08:00 - "opt_mset_msetnx";elapsed: 46.718762ms
+2022-08-17T14:49:10.071513+08:00 - "opt_pfadd";elapsed: 472.091885ms
+2022-08-17T14:49:11.027553+08:00 - "opt_pfmerge";elapsed: 955.894857ms
+2022-08-17T14:49:11.235992+08:00 - "opt_set_setnx";elapsed: 208.309703ms
+2022-08-17T14:49:11.311908+08:00 - "opt_setbit";elapsed: 75.778764ms
+2022-08-17T14:49:11.430558+08:00 - "opt_setrange";elapsed: 118.520614ms
+2022-08-17T14:49:12.363655+08:00 - "opt_hincrby_hincrbyfloat";elapsed: 932.932152ms
+2022-08-17T14:49:13.647183+08:00 - "opt_hset_hmset_hsetnx_hdel";elapsed: 1.283374285s
+2022-08-17T14:49:14.037215+08:00 - "opt_lpush_lpop_lpushx_lset";elapsed: 389.895144ms
+2022-08-17T14:49:14.829498+08:00 - "opt_lrem_ltrim_linsert";elapsed: 792.111158ms
+2022-08-17T14:49:15.463857+08:00 - "opt_rpush_rpushx_rpop_rpoplpush";elapsed: 634.212002ms
+2022-08-17T14:49:16.627795+08:00 - "opt_blpop_brpop_brpoplpush";elapsed: 1.163739228s
+2022-08-17T14:49:18.387751+08:00 - "opt_sadd_smove_spop_srem";elapsed: 1.759758083s
+2022-08-17T14:49:19.515962+08:00 - "opt_sdiffstore_sinertstore_sunionstore";elapsed: 1.128027136s
+2022-08-17T14:49:21.445736+08:00 - "opt_zadd_zincrby_zerm";elapsed: 1.929599454s
+2022-08-17T14:49:22.312688+08:00 - "opt_zpopmax_zpopmin";elapsed: 866.804191ms
+2022-08-17T14:49:24.013216+08:00 - "opt_zremrangebylex_zremrangebyrank_zermrangebyscore";elapsed: 1.700361235s
+2022-08-17T14:49:25.392214+08:00 - "opt_zunionstore_zinterstore";elapsed: 1.378847979s
+2022-08-17T15:04:02.762110+08:00 - ExecuteResult { OptType: OPT_APPEND, Result: Ok(()), DB: 0 };elapsed: 775.817043ms
+2022-08-17T15:04:03.486162+08:00 - ExecuteResult { OptType: OPT_BITOP, Result: Ok(()), DB: 0 };elapsed: 723.864695ms
+2022-08-17T15:04:03.595438+08:00 - ExecuteResult { OptType: OPT_DECR_DECRBY, Result: Ok(()), DB: 0 };elapsed: 109.132965ms
+2022-08-17T15:04:03.633018+08:00 - ExecuteResult { OptType: OPT_INCR_INCRBY_INCRBYFLOAT, Result: Err(An error was signalled by the server: syntax error), DB: 0 };elapsed: 37.467936ms
+2022-08-17T15:04:03.664689+08:00 - ExecuteResult { OptType: OPT_MSET_MSETNX, Result: Err(An error was signalled by the server: wrong number of arguments for 'msetnx' command), DB: 0 };elapsed: 31.552865ms
+2022-08-17T15:04:04.099919+08:00 - ExecuteResult { OptType: OPT_PFADD, Result: Ok(()), DB: 0 };elapsed: 435.091986ms
+2022-08-17T15:04:04.961523+08:00 - ExecuteResult { OptType: OPT_PFMERGE, Result: Ok(()), DB: 0 };elapsed: 861.465844ms
+2022-08-17T15:04:05.106881+08:00 - ExecuteResult { OptType: OPT_SET_SETNX, Result: Ok(()), DB: 0 };elapsed: 145.236728ms
+2022-08-17T15:04:05.181787+08:00 - ExecuteResult { OptType: OPT_SETBIT, Result: Ok(()), DB: 0 };elapsed: 74.773655ms
+2022-08-17T15:04:05.297613+08:00 - ExecuteResult { OptType: OPT_SETRANGE, Result: Ok(()), DB: 0 };elapsed: 115.706233ms
+2022-08-17T15:04:06.082043+08:00 - ExecuteResult { OptType: OPT_HINCRBY_HINCRBYFLOAT, Result: Ok(()), DB: 0 };elapsed: 784.293715ms
+2022-08-17T15:04:07.109760+08:00 - ExecuteResult { OptType: OPT_HSET_HMSET_HSETNX_HDEL, Result: Ok(()), DB: 0 };elapsed: 1.027574987s
+2022-08-17T15:04:07.484222+08:00 - ExecuteResult { OptType: OPT_LPUSH_LPOP_LPUSHX_LSET, Result: Ok(()), DB: 0 };elapsed: 374.350422ms
+2022-08-17T15:04:08.054822+08:00 - ExecuteResult { OptType: OPT_LREM_LTRIM_LINSERT, Result: Ok(()), DB: 0 };elapsed: 570.452807ms
+2022-08-17T15:04:09.206213+08:00 - ExecuteResult { OptType: OPT_RPUSH_RPUSHX_RPOP_RPOPLPUSH, Result: Ok(()), DB: 0 };elapsed: 1.151241089s
+2022-08-17T15:04:12.723541+08:00 - ExecuteResult { OptType: OPT_BLPOP_BRPOP_BRPOPLPUSH, Result: Ok(()), DB: 0 };elapsed: 3.517086066s
+2022-08-17T15:04:21.657153+08:00 - ExecuteResult { OptType: OPT_SADD_SMOVE_SPOP_SREM, Result: Err(An error was signalled by the server: wrong number of arguments for 'smove' command), DB: 0 };elapsed: 8.933183717s
+2022-08-17T15:04:32.150493+08:00 - ExecuteResult { OptType: OPT_SDIFFSTORE_SINERTSTORE_SUNIONSTORE, Result: Ok(()), DB: 0 };elapsed: 10.492911717s
+2022-08-17T15:04:34.063702+08:00 - ExecuteResult { OptType: OPT_ZADD_ZINCRBY_ZERM, Result: Ok(()), DB: 0 };elapsed: 1.913024558s
+2022-08-17T15:04:35.080783+08:00 - ExecuteResult { OptType: OPT_ZPOPMAX_ZPOPMIN, Result: Err(An error was signalled by the server: unknown command `zpopmax`, with args beginning with: `zpopmax_ro4Z`, `8`, ), DB: 0 };elapsed: 1.016934156s
+2022-08-17T15:04:36.574018+08:00 - ExecuteResult { OptType: OPT_ZREMRANGEBYLEX_ZREMRANGEBYRANK_ZERMRANGEBYSCORE, Result: Ok(()), DB: 0 };elapsed: 1.493070525s
+2022-08-17T15:04:38.201032+08:00 - ExecuteResult { OptType: OPT_ZUNIONSTORE_ZINTERSTORE, Result: Ok(()), DB: 0 };elapsed: 1.626842436s
+2022-08-17T15:55:08.455892+08:00 - ExecuteResult { OptType: OPT_APPEND, Result: Ok(()), DB: 0 };elapsed: 803.24051ms
+2022-08-17T15:55:09.130371+08:00 - ExecuteResult { OptType: OPT_BITOP, Result: Ok(()), DB: 0 };elapsed: 673.966637ms
+2022-08-17T15:55:09.221525+08:00 - ExecuteResult { OptType: OPT_DECR_DECRBY, Result: Ok(()), DB: 0 };elapsed: 91.02735ms
+2022-08-17T15:55:09.255443+08:00 - ExecuteResult { OptType: OPT_INCR_INCRBY_INCRBYFLOAT, Result: Err(An error was signalled by the server: syntax error), DB: 0 };elapsed: 33.785235ms
+2022-08-17T15:55:09.289587+08:00 - ExecuteResult { OptType: OPT_MSET_MSETNX, Result: Err(An error was signalled by the server: wrong number of arguments for 'msetnx' command), DB: 0 };elapsed: 34.007605ms
+2022-08-17T15:55:09.669363+08:00 - ExecuteResult { OptType: OPT_PFADD, Result: Ok(()), DB: 0 };elapsed: 379.648218ms
+2022-08-17T15:55:10.360273+08:00 - ExecuteResult { OptType: OPT_PFMERGE, Result: Ok(()), DB: 0 };elapsed: 690.770354ms
+2022-08-17T15:55:10.499346+08:00 - ExecuteResult { OptType: OPT_SET_SETNX, Result: Ok(()), DB: 0 };elapsed: 138.943365ms
+2022-08-17T15:55:10.573219+08:00 - ExecuteResult { OptType: OPT_SETBIT, Result: Ok(()), DB: 0 };elapsed: 73.747588ms
+2022-08-17T15:55:10.672+08:00 - ExecuteResult { OptType: OPT_SETRANGE, Result: Ok(()), DB: 0 };elapsed: 98.662543ms
+2022-08-17T15:55:11.416524+08:00 - ExecuteResult { OptType: OPT_HINCRBY_HINCRBYFLOAT, Result: Ok(()), DB: 0 };elapsed: 744.37433ms
+2022-08-17T15:55:12.418447+08:00 - ExecuteResult { OptType: OPT_HSET_HMSET_HSETNX_HDEL, Result: Ok(()), DB: 0 };elapsed: 1.001771898s
+2022-08-17T15:55:12.722941+08:00 - ExecuteResult { OptType: OPT_LPUSH_LPOP_LPUSHX_LSET, Result: Ok(()), DB: 0 };elapsed: 304.367257ms
+2022-08-17T15:55:13.180477+08:00 - ExecuteResult { OptType: OPT_LREM_LTRIM_LINSERT, Result: Ok(()), DB: 0 };elapsed: 457.399245ms
+2022-08-17T15:55:13.833823+08:00 - ExecuteResult { OptType: OPT_RPUSH_RPUSHX_RPOP_RPOPLPUSH, Result: Ok(()), DB: 0 };elapsed: 653.217694ms
+2022-08-17T15:55:14.413313+08:00 - ExecuteResult { OptType: OPT_BLPOP_BRPOP_BRPOPLPUSH, Result: Ok(()), DB: 0 };elapsed: 579.355057ms
+2022-08-17T15:55:15.829085+08:00 - ExecuteResult { OptType: OPT_SADD_SMOVE_SPOP_SREM, Result: Err(An error was signalled by the server: wrong number of arguments for 'smove' command), DB: 0 };elapsed: 1.415594513s
+2022-08-17T15:55:16.770592+08:00 - ExecuteResult { OptType: OPT_SDIFFSTORE_SINERTSTORE_SUNIONSTORE, Result: Ok(()), DB: 0 };elapsed: 941.341311ms
+2022-08-17T15:55:18.401041+08:00 - ExecuteResult { OptType: OPT_ZADD_ZINCRBY_ZERM, Result: Ok(()), DB: 0 };elapsed: 1.630292645s
+2022-08-17T15:55:19.125866+08:00 - ExecuteResult { OptType: OPT_ZPOPMAX_ZPOPMIN, Result: Err(An error was signalled by the server: unknown command `zpopmax`, with args beginning with: `zpopmax_zAl)`, `3`, ), DB: 0 };elapsed: 724.683385ms
+2022-08-17T15:55:20.292178+08:00 - ExecuteResult { OptType: OPT_ZREMRANGEBYLEX_ZREMRANGEBYRANK_ZERMRANGEBYSCORE, Result: Ok(()), DB: 0 };elapsed: 1.166159748s
+2022-08-17T15:55:21.485479+08:00 - ExecuteResult { OptType: OPT_ZUNIONSTORE_ZINTERSTORE, Result: Ok(()), DB: 0 };elapsed: 1.193152579s
+2022-08-17T16:01:41.471490+08:00 - ExecuteResult { OptType: OPT_APPEND, Result: Ok(()), DB: 0 };elapsed: 700.947122ms
+2022-08-17T16:01:42.143689+08:00 - ExecuteResult { OptType: OPT_BITOP, Result: Ok(()), DB: 0 };elapsed: 672.044847ms
+2022-08-17T16:01:42.251469+08:00 - ExecuteResult { OptType: OPT_DECR_DECRBY, Result: Ok(()), DB: 0 };elapsed: 107.650719ms
+2022-08-17T16:01:42.282253+08:00 - ExecuteResult { OptType: OPT_INCR_INCRBY_INCRBYFLOAT, Result: Err(An error was signalled by the server: syntax error), DB: 0 };elapsed: 30.665482ms
+2022-08-17T16:01:42.320261+08:00 - ExecuteResult { OptType: OPT_MSET_MSETNX, Result: Err(An error was signalled by the server: wrong number of arguments for 'msetnx' command), DB: 0 };elapsed: 37.882718ms
+2022-08-17T16:01:42.841439+08:00 - ExecuteResult { OptType: OPT_PFADD, Result: Ok(()), DB: 0 };elapsed: 521.046841ms
+2022-08-17T16:01:43.582235+08:00 - ExecuteResult { OptType: OPT_PFMERGE, Result: Ok(()), DB: 0 };elapsed: 740.661094ms
+2022-08-17T16:01:43.709136+08:00 - ExecuteResult { OptType: OPT_SET_SETNX, Result: Ok(()), DB: 0 };elapsed: 126.776709ms
+2022-08-17T16:01:43.777359+08:00 - ExecuteResult { OptType: OPT_SETBIT, Result: Ok(()), DB: 0 };elapsed: 68.077834ms
+2022-08-17T16:01:43.883409+08:00 - ExecuteResult { OptType: OPT_SETRANGE, Result: Ok(()), DB: 0 };elapsed: 105.902509ms
+2022-08-17T16:01:44.597636+08:00 - ExecuteResult { OptType: OPT_HINCRBY_HINCRBYFLOAT, Result: Ok(()), DB: 0 };elapsed: 714.061985ms
+2022-08-17T16:01:45.648530+08:00 - ExecuteResult { OptType: OPT_HSET_HMSET_HSETNX_HDEL, Result: Ok(()), DB: 0 };elapsed: 1.050737325s
+2022-08-17T16:01:45.979517+08:00 - ExecuteResult { OptType: OPT_LPUSH_LPOP_LPUSHX_LSET, Result: Ok(()), DB: 0 };elapsed: 330.859772ms
+2022-08-17T16:01:46.485915+08:00 - ExecuteResult { OptType: OPT_LREM_LTRIM_LINSERT, Result: Ok(()), DB: 0 };elapsed: 506.267374ms
+2022-08-17T16:01:47.025042+08:00 - ExecuteResult { OptType: OPT_RPUSH_RPUSHX_RPOP_RPOPLPUSH, Result: Ok(()), DB: 0 };elapsed: 538.994685ms
+2022-08-17T16:01:47.824485+08:00 - ExecuteResult { OptType: OPT_BLPOP_BRPOP_BRPOPLPUSH, Result: Ok(()), DB: 0 };elapsed: 799.290082ms
+2022-08-17T16:01:49.222129+08:00 - ExecuteResult { OptType: OPT_SADD_SMOVE_SPOP_SREM, Result: Err(An error was signalled by the server: wrong number of arguments for 'smove' command), DB: 0 };elapsed: 1.397462812s
+2022-08-17T16:01:50.168528+08:00 - ExecuteResult { OptType: OPT_SDIFFSTORE_SINERTSTORE_SUNIONSTORE, Result: Ok(()), DB: 0 };elapsed: 946.236371ms
+2022-08-17T16:01:51.442373+08:00 - ExecuteResult { OptType: OPT_ZADD_ZINCRBY_ZERM, Result: Ok(()), DB: 0 };elapsed: 1.273658024s
+2022-08-17T16:01:52.258118+08:00 - ExecuteResult { OptType: OPT_ZPOPMAX_ZPOPMIN, Result: Err(An error was signalled by the server: unknown command `zpopmax`, with args beginning with: `zpopmax_mg)R`, `0`, ), DB: 0 };elapsed: 815.580289ms
+2022-08-17T16:01:53.575739+08:00 - ExecuteResult { OptType: OPT_ZREMRANGEBYLEX_ZREMRANGEBYRANK_ZERMRANGEBYSCORE, Result: Ok(()), DB: 0 };elapsed: 1.317461963s
+2022-08-17T16:01:54.880468+08:00 - ExecuteResult { OptType: OPT_ZUNIONSTORE_ZINTERSTORE, Result: Ok(()), DB: 0 };elapsed: 1.304570347s
+2022-08-17T16:08:38.918643+08:00 - ExecuteResult { OptType: OPT_APPEND, Result: Ok(()), DB: 0 };elapsed: 748.616212ms
+2022-08-17T16:08:39.629073+08:00 - ExecuteResult { OptType: OPT_BITOP, Result: Ok(()), DB: 0 };elapsed: 709.409128ms
+2022-08-17T16:08:39.739817+08:00 - ExecuteResult { OptType: OPT_DECR_DECRBY, Result: Ok(()), DB: 0 };elapsed: 110.631724ms
+2022-08-17T16:08:39.773345+08:00 - ExecuteResult { OptType: OPT_INCR_INCRBY_INCRBYFLOAT, Result: Err(An error was signalled by the server: syntax error), DB: 0 };elapsed: 33.411333ms
+2022-08-17T16:08:39.808452+08:00 - ExecuteResult { OptType: OPT_MSET_MSETNX, Result: Err(An error was signalled by the server: wrong number of arguments for 'msetnx' command), DB: 0 };elapsed: 34.964777ms
+2022-08-17T16:08:40.234305+08:00 - ExecuteResult { OptType: OPT_PFADD, Result: Ok(()), DB: 0 };elapsed: 425.777548ms
+2022-08-17T16:08:41.039694+08:00 - ExecuteResult { OptType: OPT_PFMERGE, Result: Ok(()), DB: 0 };elapsed: 805.351695ms
+2022-08-17T16:08:41.197058+08:00 - ExecuteResult { OptType: OPT_SET_SETNX, Result: Ok(()), DB: 0 };elapsed: 157.226984ms
+2022-08-17T16:08:41.275226+08:00 - ExecuteResult { OptType: OPT_SETBIT, Result: Ok(()), DB: 0 };elapsed: 78.060263ms
+2022-08-17T16:08:41.376984+08:00 - ExecuteResult { OptType: OPT_SETRANGE, Result: Ok(()), DB: 0 };elapsed: 101.63327ms
+2022-08-17T16:08:42.161544+08:00 - ExecuteResult { OptType: OPT_HINCRBY_HINCRBYFLOAT, Result: Ok(()), DB: 0 };elapsed: 784.502547ms
+2022-08-17T16:08:43.264420+08:00 - ExecuteResult { OptType: OPT_HSET_HMSET_HSETNX_HDEL, Result: Ok(()), DB: 0 };elapsed: 1.102865248s
+2022-08-17T16:08:43.687199+08:00 - ExecuteResult { OptType: OPT_LPUSH_LPOP_LPUSHX_LSET, Result: Ok(()), DB: 0 };elapsed: 422.681622ms
+2022-08-17T16:08:44.257719+08:00 - ExecuteResult { OptType: OPT_LREM_LTRIM_LINSERT, Result: Ok(()), DB: 0 };elapsed: 570.433224ms
+2022-08-17T16:08:44.683604+08:00 - ExecuteResult { OptType: OPT_RPUSH_RPUSHX_RPOP_RPOPLPUSH, Result: Ok(()), DB: 0 };elapsed: 425.792423ms
+2022-08-17T16:08:45.281640+08:00 - ExecuteResult { OptType: OPT_BLPOP_BRPOP_BRPOPLPUSH, Result: Ok(()), DB: 0 };elapsed: 597.972098ms
+2022-08-17T16:08:46.951784+08:00 - ExecuteResult { OptType: OPT_SADD_SMOVE_SPOP_SREM, Result: Err(An error was signalled by the server: wrong number of arguments for 'smove' command), DB: 0 };elapsed: 1.670147539s
+2022-08-17T16:08:47.993523+08:00 - ExecuteResult { OptType: OPT_SDIFFSTORE_SINERTSTORE_SUNIONSTORE, Result: Ok(()), DB: 0 };elapsed: 1.041670923s
+2022-08-17T16:08:49.578240+08:00 - ExecuteResult { OptType: OPT_ZADD_ZINCRBY_ZERM, Result: Ok(()), DB: 0 };elapsed: 1.584682848s
+2022-08-17T16:08:50.481611+08:00 - ExecuteResult { OptType: OPT_ZPOPMAX_ZPOPMIN, Result: Err(An error was signalled by the server: unknown command `zpopmax`, with args beginning with: `zpopmax_kIgN`, `5`, ), DB: 0 };elapsed: 903.298715ms
+2022-08-17T16:08:51.804337+08:00 - ExecuteResult { OptType: OPT_ZREMRANGEBYLEX_ZREMRANGEBYRANK_ZERMRANGEBYSCORE, Result: Ok(()), DB: 0 };elapsed: 1.322658917s
+2022-08-17T16:08:53.080412+08:00 - ExecuteResult { OptType: OPT_ZUNIONSTORE_ZINTERSTORE, Result: Ok(()), DB: 0 };elapsed: 1.275962265s
+2022-08-17T16:10:54.705520+08:00 - ExecuteResult { OptType: OPT_APPEND, Result: Ok(()), DB: 0 };elapsed: 743.618326ms
+2022-08-17T16:10:55.346629+08:00 - ExecuteResult { OptType: OPT_BITOP, Result: Ok(()), DB: 0 };elapsed: 640.950347ms
+2022-08-17T16:10:55.451473+08:00 - ExecuteResult { OptType: OPT_DECR_DECRBY, Result: Ok(()), DB: 0 };elapsed: 104.716192ms
+2022-08-17T16:10:55.483856+08:00 - ExecuteResult { OptType: OPT_INCR_INCRBY_INCRBYFLOAT, Result: Err(An error was signalled by the server: syntax error), DB: 0 };elapsed: 32.244039ms
+2022-08-17T16:10:55.520886+08:00 - ExecuteResult { OptType: OPT_MSET_MSETNX, Result: Err(An error was signalled by the server: wrong number of arguments for 'msetnx' command), DB: 0 };elapsed: 36.890714ms
+2022-08-17T16:10:55.948457+08:00 - ExecuteResult { OptType: OPT_PFADD, Result: Ok(()), DB: 0 };elapsed: 427.418887ms
+2022-08-17T16:10:56.706331+08:00 - ExecuteResult { OptType: OPT_PFMERGE, Result: Ok(()), DB: 0 };elapsed: 757.711165ms
+2022-08-17T16:10:56.853753+08:00 - ExecuteResult { OptType: OPT_SET_SETNX, Result: Ok(()), DB: 0 };elapsed: 147.295818ms
+2022-08-17T16:10:56.927272+08:00 - ExecuteResult { OptType: OPT_SETBIT, Result: Ok(()), DB: 0 };elapsed: 73.388939ms
+2022-08-17T16:10:57.034944+08:00 - ExecuteResult { OptType: OPT_SETRANGE, Result: Ok(()), DB: 0 };elapsed: 107.540591ms
+2022-08-17T16:10:57.717660+08:00 - ExecuteResult { OptType: OPT_HINCRBY_HINCRBYFLOAT, Result: Ok(()), DB: 0 };elapsed: 682.581153ms
+2022-08-17T16:10:58.837356+08:00 - ExecuteResult { OptType: OPT_HSET_HMSET_HSETNX_HDEL, Result: Ok(()), DB: 0 };elapsed: 1.119521796s
+2022-08-17T16:10:59.190015+08:00 - ExecuteResult { OptType: OPT_LPUSH_LPOP_LPUSHX_LSET, Result: Ok(()), DB: 0 };elapsed: 352.527181ms
+2022-08-17T16:10:59.743904+08:00 - ExecuteResult { OptType: OPT_LREM_LTRIM_LINSERT, Result: Ok(()), DB: 0 };elapsed: 553.749584ms
+2022-08-17T16:11:00.274046+08:00 - ExecuteResult { OptType: OPT_RPUSH_RPUSHX_RPOP_RPOPLPUSH, Result: Ok(()), DB: 0 };elapsed: 529.970359ms
+2022-08-17T16:11:01.117140+08:00 - ExecuteResult { OptType: OPT_BLPOP_BRPOP_BRPOPLPUSH, Result: Ok(()), DB: 0 };elapsed: 842.94822ms
+2022-08-17T16:11:02.728490+08:00 - ExecuteResult { OptType: OPT_SADD_SMOVE_SPOP_SREM, Result: Err(An error was signalled by the server: wrong number of arguments for 'smove' command), DB: 0 };elapsed: 1.611180016s
+2022-08-17T16:11:03.729334+08:00 - ExecuteResult { OptType: OPT_SDIFFSTORE_SINERTSTORE_SUNIONSTORE, Result: Ok(()), DB: 0 };elapsed: 1.000697363s
+2022-08-17T16:11:05.138720+08:00 - ExecuteResult { OptType: OPT_ZADD_ZINCRBY_ZERM, Result: Ok(()), DB: 0 };elapsed: 1.409228527s
+2022-08-17T16:11:05.894008+08:00 - ExecuteResult { OptType: OPT_ZPOPMAX_ZPOPMIN, Result: Err(An error was signalled by the server: unknown command `zpopmax`, with args beginning with: `zpopmax_6LqL`, `0`, ), DB: 0 };elapsed: 755.13648ms
+2022-08-17T16:11:07.235400+08:00 - ExecuteResult { OptType: OPT_ZREMRANGEBYLEX_ZREMRANGEBYRANK_ZERMRANGEBYSCORE, Result: Ok(()), DB: 0 };elapsed: 1.341219001s
+2022-08-17T16:11:08.934776+08:00 - ExecuteResult { OptType: OPT_ZUNIONSTORE_ZINTERSTORE, Result: Ok(()), DB: 0 };elapsed: 1.699207679s
+2022-08-17T16:13:53.249001+08:00 - ExecuteResult { OptType: OPT_APPEND, Result: Ok(()), DB: 0 };elapsed: 647.913902ms
+2022-08-17T16:13:53.862826+08:00 - ExecuteResult { OptType: OPT_BITOP, Result: Ok(()), DB: 0 };elapsed: 612.973104ms
+2022-08-17T16:13:53.965277+08:00 - ExecuteResult { OptType: OPT_DECR_DECRBY, Result: Ok(()), DB: 0 };elapsed: 102.281022ms
+2022-08-17T16:14:34.884470+08:00 - ExecuteResult { OptType: OPT_APPEND, Result: Ok(()), DB: 0 };elapsed: 733.397892ms
+2022-08-17T16:14:35.542259+08:00 - ExecuteResult { OptType: OPT_BITOP, Result: Ok(()), DB: 0 };elapsed: 657.632805ms
+2022-08-17T16:14:35.645020+08:00 - ExecuteResult { OptType: OPT_DECR_DECRBY, Result: Ok(()), DB: 0 };elapsed: 102.625725ms
+2022-08-17T16:15:42.922372+08:00 - ExecuteResult { OptType: OPT_APPEND, Result: Ok(()), DB: 0 };elapsed: 798.935711ms
+2022-08-17T16:15:43.567851+08:00 - ExecuteResult { OptType: OPT_BITOP, Result: Ok(()), DB: 0 };elapsed: 644.522395ms
+2022-08-17T16:15:43.689293+08:00 - ExecuteResult { OptType: OPT_DECR_DECRBY, Result: Ok(()), DB: 0 };elapsed: 121.309737ms
+2022-08-17T16:17:10.480683+08:00 - ExecuteResult { OptType: OPT_APPEND, Result: Ok(()), DB: 0 };elapsed: 741.084966ms
+2022-08-17T16:17:11.198051+08:00 - ExecuteResult { OptType: OPT_BITOP, Result: Ok(()), DB: 0 };elapsed: 716.089729ms
+2022-08-17T16:17:11.315235+08:00 - ExecuteResult { OptType: OPT_DECR_DECRBY, Result: Ok(()), DB: 0 };elapsed: 117.050269ms
+2022-08-17T16:17:11.519150+08:00 - ExecuteResult { OptType: OPT_INCR_INCRBY_INCRBYFLOAT, Result: Ok(()), DB: 0 };elapsed: 203.779602ms
+2022-08-17T16:17:11.556015+08:00 - ExecuteResult { OptType: OPT_MSET_MSETNX, Result: Err(An error was signalled by the server: wrong number of arguments for 'msetnx' command), DB: 0 };elapsed: 36.738578ms
+2022-08-17T16:17:12.100292+08:00 - ExecuteResult { OptType: OPT_PFADD, Result: Ok(()), DB: 0 };elapsed: 544.112783ms
+2022-08-17T16:17:13.016183+08:00 - ExecuteResult { OptType: OPT_PFMERGE, Result: Ok(()), DB: 0 };elapsed: 915.761237ms
+2022-08-17T16:17:13.192798+08:00 - ExecuteResult { OptType: OPT_SET_SETNX, Result: Ok(()), DB: 0 };elapsed: 176.502713ms
+2022-08-17T16:17:13.280695+08:00 - ExecuteResult { OptType: OPT_SETBIT, Result: Ok(()), DB: 0 };elapsed: 87.778051ms
+2022-08-17T16:17:13.416968+08:00 - ExecuteResult { OptType: OPT_SETRANGE, Result: Ok(()), DB: 0 };elapsed: 136.152427ms
+2022-08-17T16:17:14.253717+08:00 - ExecuteResult { OptType: OPT_HINCRBY_HINCRBYFLOAT, Result: Ok(()), DB: 0 };elapsed: 836.618813ms
+2022-08-17T16:17:15.253240+08:00 - ExecuteResult { OptType: OPT_HSET_HMSET_HSETNX_HDEL, Result: Ok(()), DB: 0 };elapsed: 999.386178ms
+2022-08-17T16:17:15.399365+08:00 - ExecuteResult { OptType: OPT_LPUSH_LPOP_LPUSHX_LSET, Result: Ok(()), DB: 0 };elapsed: 145.999479ms
+2022-08-17T16:17:15.919371+08:00 - ExecuteResult { OptType: OPT_LREM_LTRIM_LINSERT, Result: Ok(()), DB: 0 };elapsed: 519.87251ms
+2022-08-17T16:17:16.444915+08:00 - ExecuteResult { OptType: OPT_RPUSH_RPUSHX_RPOP_RPOPLPUSH, Result: Ok(()), DB: 0 };elapsed: 525.426491ms
+2022-08-17T16:17:17.080685+08:00 - ExecuteResult { OptType: OPT_BLPOP_BRPOP_BRPOPLPUSH, Result: Ok(()), DB: 0 };elapsed: 635.641886ms
+2022-08-17T16:17:18.538731+08:00 - ExecuteResult { OptType: OPT_SADD_SMOVE_SPOP_SREM, Result: Err(An error was signalled by the server: wrong number of arguments for 'smove' command), DB: 0 };elapsed: 1.457883801s
+2022-08-17T16:17:19.530172+08:00 - ExecuteResult { OptType: OPT_SDIFFSTORE_SINERTSTORE_SUNIONSTORE, Result: Ok(()), DB: 0 };elapsed: 991.268955ms
+2022-08-17T16:17:21.037498+08:00 - ExecuteResult { OptType: OPT_ZADD_ZINCRBY_ZERM, Result: Ok(()), DB: 0 };elapsed: 1.50713915s
+2022-08-17T16:17:22.086235+08:00 - ExecuteResult { OptType: OPT_ZPOPMAX_ZPOPMIN, Result: Err(An error was signalled by the server: unknown command `zpopmax`, with args beginning with: `zpopmax_hHDI`, `4`, ), DB: 0 };elapsed: 1.048553847s
+2022-08-17T16:17:23.554405+08:00 - ExecuteResult { OptType: OPT_ZREMRANGEBYLEX_ZREMRANGEBYRANK_ZERMRANGEBYSCORE, Result: Ok(()), DB: 0 };elapsed: 1.467965848s
+2022-08-17T16:17:25.084112+08:00 - ExecuteResult { OptType: OPT_ZUNIONSTORE_ZINTERSTORE, Result: Ok(()), DB: 0 };elapsed: 1.529508448s

@@ -21,6 +21,7 @@ pub enum OptType {
     OPT_DECR_DECRBY,
     OPT_INCR_INCRBY_INCRBYFLOAT,
     OPT_MSET_MSETNX,
+    OPT_PSETEX_SETEX,
     OPT_PFADD,
     OPT_PFMERGE,
     OPT_SET_SETNX,
@@ -37,6 +38,7 @@ pub enum OptType {
     OPT_SDIFFSTORE_SINERTSTORE_SUNIONSTORE,
     OPT_ZADD_ZINCRBY_ZERM,
     OPT_ZPOPMAX_ZPOPMIN,
+    OPT_BZPOPMAX_BZPOPMIN,
     OPT_ZREMRANGEBYLEX_ZREMRANGEBYRANK_ZREMRANGEBYSCORE,
     OPT_ZUNIONSTORE_ZINTERSTORE,
 }
@@ -58,6 +60,9 @@ impl fmt::Display for OptType {
             }
             OptType::OPT_MSET_MSETNX => {
                 write!(f, "opt_mset_msetnx")
+            }
+            OptType::OPT_PSETEX_SETEX => {
+                write!(f, "opt_psetex_setex")
             }
             OptType::OPT_PFADD => {
                 write!(f, "opt_pfadd")
@@ -107,6 +112,9 @@ impl fmt::Display for OptType {
             OptType::OPT_ZPOPMAX_ZPOPMIN => {
                 write!(f, "opt_zpopmax_zpopmin")
             }
+            OptType::OPT_BZPOPMAX_BZPOPMIN => {
+                write!(f, "opt_bzpopmax_bzpopmin")
+            }
             OptType::OPT_ZREMRANGEBYLEX_ZREMRANGEBYRANK_ZREMRANGEBYSCORE => {
                 write!(f, "opt_zremrangebylex_zremrangebyrank_zremrangebyscore")
             }
@@ -137,13 +145,13 @@ struct ExecuteResult {
 impl<'a> RedisOpt<'a> {
     pub fn exec(&mut self) -> RedisResult<()> {
         let start = Instant::now();
-
         let r = match self.OptType {
             OptType::OPT_APPEND => self.opt_append(),
             OptType::OPT_BITOP => self.opt_bitop(),
             OptType::OPT_DECR_DECRBY => self.opt_decr_decrby(),
             OptType::OPT_INCR_INCRBY_INCRBYFLOAT => self.opt_incr_incrby_incrbyfloat(),
             OptType::OPT_MSET_MSETNX => self.opt_mset_msetnx(),
+            OptType::OPT_PSETEX_SETEX => self.opt_psetex_setex(),
             OptType::OPT_PFADD => self.opt_pfadd(),
             OptType::OPT_PFMERGE => self.opt_pfmerge(),
             OptType::OPT_SET_SETNX => self.opt_set_setnx(),
@@ -162,6 +170,7 @@ impl<'a> RedisOpt<'a> {
             }
             OptType::OPT_ZADD_ZINCRBY_ZERM => self.opt_zadd_zincrby_zerm(),
             OptType::OPT_ZPOPMAX_ZPOPMIN => self.opt_zpopmax_zpopmin(),
+            OptType::OPT_BZPOPMAX_BZPOPMIN => self.opt_bzpopmax_bzpopmin(),
             OptType::OPT_ZREMRANGEBYLEX_ZREMRANGEBYRANK_ZREMRANGEBYSCORE => {
                 self.opt_zremrangebylex_zremrangebyrank_zremrangebyscore()
             }
@@ -179,6 +188,16 @@ impl<'a> RedisOpt<'a> {
             start.elapsed()
         );
         result.Result
+    }
+
+    pub fn exec_all(&mut self) {
+        let ri = all::<OptType>().collect::<Vec<_>>();
+        let opttype = self.OptType.clone();
+        for item in ri {
+            self.OptType = item;
+            self.exec();
+        }
+        self.OptType = opttype;
     }
 }
 
@@ -199,18 +218,17 @@ impl<'a> RedisOpt<'a> {
             let _ = self.RedisConn.req_command(
                 cmd_expire
                     .arg(key.to_redis_args())
-                    .arg(self.EXPIRE.to_redis_args()),
-            )?;
+                    .arg(self.EXPIRE.to_redis_args()))?;
         }
         Ok(())
     }
 
     // bitmap操作
     pub fn opt_bitop(&mut self) -> RedisResult<()> {
-        let opand = "opand_".to_string() + &*self.KeySuffix;
-        let opor = "opor_".to_string() + &*self.KeySuffix;
-        let opxor = "opxor_".to_string() + &*self.KeySuffix;
-        let opnot = "opnot_".to_string() + &*self.KeySuffix;
+        let bitopand = "bitop_and_".to_string() + &*self.KeySuffix;
+        let bitopor = "bitop_or_".to_string() + &*self.KeySuffix;
+        let bitopxor = "bitop_xor_".to_string() + &*self.KeySuffix;
+        let bitopnot = "bitop_not_".to_string() + &*self.KeySuffix;
 
         let mut opvec = vec![];
         for i in 0..self.Loopstep {
@@ -221,8 +239,7 @@ impl<'a> RedisOpt<'a> {
                     .arg(bitop.clone().to_redis_args())
                     .arg(bitop.clone().to_redis_args())
                     .arg("EX")
-                    .arg(self.EXPIRE.to_redis_args()),
-            )?;
+                    .arg(self.EXPIRE.to_redis_args()))?;
             opvec.push(bitop);
         }
 
@@ -233,60 +250,52 @@ impl<'a> RedisOpt<'a> {
             cmd_bitop
                 .clone()
                 .arg("and".to_redis_args())
-                .arg(opand.to_redis_args())
-                .arg(opvec.to_redis_args()),
-        )?;
+                .arg(bitopand.to_redis_args())
+                .arg(opvec.to_redis_args()))?;
         let _ = self.RedisConn.req_command(
             cmd_expire
                 .clone()
-                .arg(opand.to_redis_args())
-                .arg(self.EXPIRE.to_redis_args()),
-        )?;
+                .arg(bitopand.to_redis_args())
+                .arg(self.EXPIRE.to_redis_args()))?;
 
         //执行 or 操作
         let _ = self.RedisConn.req_command(
             cmd_bitop
                 .clone()
                 .arg("or".to_redis_args())
-                .arg(opor.to_redis_args())
-                .arg(opvec.to_redis_args()),
-        )?;
+                .arg(bitopor.to_redis_args())
+                .arg(opvec.to_redis_args()))?;
         let _ = self.RedisConn.req_command(
             cmd_expire
                 .clone()
-                .arg(opor.to_redis_args())
-                .arg(self.EXPIRE.to_redis_args()),
-        )?;
+                .arg(bitopor.to_redis_args())
+                .arg(self.EXPIRE.to_redis_args()))?;
 
         //执行 xor 操作
         let _ = self.RedisConn.req_command(
             cmd_bitop
                 .clone()
                 .arg("xor".to_redis_args())
-                .arg(opxor.to_redis_args())
-                .arg(opvec.to_redis_args()),
-        )?;
+                .arg(bitopxor.to_redis_args())
+                .arg(opvec.to_redis_args()))?;
         let _ = self.RedisConn.req_command(
             cmd_expire
                 .clone()
-                .arg(opxor.to_redis_args())
-                .arg(self.EXPIRE.to_redis_args()),
-        )?;
+                .arg(bitopxor.to_redis_args())
+                .arg(self.EXPIRE.to_redis_args()))?;
 
         //执行 not 操作
         let _ = self.RedisConn.req_command(
             cmd_bitop
                 .clone()
                 .arg("not".to_redis_args())
-                .arg(opnot.clone().to_redis_args())
-                .arg(opvec[0].to_redis_args()),
-        )?;
+                .arg(bitopnot.clone().to_redis_args())
+                .arg(opvec[0].to_redis_args()))?;
         let _ = self.RedisConn.req_command(
             cmd_expire
                 .clone()
-                .arg(opnot.to_redis_args())
-                .arg(self.EXPIRE.to_redis_args()),
-        )?;
+                .arg(bitopnot.to_redis_args())
+                .arg(self.EXPIRE.to_redis_args()))?;
 
         Ok(())
     }
@@ -300,8 +309,7 @@ impl<'a> RedisOpt<'a> {
                 .arg(decr.clone().to_redis_args())
                 .arg(&*self.Loopstep.clone().to_redis_args())
                 .arg("EX")
-                .arg(&*self.EXPIRE.to_redis_args()),
-        )?;
+                .arg(&*self.EXPIRE.to_redis_args()))?;
 
         let mut cmd_decr = redis::cmd("decr");
         let _ = self
@@ -314,8 +322,7 @@ impl<'a> RedisOpt<'a> {
         let _ = self.RedisConn.req_command(
             cmd_decrby
                 .arg(decr.clone().to_redis_args())
-                .arg(step.to_redis_args()),
-        )?;
+                .arg(step.to_redis_args()))?;
 
         Ok(())
     }
@@ -368,34 +375,49 @@ impl<'a> RedisOpt<'a> {
 
         let _ = self
             .RedisConn
-            .req_command(cmd_msetnx.clone().arg(msetnx.clone()))?;
+            .req_command(cmd_msetnx.clone().arg(msetnxarry.clone()))?;
         let _ = self
             .RedisConn
-            .req_command(cmd_mset.clone().arg(mset.clone()))?;
+            .req_command(cmd_mset.clone().arg(msetarry.clone()))?;
         let _ = self
             .RedisConn
-            .req_command(cmd_msetnx.clone().arg(msetnx.clone()))?;
+            .req_command(cmd_mset.clone().arg(msetnxarry.clone()))?;
+        let _ = self
+            .RedisConn
+            .req_command(cmd_msetnx.clone().arg(msetarry.clone()))?;
 
         let mut cmd_expire = redis::cmd("expire");
 
         for i in 0..self.Loopstep {
             let _ = self.RedisConn.req_command(
-                cmd_expire
-                    .clone()
+                cmd_expire.clone()
                     .arg(mset.clone() + &*i.to_string())
-                    .arg(&*self.EXPIRE.to_redis_args()),
-            )?;
+                    .arg(&*self.EXPIRE.to_redis_args()))?;
             let _ = self.RedisConn.req_command(
-                cmd_expire
-                    .clone()
+                cmd_expire.clone()
                     .arg(msetnx.clone() + &*i.to_string())
-                    .arg(&*self.EXPIRE.to_redis_args()),
-            )?;
+                    .arg(&*self.EXPIRE.to_redis_args()))?;
         }
         Ok(())
     }
 
-    // ToDO PSETEX and SETEX
+    // PSETEX and SETEX
+    pub fn opt_psetex_setex(&mut self) -> RedisResult<()> {
+        let psetex = "psetex_".to_string() + &*self.KeySuffix.clone();
+        let setex = "setex".to_string() + &*self.KeySuffix.clone();
+
+        let cmd_psetex = redis::cmd("psetex");
+        let cmd_setex = redis::cmd("setex");
+        self.RedisConn.req_command(cmd_setex.clone()
+            .arg(setex.clone())
+            .arg(&self.EXPIRE.clone())
+            .arg(setex.clone()))?;
+        self.RedisConn.req_command(cmd_psetex.clone()
+            .arg(psetex.clone())
+            .arg(&self.EXPIRE.clone() * 1000)
+            .arg(psetex.clone()))?;
+        Ok(())
+    }
 
     //PFADD
     pub fn opt_pfadd(&mut self) -> RedisResult<()> {
@@ -408,16 +430,14 @@ impl<'a> RedisOpt<'a> {
                 cmd_pfadd
                     .clone()
                     .arg(pfadd.clone())
-                    .arg(element_prefix.clone() + &*i.to_string()),
-            )?;
+                    .arg(element_prefix.clone() + &*i.to_string()))?;
         }
         let mut cmd_expire = redis::cmd("expire");
         self.RedisConn.req_command(
             cmd_expire
                 .clone()
                 .arg(pfadd.clone())
-                .arg(&*self.EXPIRE.to_redis_args()),
-        )?;
+                .arg(&*self.EXPIRE.to_redis_args()))?;
         Ok(())
     }
 
@@ -461,8 +481,7 @@ impl<'a> RedisOpt<'a> {
                 .arg(set.clone())
                 .arg(set.clone())
                 .arg("EX")
-                .arg(&*self.EXPIRE.clone().to_redis_args()),
-        )?;
+                .arg(&*self.EXPIRE.clone().to_redis_args()))?;
 
         self.RedisConn
             .req_command(cmd_setnx.clone().arg(setnx.clone()).arg(setnx.clone()))?;
@@ -475,8 +494,7 @@ impl<'a> RedisOpt<'a> {
             cmd_expire
                 .clone()
                 .arg(setnx.clone())
-                .arg(&*self.EXPIRE.to_redis_args()),
-        )?;
+                .arg(&*self.EXPIRE.to_redis_args()))?;
 
         Ok(())
     }
@@ -495,8 +513,7 @@ impl<'a> RedisOpt<'a> {
             cmd_expire
                 .clone()
                 .arg(setbit)
-                .arg(&*self.EXPIRE.to_redis_args()),
-        )?;
+                .arg(&*self.EXPIRE.to_redis_args()))?;
 
         Ok(())
     }
@@ -514,15 +531,13 @@ impl<'a> RedisOpt<'a> {
             cmd_setrange
                 .arg(setrange.clone())
                 .arg(offset)
-                .arg(rand_string(4)),
-        )?;
+                .arg(rand_string(4)))?;
         let mut cmd_expire = redis::cmd("expire");
         self.RedisConn.req_command(
             cmd_expire
                 .clone()
                 .arg(setrange)
-                .arg(&*self.EXPIRE.to_redis_args()),
-        )?;
+                .arg(&*self.EXPIRE.to_redis_args()))?;
         Ok(())
     }
 
@@ -539,15 +554,13 @@ impl<'a> RedisOpt<'a> {
                     .clone()
                     .arg(hincrby.clone())
                     .arg(rng.gen_range(0..self.Loopstep))
-                    .arg(rng.gen_range(0..self.Loopstep)),
-            )?;
+                    .arg(rng.gen_range(0..self.Loopstep)))?;
             self.RedisConn.req_command(
                 cmd_hincrbyfloat
                     .clone()
                     .arg(hincrbyfloat.clone())
                     .arg(rng.gen_range(0..self.Loopstep))
-                    .arg(rng.gen::<f64>()),
-            )?;
+                    .arg(rng.gen::<f64>()))?;
         }
         Ok(())
     }
@@ -787,12 +800,12 @@ impl<'a> RedisOpt<'a> {
         Ok(())
     }
 
-    // ToDo add LMOVE LMPOP
+    //  LMOVE BLMOVE LMPOP BLMPOP
     pub fn opt_lmove_blmove_lmpop_blmpop(&mut self) -> RedisResult<()> {
-        let lmove = "lmove".to_string() + &*self.KeySuffix.clone();
-        let blmove = "blmove".to_string() + &*self.KeySuffix.clone();
-        let lmpop = "lmpop".to_string() + &*self.KeySuffix.clone();
-        let blmpop = "blmpop".to_string() + &*self.KeySuffix.clone();
+        let lmove = "lmove_".to_string() + &*self.KeySuffix.clone();
+        let blmove = "blmove_".to_string() + &*self.KeySuffix.clone();
+        let lmpop = "lmpop_".to_string() + &*self.KeySuffix.clone();
+        let blmpop = "blmpop_".to_string() + &*self.KeySuffix.clone();
 
         let cmd_rpush = redis::cmd("rpush");
         let cmd_lmove = redis::cmd("lmove");
@@ -936,7 +949,6 @@ impl<'a> RedisOpt<'a> {
         Ok(())
     }
 
-    // ToDo add BLMOVE BLMPOP
 
     //SADD SMOVE SPOP SREM
     pub fn opt_sadd_smove_spop_srem(&mut self) -> RedisResult<()> {
@@ -1194,19 +1206,62 @@ impl<'a> RedisOpt<'a> {
             cmd_expire
                 .clone()
                 .arg(zpopmax.clone())
-                .arg(&*self.EXPIRE.to_redis_args()),
-        )?;
+                .arg(&*self.EXPIRE.to_redis_args()))?;
         self.RedisConn.req_command(
             cmd_expire
                 .clone()
                 .arg(zpopmin.clone())
-                .arg(&*self.EXPIRE.to_redis_args()),
-        )?;
+                .arg(&*self.EXPIRE.to_redis_args()))?;
 
         Ok(())
     }
 
-    //ToDo BZPOPMAX BZPOPMIN
+    // BZPOPMAX BZPOPMIN
+    pub fn opt_bzpopmax_bzpopmin(&mut self) -> RedisResult<()> {
+        let bzpopmax = "bzpopmax_".to_string() + &*self.KeySuffix.clone();
+        let bzpopmin = "bzpopmin_".to_string() + &*self.KeySuffix.clone();
+
+        let cmd_zadd = redis::cmd("zadd");
+        let cmd_bzpopmax = redis::cmd("bzpopmax");
+        let cmd_bzpopmin = redis::cmd("bzpopmin");
+
+        for i in 0..self.Loopstep {
+            self.RedisConn.req_command(
+                cmd_zadd
+                    .clone()
+                    .arg(bzpopmax.clone())
+                    .arg(i)
+                    .arg(bzpopmax.clone() + &*i.to_string()))?;
+            self.RedisConn.req_command(
+                cmd_zadd
+                    .clone()
+                    .arg(bzpopmin.clone())
+                    .arg(i)
+                    .arg(bzpopmin.clone() + &*i.to_string()))?;
+        }
+
+        self.RedisConn.req_command(cmd_bzpopmax.clone()
+            .arg(bzpopmax.clone())
+            .arg(10 as usize))?;
+        self.RedisConn.req_command(cmd_bzpopmin.clone()
+            .arg(bzpopmin.clone())
+            .arg(10 as usize))?;
+
+        let mut cmd_expire = redis::cmd("expire");
+
+        self.RedisConn.req_command(
+            cmd_expire
+                .clone()
+                .arg(bzpopmax.clone())
+                .arg(&*self.EXPIRE.to_redis_args()))?;
+        self.RedisConn.req_command(
+            cmd_expire
+                .clone()
+                .arg(bzpopmin.clone())
+                .arg(&*self.EXPIRE.to_redis_args()))?;
+
+        Ok(())
+    }
 
     //ZREMRANGEBYLEX ZREMRANGEBYRANK ZREMRANGEBYSCORE
     pub fn opt_zremrangebylex_zremrangebyrank_zremrangebyscore(&mut self) -> RedisResult<()> {
@@ -1305,22 +1360,19 @@ impl<'a> RedisOpt<'a> {
                     .clone()
                     .arg(zset1.clone())
                     .arg(i)
-                    .arg(zset1.clone() + &*i.to_string()),
-            )?;
+                    .arg(zset1.clone() + &*i.to_string()))?;
             self.RedisConn.req_command(
                 cmd_zadd
                     .clone()
                     .arg(zset2.clone())
                     .arg(i)
-                    .arg(zset2.clone() + &*i.to_string()),
-            )?;
+                    .arg(zset2.clone() + &*i.to_string()))?;
             self.RedisConn.req_command(
                 cmd_zadd
                     .clone()
                     .arg(zset3.clone())
                     .arg(i)
-                    .arg(zset3.clone() + &*i.to_string()),
-            )?;
+                    .arg(zset3.clone() + &*i.to_string()))?;
         }
 
         self.RedisConn.req_command(
@@ -1330,8 +1382,7 @@ impl<'a> RedisOpt<'a> {
                 .arg(3)
                 .arg(zset1.clone())
                 .arg(zset2.clone())
-                .arg(zset3.clone()),
-        )?;
+                .arg(zset3.clone()))?;
         self.RedisConn.req_command(
             cmd_zunionstore
                 .clone()
@@ -1339,33 +1390,31 @@ impl<'a> RedisOpt<'a> {
                 .arg(3)
                 .arg(zset1.clone())
                 .arg(zset2.clone())
-                .arg(zset3.clone()),
-        )?;
+                .arg(zset3.clone()))?;
 
         self.RedisConn.req_command(
             cmd_del
                 .clone()
                 .arg(zset1.clone())
                 .arg(zset2.clone())
-                .arg(zset3.clone()),
-        )?;
+                .arg(zset3.clone()))?;
 
         let mut cmd_expire = redis::cmd("expire");
         self.RedisConn.req_command(
             cmd_expire
                 .clone()
                 .arg(zinterstore.clone())
-                .arg(&*self.EXPIRE.to_redis_args()),
-        )?;
+                .arg(&*self.EXPIRE.to_redis_args()))?;
         self.RedisConn.req_command(
             cmd_expire
                 .clone()
                 .arg(zunionstore.clone())
-                .arg(&*self.EXPIRE.to_redis_args()),
-        )?;
+                .arg(&*self.EXPIRE.to_redis_args()))?;
 
         Ok(())
     }
+
+    // ToDo Stream 类型相关操作
 }
 
 #[cfg(test)]
@@ -1380,11 +1429,11 @@ mod test {
 
     use super::*;
 
-    const rurl: &str = "redis://:redistest0102@114.67.76.82:16374/";
+    const rurl: &str = "redis://:redistest0102@114.67.76.82:16377/";
 
-    //cargo test redisdatagen::gencmddata::test::test_exec -- --nocapture
+    //cargo test redisdatagen::gencmddata::test::test_exec_all -- --nocapture
     #[test]
-    fn test_exec() {
+    fn test_exec_all() {
         init_log();
 
         let subffix = rand_string(4);
@@ -1399,12 +1448,7 @@ mod test {
             EXPIRE: 100,
             DB: 0,
         };
-        let ri = all::<OptType>().collect::<Vec<_>>();
-        for item in ri {
-            println!("{}", item);
-            opt.OptType = item;
-            let r = opt.exec();
-        }
+        opt.exec_all()
     }
 
     //cargo test redisdatagen::gencmddata::test::test_opt_append -- --nocapture
@@ -1468,15 +1512,4 @@ mod test {
     }
 }
 
-// pub fn opt_append<C>(key_len: usize, hash_size: usize, conn: &mut C) -> RedisResult<()>
-//     where
-//         C: redis::ConnectionLike, {
-//     let prefix = gen_key(RedisKeyType::TypeString, key_len);
-//     for i in 0..keys {
-//         let key = prefix.clone() + "_" + &*i.to_string();
-//         let mut cmd_set = redis::cmd("set");
-//         let r_set = conn
-//             .req_command(&cmd_set.arg(key.to_redis_args()).arg(key.to_redis_args()))?;
-//     }
-//     Ok(())
-// }
+

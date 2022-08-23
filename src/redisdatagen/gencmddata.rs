@@ -4,6 +4,7 @@ use std::borrow::Borrow;
 use std::collections::HashMap;
 use std::fmt;
 use std::fmt::Formatter;
+use std::time::Duration;
 
 use enum_iterator::{all, Sequence};
 use log::info;
@@ -37,6 +38,7 @@ pub enum OptType {
     OPT_SADD_SMOVE_SPOP_SREM,
     OPT_SDIFFSTORE_SINERTSTORE_SUNIONSTORE,
     OPT_ZADD_ZINCRBY_ZERM,
+    OPT_ZMPOP_BZMPOP,
     OPT_ZPOPMAX_ZPOPMIN,
     OPT_BZPOPMAX_BZPOPMIN,
     OPT_ZREMRANGEBYLEX_ZREMRANGEBYRANK_ZREMRANGEBYSCORE,
@@ -112,6 +114,9 @@ impl fmt::Display for OptType {
             OptType::OPT_ZPOPMAX_ZPOPMIN => {
                 write!(f, "opt_zpopmax_zpopmin")
             }
+            OptType::OPT_ZMPOP_BZMPOP => {
+                write!(f, "opt_zmpop_bzmpop")
+            }
             OptType::OPT_BZPOPMAX_BZPOPMIN => {
                 write!(f, "opt_bzpopmax_bzpopmin")
             }
@@ -133,10 +138,12 @@ pub struct RedisOpt<'a> {
     pub Loopstep: usize,
     pub EXPIRE: usize,
     pub DB: usize,
+    pub LogOut: bool,
 }
 
 #[derive(Debug)]
-struct ExecuteResult {
+pub struct ExecuteResult {
+    pub Elapsed: Duration,
     pub OptType: OptType,
     pub Result: RedisResult<()>,
     pub DB: usize,
@@ -169,6 +176,7 @@ impl<'a> RedisOpt<'a> {
                 self.opt_sdiffstore_sinterstore_sunionstore()
             }
             OptType::OPT_ZADD_ZINCRBY_ZERM => self.opt_zadd_zincrby_zerm(),
+            OptType::OPT_ZMPOP_BZMPOP => self.opt_zmpop_bzmpop(),
             OptType::OPT_ZPOPMAX_ZPOPMIN => self.opt_zpopmax_zpopmin(),
             OptType::OPT_BZPOPMAX_BZPOPMIN => self.opt_bzpopmax_bzpopmin(),
             OptType::OPT_ZREMRANGEBYLEX_ZREMRANGEBYRANK_ZREMRANGEBYSCORE => {
@@ -178,15 +186,13 @@ impl<'a> RedisOpt<'a> {
         };
 
         let result = ExecuteResult {
+            Elapsed: start.elapsed(),
             OptType: self.OptType.clone(),
             Result: r,
             DB: self.DB,
         };
-        log::info!(
-            "{:?};elapsed: {:?}",
-            result,
-            start.elapsed()
-        );
+        if self.LogOut { log::info!("{:?}",result); }
+
         result.Result
     }
 
@@ -1216,6 +1222,57 @@ impl<'a> RedisOpt<'a> {
         Ok(())
     }
 
+    // ZMPOP BZMPOP
+    pub fn opt_zmpop_bzmpop(&mut self) -> RedisResult<()> {
+        let zmpop = "zmpop_".to_string() + &*self.KeySuffix.clone();
+        let bzmpop = "bzmpop_".to_string() + &*self.KeySuffix.clone();
+
+        let cmd_zadd = redis::cmd("zadd");
+        let cmd_zmpop = redis::cmd("zmpop");
+        let cmd_bzmpop = redis::cmd("bzmpop");
+
+        for i in 0..self.Loopstep {
+            self.RedisConn.req_command(cmd_zadd.clone()
+                .arg(zmpop.clone())
+                .arg(i)
+                .arg(zmpop.clone() + &*i.to_string()))?;
+            self.RedisConn.req_command(cmd_zadd.clone()
+                .arg(bzmpop.clone())
+                .arg(i)
+                .arg(bzmpop.clone() + &*i.to_string()))?;
+        }
+
+        self.RedisConn.req_command(cmd_zmpop.clone()
+            .arg(1 as isize)
+            .arg(zmpop.clone())
+            .arg("max")
+            .arg("count")
+            .arg(1 as isize))?;
+        self.RedisConn.req_command(cmd_zmpop.clone()
+            .arg(1 as isize)
+            .arg(zmpop.clone())
+            .arg("min")
+            .arg("count")
+            .arg(1 as isize))?;
+
+        self.RedisConn.req_command(cmd_bzmpop.clone()
+            .arg(10 as isize)
+            .arg(1 as isize)
+            .arg(bzmpop.clone())
+            .arg("max")
+            .arg("count")
+            .arg(1 as isize))?;
+        self.RedisConn.req_command(cmd_bzmpop.clone()
+            .arg(10 as isize)
+            .arg(1 as isize)
+            .arg(bzmpop.clone())
+            .arg("min")
+            .arg("count")
+            .arg(1 as isize))?;
+
+        Ok(())
+    }
+
     // BZPOPMAX BZPOPMIN
     pub fn opt_bzpopmax_bzpopmin(&mut self) -> RedisResult<()> {
         let bzpopmax = "bzpopmax_".to_string() + &*self.KeySuffix.clone();
@@ -1339,8 +1396,6 @@ impl<'a> RedisOpt<'a> {
         Ok(())
     }
 
-    // ToDo ZREVRANGEBYSCORE
-
     // BO_ZUNIONSTORE_ZINTERSTORE,集群模式下key分布在不同节点会报错(error) CROSSSLOT Keys in request don't hash to the same slot
     pub fn opt_zunionstore_zinterstore(&mut self) -> RedisResult<()> {
         let zset1 = "zset1_".to_string() + &*self.KeySuffix.clone();
@@ -1447,6 +1502,7 @@ mod test {
             Loopstep: 10,
             EXPIRE: 100,
             DB: 0,
+            LogOut: false,
         };
         opt.exec_all()
     }
@@ -1466,6 +1522,7 @@ mod test {
             Loopstep: 10,
             EXPIRE: 100,
             DB: 0,
+            LogOut: false,
         };
         let r = opt.opt_append();
         println!("{:?}", r);
@@ -1486,6 +1543,7 @@ mod test {
             Loopstep: 10,
             EXPIRE: 100,
             DB: 0,
+            LogOut: false,
         };
         let r = opt.opt_bitop();
         println!("{:?}", r);
@@ -1506,6 +1564,7 @@ mod test {
             Loopstep: 10,
             EXPIRE: 100,
             DB: 0,
+            LogOut: false,
         };
         let r = opt.opt_decr_decrby();
         println!("{:?}", r);

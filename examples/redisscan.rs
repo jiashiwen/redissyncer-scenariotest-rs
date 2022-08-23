@@ -12,6 +12,7 @@ use redis::ConnectionLike;
 use redis::{AsyncCommands, AsyncIter};
 use std::string::String;
 use std::time::Instant;
+use clap::arg;
 use rand::Rng;
 use redis::cluster::ClusterClient;
 
@@ -37,14 +38,20 @@ use redis::cluster::ClusterClient;
 
 #[tokio::main]
 async fn main() -> redis::RedisResult<()> {
-    let start = Instant::now();
     let i: usize = 10;
 
     let mut rng = rand::thread_rng();
-    println!("{}", 2 * rng.gen_range(0..i) as isize - i as isize);
+
     // let cluster = ClusterClient::open("redis://127.0.0.1/").unwrap();
     let client = redis::Client::open("redis://:redistest0102@114.67.76.82:16377/").unwrap();
+
     let mut con = client.get_connection().unwrap();
+
+    let r: isize = con.zrank("z1", "1000")?;
+
+    println!("sismumber :{:?}", r);
+
+
     // ToDo
     // 大数据量SCAN 测试
     let mut c = cmd("SCAN");
@@ -86,16 +93,6 @@ async fn main() -> redis::RedisResult<()> {
         }
     }
 
-
-    // let mut con = client.get_async_connection().await?;
-    //
-    //
-    // // info
-    // let mut cmd_info = redis::cmd("info");
-    // let r_info: String = cmd_info.query_async(&mut con).await?;
-    // println!("{:?}", r_info);
-
-    println!("elapsed: {:?}", start.elapsed());
 
     Ok(())
 }

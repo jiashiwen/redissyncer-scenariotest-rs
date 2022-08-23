@@ -3,11 +3,18 @@ use std::fmt::Display;
 /// 错误的类型
 #[derive(Debug)]
 pub enum CompareErrorType {
-    TTLErr,
+    TTLDiff,
     ExistsErr,
+    ListLenDiff,
+    ListIndexValueDiff,
+    SetMembersDiff,
+    SetMemberNotIn,
+    ZSetMembersDiff,
+    ZSetMemberScoreDiff,
+    ValueNotEqual,
 
     /// 未知错误
-    UnknowErr,
+    Unknow,
 }
 
 /// 应用错误
@@ -26,9 +33,16 @@ impl CompareError {
     #[allow(dead_code)]
     fn code(&self) -> i32 {
         match self.error_type {
-            CompareErrorType::UnknowErr => 9999,
-            CompareErrorType::TTLErr => 1000,
-            CompareErrorType::ExistsErr => 1001
+            CompareErrorType::Unknow => 9999,
+            CompareErrorType::TTLDiff => 1000,
+            CompareErrorType::ExistsErr => 1001,
+            CompareErrorType::ValueNotEqual => 1002,
+            CompareErrorType::ListLenDiff => 1003,
+            CompareErrorType::ListIndexValueDiff => 1004,
+            CompareErrorType::SetMembersDiff => 1005,
+            CompareErrorType::SetMemberNotIn => 1006,
+            CompareErrorType::ZSetMembersDiff => 1007,
+            CompareErrorType::ZSetMemberScoreDiff => 1008
         }
     }
     /// 从上级错误中创建应用错误
@@ -41,7 +55,7 @@ impl CompareError {
     }
     /// 从字符串创建应用错误
     #[allow(dead_code)]
-    fn from_str(msg: &str, error_type: CompareErrorType) -> Self {
+    pub fn from_str(msg: &str, error_type: CompareErrorType) -> Self {
         Self {
             message: Some(msg.to_string()),
             cause: None,

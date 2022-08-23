@@ -2,8 +2,9 @@ use std::collections::HashMap;
 use std::str::from_utf8;
 use crate::redisdatagen::RedisKeyType;
 use redis::{AsyncIter, Connection, ConnectionLike, FromRedisValue, RedisResult, ToRedisArgs, Value};
-use anyhow::Result;
+use anyhow::{Error, Result};
 use redis::Iter;
+use crate::compare::compare_error::{CompareError, CompareErrorType};
 
 pub struct RedisKey {
     pub key: String,
@@ -13,7 +14,8 @@ pub struct RedisKey {
 pub struct Comparer<'a> {
     pub sconn: &'a mut (dyn ConnectionLike + 'a),
     pub tconn: &'a mut (dyn ConnectionLike + 'a),
-    pub ttl_diff: u32,
+    pub ttl_diff: usize,
+    pub batch: usize,
 }
 
 impl<'a> Comparer<'a> {
@@ -23,38 +25,193 @@ impl<'a> Comparer<'a> {
             sconn: s_conn,
             tconn: t_conn,
             ttl_diff: 1,
+            batch: 10,
         }
     }
 
-    pub fn compare_string(&self, key: RedisKey) -> Result<()> {
+    pub fn compare_string(&mut self, key: RedisKey) -> Result<()> {
         // target端key是否存在
-        // soure 和 target 值是否相等
+        let t_exist = key_exists(key.key.clone(), self.tconn)?;
+
+        if !t_exist {
+            return Err(Error::from(CompareError::from_str("key not exists target", CompareErrorType::ExistsErr)));
+        }
+
+        // source target 值是否相等
+        let sval = self.sconn.req_command(redis::cmd("get")
+            .arg(key.key.clone()))?;
+        let tval = self.tconn.req_command(redis::cmd("get")
+            .arg(key.key.clone()))?;
+        if !sval.eq(&tval) {
+            return Err(Error::from(CompareError::from_str("key value not equal", CompareErrorType::ValueNotEqual)));
+        }
+
         // ttl差值是否在规定范围内
+        let s_ttl = ttl(key.key.clone(), self.sconn)?;
+        let t_ttl = ttl(key.key.clone(), self.tconn)?;
+
+        if self.ttl_diff < (s_ttl - t_ttl).abs() as usize {
+            return Err(Error::from(CompareError::from_str("ttl diff too large", CompareErrorType::TTLDiff)));
+        }
+
         Ok(())
     }
 
-    pub fn compare_list(&self, key: RedisKey) -> Result<()> {
+    pub fn compare_list(&mut self, key: RedisKey) -> Result<()> {
         // target端key是否存在
+        let t_exist = key_exists(key.key.clone(), self.tconn)?;
+        if !t_exist {
+            return Err(Error::from(CompareError::from_str("key not exists target", CompareErrorType::ExistsErr)));
+        }
+
+        //比较 list 长度是否一致
+        let s_len = list_len(key.key.clone(), self.sconn)?;
+        let t_len = list_len(key.key.clone(), self.tconn)?;
+
+        if !s_len.eq(&t_len) {
+            return Err(Error::from(CompareError::from_str("list len diff", CompareErrorType::ExistsErr)));
+        }
+
         // 遍历source，核对target中相应的值是否一致
+        let quotient = s_len / self.batch; // integer division, decimals are truncated
+        let remainder = s_len % self.batch;
+
+        let mut lrangeend = 0 as isize;
+        if quotient != 0 {
+            for i in 0..quotient {
+                if i == quotient - 1 {
+                    lrangeend = (quotient * self.batch) as isize;
+                } else {
+                    lrangeend = ((self.batch - 1) + i * self.batch) as isize;
+                }
+
+                let s_elements = lrange(key.key.clone(), (0 + i * self.batch) as isize, lrangeend, self.sconn)?;
+                let t_elements = lrange(key.key.clone(), (0 + i * self.batch) as isize, lrangeend, self.tconn)?;
+
+
+                for i in 0..s_elements.len() {
+                    let s_val = s_elements.get(i);
+                    let t_val = t_elements.get(i);
+
+                    if !s_val.eq(&t_val) {
+                        return Err(Error::from(CompareError::from_str("list index value diff", CompareErrorType::ExistsErr)));
+                    }
+                }
+            }
+        }
+
+        if remainder != 0 {
+            let mut start = 0 as isize;
+            if quotient == 0 {
+                start = 0;
+            } else {
+                start = (quotient * self.batch) as isize + 1;
+            }
+
+            let s_elements = lrange(key.key.clone(), start, (remainder + quotient * self.batch) as isize, self.sconn)?;
+            let t_elements = lrange(key.key.clone(), start, (remainder + quotient * self.batch) as isize, self.tconn)?;
+            for i in 0..s_elements.len() {
+                let s_val = s_elements.get(i);
+                let t_val = t_elements.get(i);
+
+                if !s_val.eq(&t_val) {
+                    return Err(Error::from(CompareError::from_str("list index value diff", CompareErrorType::ExistsErr)));
+                }
+            }
+        }
+
         // ttl差值是否在规定范围内
+        let s_ttl = ttl(key.key.clone(), self.sconn)?;
+        let t_ttl = ttl(key.key.clone(), self.tconn)?;
+
+        if self.ttl_diff < (s_ttl - t_ttl).abs() as usize {
+            return Err(Error::from(CompareError::from_str("ttl diff too large", CompareErrorType::TTLDiff)));
+        }
         Ok(())
     }
 
-    pub fn compare_set(&self, key: RedisKey) -> Result<()> {
+    pub fn compare_set(&mut self, key: RedisKey) -> Result<()> {
         // target端key是否存在
+        let t_exist = key_exists(key.key.clone(), self.tconn)?;
+        if !t_exist {
+            return Err(Error::from(CompareError::from_str("key not exists target", CompareErrorType::ExistsErr)));
+        }
+
+        // 比较 set 元素数量 是否一致
+        let s_size = scard(key.key.clone(), self.sconn)?;
+        let t_size = scard(key.key.clone(), self.tconn)?;
+
+        if !s_size.eq(&t_size) {
+            return Err(Error::from(CompareError::from_str("set members diff", CompareErrorType::SetMembersDiff)));
+        }
+
         // 遍历source，核对在target是否存在
+        let mut cmd_sscan = redis::cmd("sscan");
+        cmd_sscan.arg(key.key.clone()).cursor_arg(0);
+        let iter: Iter<String> = cmd_sscan.iter(self.sconn)?;
+        for item in iter {
+            let is = sismumber(key.key.clone(), item, self.tconn)?;
+            if !is {
+                return Err(Error::from(CompareError::from_str("set members diff", CompareErrorType::SetMemberNotIn)));
+            }
+        }
+
+
         // ttl差值是否在规定范围内
+        let s_ttl = ttl(key.key.clone(), self.sconn)?;
+        let t_ttl = ttl(key.key.clone(), self.tconn)?;
+
+        if self.ttl_diff < (s_ttl - t_ttl).abs() as usize {
+            return Err(Error::from(CompareError::from_str("ttl diff too large", CompareErrorType::TTLDiff)));
+        }
         Ok(())
     }
 
-    pub fn compare_zset(&self, key: RedisKey) -> Result<()> {
+    pub fn compare_zset(&mut self, key: RedisKey) -> Result<()> {
         // target端key是否存在
+        let t_exist = key_exists(key.key.clone(), self.tconn)?;
+        if !t_exist {
+            return Err(Error::from(CompareError::from_str("key not exists target", CompareErrorType::ExistsErr)));
+        }
+
+        // 比较 zset 元素数量 是否一致
+        let s_size = zcard(key.key.clone(), self.sconn)?;
+        let t_size = zcard(key.key.clone(), self.tconn)?;
+
+        if !s_size.eq(&t_size) {
+            return Err(Error::from(CompareError::from_str("Sorted set members diff", CompareErrorType::ZSetMembersDiff)));
+        }
+
         // 遍历source，核对在target score 和 值是否一致
+        let mut cmd_zscan = redis::cmd("zscan");
+        cmd_zscan.arg(key.key.clone()).cursor_arg(0);
+        let iter: Iter<String> = cmd_zscan.iter(self.sconn)?;
+        let mut count = 0 as usize;
+        // let mut score = "".to_string();
+        let mut member = "".to_string();
+        for item in iter {
+            if count % 2 == 0 {
+                member = item.clone();
+            } else {
+                let t_scroe = zrank(key.key.clone(), member.clone(), self.tconn)?;
+                if !t_scroe.to_string().eq(&item) {
+                    return Err(Error::from(CompareError::from_str("zset member score diff", CompareErrorType::ZSetMemberScoreDiff)));
+                }
+            }
+            count += 1;
+        }
+
         // ttl差值是否在规定范围内
+        let s_ttl = ttl(key.key.clone(), self.sconn)?;
+        let t_ttl = ttl(key.key.clone(), self.tconn)?;
+
+        if self.ttl_diff < (s_ttl - t_ttl).abs() as usize {
+            return Err(Error::from(CompareError::from_str("ttl diff too large", CompareErrorType::TTLDiff)));
+        }
         Ok(())
     }
 
-    pub fn compare_hash(&self, key: RedisKey) -> Result<()> {
+    pub fn compare_hash(&mut self, key: RedisKey) -> Result<()> {
         // target端key是否存在
         // 遍历source，核对在target field 和 value 是否一致
         // ttl差值是否在规定范围内
@@ -62,25 +219,81 @@ impl<'a> Comparer<'a> {
     }
 }
 
+impl<'a> Comparer<'a> {}
+
 
 // key 是否存在
-pub fn key_exists<T, C>(key: T, conn: &mut C) -> RedisResult<bool>
+pub fn key_exists<T>(key: T, conn: &mut dyn redis::ConnectionLike) -> RedisResult<bool>
     where
         T: ToRedisArgs,
-        C: redis::ConnectionLike,
 {
     let exists: bool = redis::cmd("exists").arg(key).query(conn)?;
     Ok(exists)
 }
 
-pub fn ttl<T, C>(key: T, conn: &mut C) -> RedisResult<isize>
+pub fn ttl<T>(key: T, conn: &mut dyn redis::ConnectionLike) -> RedisResult<isize>
     where
         T: ToRedisArgs,
-        C: redis::ConnectionLike,
 {
     let ttl: isize = redis::cmd("ttl").arg(key).query(conn)?;
     Ok(ttl)
 }
+
+// List 长度
+pub fn list_len<T>(key: T, conn: &mut dyn redis::ConnectionLike) -> RedisResult<usize>
+    where
+        T: ToRedisArgs,
+{
+    let l: usize = redis::cmd("llen").arg(key).query(conn)?;
+
+    Ok(l)
+}
+
+//Lrange
+pub fn lrange<T>(key: T, start: isize, end: isize, conn: &mut dyn redis::ConnectionLike) -> RedisResult<Vec<String>>
+    where
+        T: ToRedisArgs,
+{
+    let elements: Vec<String> = redis::cmd("lrange").arg(key).arg(start).arg(end).query(conn)?;
+    Ok(elements)
+}
+
+// scard 获取set 元素数量
+pub fn scard<T>(key: T, conn: &mut dyn redis::ConnectionLike) -> RedisResult<usize>
+    where
+        T: ToRedisArgs,
+{
+    let size: usize = redis::cmd("scard").arg(key).query(conn)?;
+    Ok(size)
+}
+
+// sismumber
+pub fn sismumber<T>(key: T, member: T, conn: &mut dyn redis::ConnectionLike) -> RedisResult<bool>
+    where
+        T: ToRedisArgs,
+{
+    let is: bool = redis::cmd("SISMEMBER").arg(key).arg(member).query(conn)?;
+    Ok(is)
+}
+
+//zcard 获取 sorted set 元素数量
+pub fn zcard<T>(key: T, conn: &mut dyn redis::ConnectionLike) -> RedisResult<usize>
+    where
+        T: ToRedisArgs,
+{
+    let size: usize = redis::cmd("zcard").arg(key).query(conn)?;
+    Ok(size)
+}
+
+//zrank
+pub fn zrank<T>(key: T, member: T, conn: &mut dyn redis::ConnectionLike) -> RedisResult<f64>
+    where
+        T: ToRedisArgs,
+{
+    let size: f64 = redis::cmd("zrank").arg(key).arg(member).query(conn)?;
+    Ok(size)
+}
+
 
 pub fn pttl<T, C>(key: T, conn: &mut C) -> RedisResult<isize>
     where
@@ -168,12 +381,124 @@ mod test {
     use super::*;
     use redis::{Connection, ConnectionLike, ToRedisArgs};
 
-    static redis_url: &str = "redis://:redistest0102@114.67.76.82:16377/?timeout=1s";
+    static s_url: &str = "redis://:redistest0102@114.67.76.82:16377/?timeout=1s";
+    static t_url: &str = "redis://:redistest0102@114.67.120.120:16376/?timeout=1s";
+
+
+    //cargo test compare::comparekey::test::test_Comparer_string --  --nocapture
+    #[test]
+    fn test_Comparer_string() {
+        let s_client = redis::Client::open(s_url).unwrap();
+        let t_client = redis::Client::open(t_url).unwrap();
+        let mut scon = s_client.get_connection().unwrap();
+        let mut tcon = t_client.get_connection().unwrap();
+
+        let mut comparer: Comparer = Comparer::new(&mut scon, &mut tcon);
+
+        let mut cmd_set = redis::cmd("set");
+
+        let mut cmd_expire = redis::cmd("expire");
+        let s_r = comparer.sconn.req_command(cmd_set.clone().arg("a").arg("1123aaa"));
+        let t_r = comparer.tconn.req_command(cmd_set.clone().arg("a").arg("1123aaa"));
+
+        comparer.sconn.req_command(cmd_expire.clone().arg("a").arg(100 as isize));
+        comparer.tconn.req_command(cmd_expire.clone().arg("a").arg(100 as isize));
+        let key_str = RedisKey { key: "a".to_string(), key_type: RedisKeyType::TypeString };
+
+        let mut r = comparer.compare_string(key_str);
+        println!("{:?}", r);
+    }
+
+    //cargo test compare::comparekey::test::test_Comparer_list --  --nocapture
+    #[test]
+    fn test_Comparer_list() {
+        let s_client = redis::Client::open(s_url).unwrap();
+        let t_client = redis::Client::open(t_url).unwrap();
+        let mut scon = s_client.get_connection().unwrap();
+        let mut tcon = t_client.get_connection().unwrap();
+
+        let mut comparer: Comparer = Comparer::new(&mut scon, &mut tcon);
+        let mut cmd_rpush = redis::cmd("rpush");
+
+        let key_list = RedisKey { key: "r1".to_string(), key_type: RedisKeyType::TypeList };
+
+
+        for i in 0..20 as i32 {
+            comparer.sconn.req_command(cmd_rpush.clone()
+                .arg(key_list.key.clone())
+                .arg(i));
+            comparer.tconn.req_command(cmd_rpush.clone()
+                .arg(key_list.key.clone())
+                .arg(i));
+        }
+
+        let r = comparer.compare_list(key_list);
+        println!("{:?}", r);
+    }
+
+
+    //cargo test compare::comparekey::test::test_Comparer_set --  --nocapture
+    #[test]
+    fn test_Comparer_set() {
+        let s_client = redis::Client::open(s_url).unwrap();
+        let t_client = redis::Client::open(t_url).unwrap();
+        let mut scon = s_client.get_connection().unwrap();
+        let mut tcon = t_client.get_connection().unwrap();
+
+        let mut comparer: Comparer = Comparer::new(&mut scon, &mut tcon);
+
+        let mut cmd_sadd = redis::cmd("sadd");
+
+        let key_set = RedisKey { key: "s1".to_string(), key_type: RedisKeyType::TypeList };
+
+
+        for i in 0..100 as i32 {
+            comparer.sconn.req_command(cmd_sadd.clone()
+                .arg(key_set.key.clone())
+                .arg(i));
+            comparer.tconn.req_command(cmd_sadd.clone()
+                .arg(key_set.key.clone())
+                .arg(i));
+        }
+
+        let r = comparer.compare_set(key_set);
+        println!("{:?}", r);
+    }
+
+    //cargo test compare::comparekey::test::test_Comparer_sorted_set --  --nocapture
+    #[test]
+    fn test_Comparer_sorted_set() {
+        let s_client = redis::Client::open(s_url).unwrap();
+        let t_client = redis::Client::open(t_url).unwrap();
+        let mut scon = s_client.get_connection().unwrap();
+        let mut tcon = t_client.get_connection().unwrap();
+
+        let mut comparer: Comparer = Comparer::new(&mut scon, &mut tcon);
+
+        let mut cmd_zadd = redis::cmd("zadd");
+
+        let key_zset = RedisKey { key: "z1".to_string(), key_type: RedisKeyType::TypeZSet };
+
+
+        for i in 0..20 as i32 {
+            comparer.sconn.req_command(cmd_zadd.clone()
+                .arg(key_zset.key.clone())
+                .arg(i)
+                .arg(key_zset.key.clone() + &*i.to_string()));
+            comparer.tconn.req_command(cmd_zadd.clone()
+                .arg(key_zset.key.clone())
+                .arg(i)
+                .arg(key_zset.key.clone() + &*i.to_string()));
+        }
+
+        let r = comparer.compare_zset(key_zset);
+        println!("{:?}", r);
+    }
 
     //cargo test compare::comparekey::test::test_new_Comparer --  --nocapture
     #[test]
     fn test_new_Comparer() {
-        let client = redis::Client::open(redis_url).unwrap();
+        let client = redis::Client::open(s_url).unwrap();
         let mut scon = client.get_connection().unwrap();
         let mut tcon = client.get_connection().unwrap();
 
@@ -186,7 +511,7 @@ mod test {
     //cargo test compare::comparekey::test::test_key_exists --  --nocapture
     #[test]
     fn test_key_exists() {
-        let client = redis::Client::open(redis_url).unwrap();
+        let client = redis::Client::open(s_url).unwrap();
         let mut conn = client.get_connection().unwrap();
         let exists = key_exists("hll".to_redis_args(), &mut conn);
         println!("{:?}", exists);
@@ -195,7 +520,7 @@ mod test {
     //cargo test compare::comparekey::test::test_ttl --  --nocapture
     #[test]
     fn test_ttl() {
-        let client = redis::Client::open(redis_url).unwrap();
+        let client = redis::Client::open(s_url).unwrap();
         let mut conn = client.get_connection().unwrap();
         let ttl = ttl("hl", &mut conn);
         let pttl = pttl("hll", &mut conn);
@@ -205,7 +530,7 @@ mod test {
     //cargo test compare::comparekey::test::test_key_type --  --nocapture
     #[test]
     fn test_key_type() {
-        let client = redis::Client::open(redis_url).unwrap();
+        let client = redis::Client::open(s_url).unwrap();
         let mut conn = client.get_connection().unwrap();
 
         let k_type = key_type("h1", &mut conn);
@@ -215,7 +540,7 @@ mod test {
     //cargo test compare::comparekey::test::test_get_instance_parameters --  --nocapture
     #[test]
     fn test_get_instance_parameters() {
-        let client = redis::Client::open(redis_url).unwrap();
+        let client = redis::Client::open(s_url).unwrap();
         let mut conn = client.get_connection().unwrap();
         let k_type = get_instance_parameters(&mut conn).unwrap();
         for item in k_type.iter() {
@@ -226,7 +551,7 @@ mod test {
     //cargo test compare::comparekey::test::test_select --  --nocapture
     #[test]
     fn test_select() {
-        let client = redis::Client::open(redis_url).unwrap();
+        let client = redis::Client::open(s_url).unwrap();
 
         let mut conn = client.get_connection().unwrap();
         let mut cmd_select = redis::cmd("select");

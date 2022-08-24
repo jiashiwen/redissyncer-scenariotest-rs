@@ -1,4 +1,5 @@
-use std::fmt::Display;
+use std::fmt;
+use std::fmt::{Display, Formatter, write};
 
 /// 错误的类型
 #[derive(Debug)]
@@ -7,14 +8,35 @@ pub enum CompareErrorType {
     ExistsErr,
     ListLenDiff,
     ListIndexValueDiff,
-    SetMembersDiff,
+    SetCardDiff,
     SetMemberNotIn,
-    ZSetMembersDiff,
+    ZSetCardDiff,
     ZSetMemberScoreDiff,
-    ValueNotEqual,
+    HashLenDiff,
+    HashFieldValueDiff,
+    StringValueNotEqual,
 
     /// 未知错误
-    Unknow,
+    Unknown,
+}
+
+impl fmt::Display for CompareErrorType {
+    fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
+        match self {
+            CompareErrorType::TTLDiff => { write!(f, "TTL different") }
+            CompareErrorType::ExistsErr => { write!(f, "Key not exists") }
+            CompareErrorType::ListLenDiff => { write!(f, "List length different") }
+            CompareErrorType::ListIndexValueDiff => { write!(f, "List index value different") }
+            CompareErrorType::SetCardDiff => { write!(f, "Set cardinality different") }
+            CompareErrorType::SetMemberNotIn => { write!(f, "mumber not in set") }
+            CompareErrorType::ZSetCardDiff => { write!(f, "Sorted set cardinality different") }
+            CompareErrorType::ZSetMemberScoreDiff => { write!(f, "mumber not in sorted set") }
+            CompareErrorType::HashLenDiff => { write!(f, "Hash length different") }
+            CompareErrorType::HashFieldValueDiff => { write!(f, "Hash field value different") }
+            CompareErrorType::StringValueNotEqual => { write!(f, "String value not equal") }
+            CompareErrorType::Unknown => { write!(f, "Unknown") }
+        }
+    }
 }
 
 /// 应用错误
@@ -33,16 +55,18 @@ impl CompareError {
     #[allow(dead_code)]
     fn code(&self) -> i32 {
         match self.error_type {
-            CompareErrorType::Unknow => 9999,
+            CompareErrorType::Unknown => 9999,
             CompareErrorType::TTLDiff => 1000,
             CompareErrorType::ExistsErr => 1001,
-            CompareErrorType::ValueNotEqual => 1002,
+            CompareErrorType::StringValueNotEqual => 1002,
             CompareErrorType::ListLenDiff => 1003,
             CompareErrorType::ListIndexValueDiff => 1004,
-            CompareErrorType::SetMembersDiff => 1005,
+            CompareErrorType::SetCardDiff => 1005,
             CompareErrorType::SetMemberNotIn => 1006,
-            CompareErrorType::ZSetMembersDiff => 1007,
-            CompareErrorType::ZSetMemberScoreDiff => 1008
+            CompareErrorType::ZSetCardDiff => 1007,
+            CompareErrorType::ZSetMemberScoreDiff => 1008,
+            CompareErrorType::HashLenDiff => 1009,
+            CompareErrorType::HashFieldValueDiff => 1010
         }
     }
     /// 从上级错误中创建应用错误

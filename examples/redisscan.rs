@@ -47,9 +47,9 @@ async fn main() -> redis::RedisResult<()> {
 
     let mut con = client.get_connection().unwrap();
 
-    let r: isize = con.zrank("z1", "1000")?;
+    let r: Value = con.hget("h1", "h1__0")?;
 
-    println!("sismumber :{:?}", r);
+    println!("hget :{:?}", r);
 
 
     // ToDo

@@ -31,12 +31,13 @@ futures = "0.3"
 redis = { version = "0.21.5", features = ["default", "tokio-comp", "async-std-comp", "cluster"] }
 rand = "0.8.5"
 enum-iterator = "1.1.3"
+rayon = "1.5.3"
 
 
 
 [[example]]
-name = "sshsample"
-path = "examples/sshsample.rs"
+name = "multithread"
+path = "examples/multithread.rs"
 
 [[example]]
 name = "redisscan"

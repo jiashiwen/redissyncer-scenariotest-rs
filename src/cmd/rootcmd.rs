@@ -2,27 +2,20 @@ use crate::cmd::requestsample::new_requestsample_cmd;
 use crate::cmd::{new_compare_cmd, new_config_cmd};
 use crate::commons::CommandCompleter;
 use crate::commons::SubCmd;
-
 use crate::compare::RedisCompare;
-use crate::configure::{self, get_config, get_config_file_path, set_config, Config};
+use crate::configure::{self, get_config, get_config_file_path, Config};
 use crate::configure::{generate_default_config, set_config_file_path};
-use crate::request::{req, ReqResult, Request, RequestLogin, RequestTaskListAll};
-use crate::{compare, configure::set_config_from_file, interact};
-use chrono::prelude::Local;
+use crate::request::{req, Request};
+use crate::util::from_yaml_file_to_struct;
+use crate::{configure::set_config_from_file, interact};
 use clap::{Arg, ArgMatches, Command as clap_Command};
 use lazy_static::lazy_static;
-use log::{info, log};
-use serde_json::Value;
 use serde_yaml::from_str;
 use std::borrow::Borrow;
-use std::fs::File;
-use std::io::Read;
-use std::process::Command;
-use std::sync::atomic::AtomicBool;
-use std::sync::atomic::Ordering;
-use std::sync::Arc;
-use std::time::Duration;
-use std::{env, fs, thread};
+
+use crate::cmd::cmdgendata::new_gendata_cmd;
+use crate::redisdatagen::{GenerateBigKey, GeneratorByDuration};
+use std::fs;
 use sysinfo::{PidExt, System, SystemExt};
 
 lazy_static! {
@@ -54,6 +47,7 @@ lazy_static! {
         )
         .subcommand(new_config_cmd())
         .subcommand(new_compare_cmd())
+        .subcommand(new_gendata_cmd())
         .subcommand(new_requestsample_cmd());
     static ref SUBCMDS: Vec<SubCmd> = subcommands();
 }
@@ -195,6 +189,7 @@ fn cmd_match(matches: &ArgMatches) {
                 _ => {}
             }
         }
+
         if let Some(gen_config) = config.subcommand_matches("gendefault") {
             let mut file = String::from("");
             if let Some(path) = gen_config.value_of("filepath") {
@@ -207,6 +202,76 @@ fn cmd_match(matches: &ArgMatches) {
                 return;
             };
             println!("{} created!", file);
+        }
+    }
+
+    if let Some(gendata) = matches.subcommand_matches("gendata") {
+        if let Some(bigkey) = gendata.subcommand_matches("bigkey") {
+            if let Some(template) = bigkey.subcommand_matches("template") {
+                let mut file = String::from("bigkey_template.yml");
+                if let Some(path) = template.value_of("filepath") {
+                    file = path.to_string();
+                }
+
+                let template = GenerateBigKey::default();
+                let yml = serde_yaml::to_string(&template);
+                match yml {
+                    Ok(y) => {
+                        let r = fs::write(file.clone(), y);
+                        if let Err(e) = r {
+                            println!("{}", e);
+                            return;
+                        }
+                        println!("gen big key template,file is {}", file);
+                    }
+                    Err(e) => {
+                        eprintln!("{}", e);
+                    }
+                }
+            }
+            if let Some(from) = bigkey.subcommand_matches("from") {
+                let file = from.value_of("filepath").expect("flag filepath error");
+
+                let r = from_yaml_file_to_struct::<GenerateBigKey>(file);
+                match r {
+                    Ok(gbk) => {
+                        let r = gbk.exec();
+                        if let Err(e) = r {
+                            eprintln!("{}", e);
+                        }
+                    }
+                    Err(e) => {
+                        eprintln!("{}", e);
+                    }
+                }
+            }
+        }
+        if let Some(continuous) = gendata.subcommand_matches("continuous") {
+            if let Some(template) = continuous.subcommand_matches("template") {
+                let mut file = String::from("continuous_gen_data_template.yml");
+                if let Some(path) = template.value_of("filepath") {
+                    file = path.to_string();
+                }
+
+                let template = GeneratorByDuration::default();
+                let yml = serde_yaml::to_string(&template);
+                match yml {
+                    Ok(y) => {
+                        let r = fs::write(file.clone(), y);
+                        if let Err(e) = r {
+                            println!("{}", e);
+                            return;
+                        }
+                        println!("gen key continuous template,file is {}", file);
+                    }
+                    Err(e) => {
+                        eprintln!("{}", e);
+                    }
+                }
+            }
+            if let Some(from) = continuous.subcommand_matches("from") {
+                println!("gen  key continuous from a file");
+            }
         }
     }
 }

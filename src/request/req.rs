@@ -1,12 +1,12 @@
 use crate::configure::get_config;
 use crate::request::requestmodules::{RequestTaskListAll, RequestTaskListByNodeID};
 use crate::request::RequestLogin;
-use reqwest::Client;
 use reqwest::Response;
 use serde_json::{Map, Value};
 use std::fmt::Debug;
 use std::time::Duration;
 use url::Url;
+use reqwest::Client;
 
 //api path const
 
@@ -38,9 +38,9 @@ pub enum ResponseError {
 
 pub type Result<T, E = ResponseError> = anyhow::Result<T, E>;
 
-#[derive(Default, Debug)]
+#[derive(Default)]
 pub struct Request {
-    client: reqwest::Client,
+    client: Client,
     server: String,
 }
 

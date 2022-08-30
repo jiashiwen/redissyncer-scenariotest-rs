@@ -2,6 +2,7 @@ mod cmdcompare;
 mod cmdconfig;
 mod requestsample;
 mod rootcmd;
+mod cmdgendata;
 
 pub use cmdcompare::new_compare_cmd;
 pub use cmdconfig::new_config_cmd;

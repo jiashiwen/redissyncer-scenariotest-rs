@@ -1,9 +1,9 @@
-use std::fmt::{Display, Formatter, write};
-use redis::{aio, Connection, ErrorKind, FromRedisValue, RedisError, RedisResult, Value};
 use crate::util::rand_string;
 use enum_iterator::{all, Sequence};
 use redis::ToRedisArgs;
-
+use redis::{aio, Connection, ErrorKind, FromRedisValue, RedisError, RedisResult, Value};
+use serde::{Deserialize, Serialize};
+use std::fmt::{write, Display, Formatter};
 
 #[derive(Debug, PartialEq, Sequence)]
 pub enum RedisKeyType {
@@ -26,14 +26,20 @@ impl FromRedisValue for RedisKeyType {
                 _ => Err(RedisError::from((
                     ErrorKind::TypeError,
                     "Response was of incompatible type",
-                    format!("{:?} (response was {:?})", "Response type not string compatible.", val),
-                )))
+                    format!(
+                        "{:?} (response was {:?})",
+                        "Response type not string compatible.", val
+                    ),
+                ))),
             },
             _ => Err(RedisError::from((
                 ErrorKind::TypeError,
                 "Response was of incompatible type",
-                format!("{:?} (response was {:?})", "Response type not string compatible.", v),
-            )))
+                format!(
+                    "{:?} (response was {:?})",
+                    "Response type not string compatible.", v
+                ),
+            ))),
         }
     }
 }
@@ -41,47 +47,143 @@ impl FromRedisValue for RedisKeyType {
 impl Display for RedisKeyType {
     fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
         match self {
-            RedisKeyType::TypeString => { write!(f, "string") }
-            RedisKeyType::TypeList => { write!(f, "list") }
-            RedisKeyType::TypeSet => { write!(f, "set") }
-            RedisKeyType::TypeZSet => { write!(f, "zset") }
-            RedisKeyType::TypeHash => { write!(f, "hash") }
+            RedisKeyType::TypeString => {
+                write!(f, "string")
+            }
+            RedisKeyType::TypeList => {
+                write!(f, "list")
+            }
+            RedisKeyType::TypeSet => {
+                write!(f, "set")
+            }
+            RedisKeyType::TypeZSet => {
+                write!(f, "zset")
+            }
+            RedisKeyType::TypeHash => {
+                write!(f, "hash")
+            }
         }
+    }
+}
+
+#[derive(Debug, PartialEq, Serialize, Deserialize, Clone)]
+pub struct GenerateBigKey {
+    #[serde(default = "GenerateBigKey::redis_url_default")]
+    pub redis_url: String,
+    #[serde(default = "GenerateBigKey::redis_version_default")]
+    pub redis_version: String,
+    // 生成批次，按批次多次生成数据
+    #[serde(default = "GenerateBigKey::generate_batch_default")]
+    pub generate_batch: usize,
+    #[serde(default = "GenerateBigKey::threads_default")]
+    pub threads: usize,
+    #[serde(default = "GenerateBigKey::key_len_default")]
+    pub key_len: usize,
+    #[serde(default = "GenerateBigKey::log_out_default")]
+    pub log_out: bool,
+}
+
+impl GenerateBigKey {}
+
+impl Default for GenerateBigKey {
+    fn default() -> Self {
+        Self {
+            redis_url: "redis://127.0.0.1:6379".to_string(),
+            redis_version: "".to_string(),
+            generate_batch: 1,
+            threads: 1,
+            key_len: 4,
+            log_out: false,
+        }
+    }
+}
+
+// 生成默认值
+impl GenerateBigKey {
+    fn redis_url_default() -> String {
+        "redis://127.0.0.1:6379".to_string()
+    }
+    fn redis_version_default() -> String {
+        "4".to_string()
+    }
+    fn generate_batch_default() -> usize {
+        1
+    }
+    fn threads_default() -> usize {
+        1
+    }
+    fn key_len_default() -> usize {
+        4
+    }
+    fn log_out_default() -> bool {
+        false
+    }
+
+    pub fn exec(&self) -> RedisResult<()> {
+        let client = redis::Client::open(self.redis_url.clone())?;
+        let mut conn = client.get_connection()?;
+        let bkg = BigKeyGenerator::default(&mut conn);
+        println!("{}", bkg.collection_length);
+        Ok(())
     }
 }
 
 // #[derive(Debug, Clone)]
 pub struct BigKeyGenerator<'a> {
     // Key 长度既字符数量
-    pub KeyLen: usize,
+    pub key_len: usize,
     // Value 长度既字符数量
-    pub ValueLen: usize,
+    pub value_len: usize,
     // 集合长度 set、zset、hash长度
-    pub CollectionLength: usize,
+    pub collection_length: usize,
     // redis connection
-    pub RedisConn: &'a mut dyn redis::ConnectionLike,
+    pub redis_conn: &'a mut dyn redis::ConnectionLike,
 }
 
 impl<'a> BigKeyGenerator<'a> {
     pub fn default(conn: &'a mut dyn redis::ConnectionLike) -> Self {
         Self {
-            KeyLen: 1,
-            ValueLen: 1,
-            CollectionLength: 1,
-            RedisConn: conn,
+            key_len: 1,
+            value_len: 1,
+            collection_length: 1,
+            redis_conn: conn,
         }
     }
 
     pub fn exec(&mut self) -> RedisResult<()> {
-        gen_big_string(self.CollectionLength, self.KeyLen, self.ValueLen, self.RedisConn)?;
-        gen_list(self.KeyLen, self.ValueLen, self.CollectionLength, self.RedisConn)?;
-        gen_set(self.KeyLen, self.ValueLen, self.CollectionLength, self.RedisConn)?;
-        gen_zset(self.KeyLen, self.ValueLen, self.CollectionLength, self.RedisConn)?;
-        gen_hash(self.KeyLen, self.ValueLen, self.CollectionLength, self.RedisConn)?;
+        gen_big_string(
+            self.collection_length,
+            self.key_len,
+            self.value_len,
+            self.redis_conn,
+        )?;
+        gen_list(
+            self.key_len,
+            self.value_len,
+            self.collection_length,
+            self.redis_conn,
+        )?;
+        gen_set(
+            self.key_len,
+            self.value_len,
+            self.collection_length,
+            self.redis_conn,
+        )?;
+        gen_zset(
+            self.key_len,
+            self.value_len,
+            self.collection_length,
+            self.redis_conn,
+        )?;
+        gen_hash(
+            self.key_len,
+            self.value_len,
+            self.collection_length,
+            self.redis_conn,
+        )?;
         Ok(())
     }
 }
-
 
 // 按照指定类型生成指定长度的key
 pub fn gen_key(key_type: RedisKeyType, len: usize) -> String {
@@ -94,13 +196,14 @@ pub fn gen_key(key_type: RedisKeyType, len: usize) -> String {
 
 // 生成指定长度的 string key
 pub async fn gen_async_string<C>(keys: usize, key_len: usize, conn: &mut C) -> RedisResult<()>
-    where
-        C: aio::ConnectionLike, {
+where
+    C: aio::ConnectionLike,
+{
     let prefix = gen_key(RedisKeyType::TypeString, key_len);
     for i in 0..keys {
         let key = prefix.clone() + "_" + &*i.to_string();
         let mut cmd_set = redis::cmd("set");
-        let r_set = conn
+        let _ = conn
             .req_packed_command(&cmd_set.arg(key.to_redis_args()).arg(key.to_redis_args()))
             .await?;
     }
@@ -109,8 +212,8 @@ pub async fn gen_async_string<C>(keys: usize, key_len: usize, conn: &mut C) -> R
 
 // 根据给定key的长度生成 string 类型 kv ，keys 为 kv 的数量
 pub fn gen_string<C>(keys: usize, key_len: usize, conn: &mut C) -> RedisResult<()>
-    where
-        C: redis::ConnectionLike,
+where
+    C: redis::ConnectionLike,
 {
     let prefix = gen_key(RedisKeyType::TypeString, key_len);
     for i in 0..keys {
@@ -122,7 +225,12 @@ pub fn gen_string<C>(keys: usize, key_len: usize, conn: &mut C) -> RedisResult<(
 }
 
 // 根据给定key的长度生成 string 类型 kv ，keys 为 kv 的数量,可定义 value 长度
-pub fn gen_big_string(keys: usize, key_len: usize, value_len: usize, conn: &mut dyn redis::ConnectionLike) -> RedisResult<()> {
+pub fn gen_big_string(
+    keys: usize,
+    key_len: usize,
+    value_len: usize,
+    conn: &mut dyn redis::ConnectionLike,
+) -> RedisResult<()> {
     let key_prefix = gen_key(RedisKeyType::TypeString, key_len);
 
     let mut val = "".to_string();
@@ -133,18 +241,24 @@ pub fn gen_big_string(keys: usize, key_len: usize, value_len: usize, conn: &mut 
     for i in 0..keys {
         let key = key_prefix.clone() + "_" + &*i.to_string();
         let mut cmd_set = redis::cmd("set");
-        let r_set = conn
-            .req_command(&cmd_set.arg(key.to_redis_args())
-                .arg(val.clone() + &*i.to_string()))?;
+        let r_set = conn.req_command(
+            &cmd_set
+                .arg(key.to_redis_args())
+                .arg(val.clone() + &*i.to_string()),
+        )?;
 
-        // log::info!(target:"root","{:?}",r_set);
-        log::info!("{:?}",r_set);
+        log::info!("{:?}", r_set);
     }
 
     Ok(())
 }
 
-pub fn gen_list(key_len: usize, value_len: usize, list_len: usize, conn: &mut dyn redis::ConnectionLike) -> RedisResult<()> {
+pub fn gen_list(
+    key_len: usize,
+    value_len: usize,
+    list_len: usize,
+    conn: &mut dyn redis::ConnectionLike,
+) -> RedisResult<()> {
     let key = gen_key(RedisKeyType::TypeList, key_len);
     let mut val = "".to_string();
     if (value_len - 1) > 0 {
@@ -153,12 +267,21 @@ pub fn gen_list(key_len: usize, value_len: usize, list_len: usize, conn: &mut dy
 
     for i in 0..list_len {
         let mut cmd_rpush = redis::cmd("rpush");
-        let _ = conn.req_command(&cmd_rpush.arg(key.clone().to_redis_args()).arg(val.clone() + &*i.to_string()))?;
+        let _ = conn.req_command(
+            &cmd_rpush
+                .arg(key.clone().to_redis_args())
+                .arg(val.clone() + &*i.to_string()),
+        )?;
     }
     Ok(())
 }
 
-pub fn gen_set(key_len: usize, value_len: usize, set_size: usize, conn: &mut dyn redis::ConnectionLike) -> RedisResult<()> {
+pub fn gen_set(
+    key_len: usize,
+    value_len: usize,
+    set_size: usize,
+    conn: &mut dyn redis::ConnectionLike,
+) -> RedisResult<()> {
     let key = gen_key(RedisKeyType::TypeSet, key_len);
     let mut val = "".to_string();
     if (value_len - 1) > 0 {
@@ -166,14 +289,21 @@ pub fn gen_set(key_len: usize, value_len: usize, set_size: usize, conn: &mut dyn
     }
     for i in 0..set_size {
         let mut cmd_sadd = redis::cmd("sadd");
-        let _ = conn.req_command(&cmd_sadd
-            .arg(key.clone().to_redis_args())
-            .arg(val.clone() + &*i.to_string()))?;
+        let _ = conn.req_command(
+            &cmd_sadd
+                .arg(key.clone().to_redis_args())
+                .arg(val.clone() + &*i.to_string()),
+        )?;
     }
     Ok(())
 }
 
-pub fn gen_zset(key_len: usize, value_len: usize, zset_size: usize, conn: &mut dyn redis::ConnectionLike) -> RedisResult<()> {
+pub fn gen_zset(
+    key_len: usize,
+    value_len: usize,
+    zset_size: usize,
+    conn: &mut dyn redis::ConnectionLike,
+) -> RedisResult<()> {
     let key = gen_key(RedisKeyType::TypeZSet, key_len);
     let mut val = "".to_string();
     if (value_len - 1) > 0 {
@@ -181,15 +311,22 @@ pub fn gen_zset(key_len: usize, value_len: usize, zset_size: usize, conn: &mut d
     }
     for i in 0..zset_size {
         let mut cmd_zadd = redis::cmd("zadd");
-        let _ = conn.req_command(&cmd_zadd
-            .arg(key.clone().to_redis_args())
-            .arg(&*i.to_string().to_redis_args())
-            .arg(val.clone() + &*i.to_string()))?;
+        let _ = conn.req_command(
+            &cmd_zadd
+                .arg(key.clone().to_redis_args())
+                .arg(&*i.to_string().to_redis_args())
+                .arg(val.clone() + &*i.to_string()),
+        )?;
     }
     Ok(())
 }
 
-pub fn gen_hash(key_len: usize, value_len: usize, hash_size: usize, conn: &mut dyn redis::ConnectionLike) -> RedisResult<()> {
+pub fn gen_hash(
+    key_len: usize,
+    value_len: usize,
+    hash_size: usize,
+    conn: &mut dyn redis::ConnectionLike,
+) -> RedisResult<()> {
     let key = gen_key(RedisKeyType::TypeHash, key_len);
     let mut val = "".to_string();
     if (value_len - 1) > 0 {
@@ -198,26 +335,25 @@ pub fn gen_hash(key_len: usize, value_len: usize, hash_size: usize, conn: &mut d
     for i in 0..hash_size {
         let field = key.clone() + "_" + &*i.to_string();
         let mut cmd_hset = redis::cmd("hset");
-        let _ = conn.req_command(&cmd_hset
-            .arg(key.clone())
-            .arg(key.clone() + &*i.to_string())
-            .arg(val.clone() + &*i.to_string()))?;
+        let _ = conn.req_command(
+            &cmd_hset
+                .arg(key.clone())
+                .arg(key.clone() + &*i.to_string())
+                .arg(val.clone() + &*i.to_string()),
+        )?;
     }
     Ok(())
 }
-
 
 // ToDo
 // 测试原生redis cluster 连接及操作
 // 数据测试函数，按照数据类别编写函数，尽量测试到该类型相关的所有操作作为增量数据
 
-
 #[cfg(test)]
 mod test {
-    use futures::TryFutureExt;
-    use tokio::runtime::Runtime;
-    use crate::init_log;
     use super::*;
+    use crate::init_log;
+    use tokio::runtime::Runtime;
 
     static redis_url: &str = "redis://:redistest0102@114.67.76.82:16377/?timeout=1s";
 
@@ -227,9 +363,9 @@ mod test {
         let client = redis::Client::open(redis_url).unwrap();
         let mut conn = client.get_connection().unwrap();
         let mut gen = BigKeyGenerator::default(&mut conn);
-        gen.KeyLen = 4;
-        gen.ValueLen = 8;
-        gen.CollectionLength = 10;
+        gen.key_len = 4;
+        gen.value_len = 8;
+        gen.collection_length = 10;
         let r = gen.exec();
         println!("{:?}", r);
     }
@@ -249,6 +385,7 @@ mod test {
     //cargo test redisdatagen::generator::test::test_gen_string --  --nocapture
     #[test]
     fn test_gen_string() {
+        println!("{:?}", GenerateBigKey::default());
         let client = redis::Client::open("redis://:redistest0102@114.67.76.82:16377/").unwrap();
         let mut conn = client.get_connection().unwrap();
         gen_string(10, 8, &mut conn);
@@ -274,5 +411,3 @@ mod test {
         });
     }
 }
-
-

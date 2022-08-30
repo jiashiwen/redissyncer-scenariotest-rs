@@ -18,7 +18,7 @@ fn simple_callback(str: &str) {
     println!("{:?}", str);
 }
 
-fn simple_callback2(str: &str) {
+fn simple_callback2(_str: &str) {
     println!("2");
 }
 

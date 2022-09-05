@@ -1,0 +1,9 @@
+---
+redis_url: "redis://:redistest0102@114.67.76.82:16377/?timeout=1s"
+redis_version: ""
+generate_batch: 3
+threads: 2
+key_len: 4
+value_len: 4
+collection_length: 10
+log_out: true

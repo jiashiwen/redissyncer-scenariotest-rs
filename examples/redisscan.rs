@@ -1,20 +1,20 @@
 use redis::{aio, cmd, Commands, Iter, RedisResult, ToRedisArgs};
-use redis::{from_redis_value, Value};
-use std::any::Any;
+use redis::{Client, Value};
+
 use std::collections::HashMap;
-use std::fmt::{Debug, Pointer};
+
 use std::ops::Add;
 use std::str::{from_utf8, Utf8Error};
 
+use clap::arg;
 use futures::stream::{Next, StreamExt};
-use redis::aio::{Connection};
+use rand::Rng;
+use redis::aio::Connection;
+use redis::cluster::ClusterClient;
 use redis::ConnectionLike;
 use redis::{AsyncCommands, AsyncIter};
 use std::string::String;
 use std::time::Instant;
-use clap::arg;
-use rand::Rng;
-use redis::cluster::ClusterClient;
 
 // fn main() -> redis::RedisResult<()> {
 //     println!("redisscan");
@@ -43,14 +43,20 @@ async fn main() -> redis::RedisResult<()> {
     let mut rng = rand::thread_rng();
 
     // let cluster = ClusterClient::open("redis://127.0.0.1/").unwrap();
-    let client = redis::Client::open("redis://:redistest0102@114.67.76.82:16377/").unwrap();
+    let client = Client::open("redis://:redistest0102@114.67.76.82:16377/").unwrap();
 
     let mut con = client.get_connection().unwrap();
 
-    let r: Value = con.hget("h1", "h1__0")?;
+    let cmd_info = redis::cmd("info");
 
-    println!("hget :{:?}", r);
-
+    let r = con.req_command(&cmd_info.clone().arg("server"))?;
+    if let Value::Data(ref d) = r {
+        let info = from_utf8(&*d)?;
+        let s = info.split("\r\n");
+        for kv in s {
+            println!("{:?}", kv);
+        }
+    }
 
     // ToDo
     // 大数据量SCAN 测试
@@ -64,12 +70,21 @@ async fn main() -> redis::RedisResult<()> {
     }
     println!("tag is {}", tag);
 
-
     let (k1, k2): (i32, i32) = redis::pipe()
-        .cmd("SET").arg("key_1").arg(42).ignore()
-        .cmd("SET").arg("key_2").arg(43).ignore()
-        .cmd("GET").arg("key_1")
-        .cmd("GET").arg("key_2").query(&mut con).unwrap();
+        .cmd("SET")
+        .arg("key_1")
+        .arg(42)
+        .ignore()
+        .cmd("SET")
+        .arg("key_2")
+        .arg(43)
+        .ignore()
+        .cmd("GET")
+        .arg("key_1")
+        .cmd("GET")
+        .arg("key_2")
+        .query(&mut con)
+        .unwrap();
     println!("k1 is : {}; k2 is: {}", k1, k2);
 
     // ToDo
@@ -78,10 +93,11 @@ async fn main() -> redis::RedisResult<()> {
     let mut pip = redis::pipe();
     let mut tag = 0;
 
-    for i in 0..100 {
+    for i in 0..5 {
         let key = "pip_key_".to_owned() + &*i.to_string();
         let mut cmd = redis::cmd("set");
-        cmd.arg(key.clone().to_redis_args()).arg(key.to_redis_args());
+        cmd.arg(key.clone().to_redis_args())
+            .arg(key.to_redis_args());
         pip.add_command(cmd);
         tag += 1;
         if tag == 10 || i == 99 {
@@ -93,14 +109,13 @@ async fn main() -> redis::RedisResult<()> {
         }
     }
 
-
     Ok(())
 }
 
 // get redis parameters
 async fn get_instance_parameters<C>(con: &mut C) -> RedisResult<HashMap<String, String>>
-    where
-        C: aio::ConnectionLike,
+where
+    C: aio::ConnectionLike,
 {
     let mut cmd_config = redis::cmd("config");
     let r_config = con
@@ -155,7 +170,6 @@ fn Value_to_String(val: &Value) -> String {
     };
 }
 
-
 // scan
 async fn scansample(mut conn: redis::aio::Connection) -> redis::RedisResult<()> {
     let mut count = 0;
@@ -170,8 +184,8 @@ async fn scansample(mut conn: redis::aio::Connection) -> redis::RedisResult<()> 
 
 // 获取key类型
 async fn key_type<C>(key: &str, con: &mut C) -> redis::RedisResult<String>
-    where
-        C: crate::aio::ConnectionLike,
+where
+    C: crate::aio::ConnectionLike,
 {
     let r: String = redis::cmd("TYPE").arg(key).query_async(con).await?;
     Ok(r)

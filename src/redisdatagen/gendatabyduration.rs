@@ -73,6 +73,10 @@ impl GeneratorByDuration {
 
 impl GeneratorByDuration {
     pub fn exec(&self) -> Result<()> {
+        if self.duration <= 0 {
+            return Ok(());
+        }
+
         let pool = rayon::ThreadPoolBuilder::new()
             .num_threads(self.threads)
             .build()
@@ -82,34 +86,44 @@ impl GeneratorByDuration {
         let deadline = Instant::now() + Duration::from_secs(self.duration as u64);
 
         pool.scope(|s| {
-            for _ in 0..self.threads {
-                let mut conn = client.get_connection().unwrap();
-                s.spawn(move |_| {
-                    loop {
-                        select! {
-                            recv(at(deadline)) -> _ => {
-                                return;
-                            },
-                            default => {
-                                // do your task
-                                let subffix = rand_string(self.key_len);
-                                let db = conn.get_db();
-                                let mut opt = RedisOpt {
-                                    redis_conn: &mut conn,
-                                    redis_version: self.redis_version.clone(),
-                                    opt_type: OptType::OPT_APPEND,
-                                    key_suffix: subffix,
-                                    loopstep: self.loopstep,
-                                    expire: self.expire,
-                                    db: db as usize,
-                                    log_out: self.log_out,
-                                };
-                                opt.exec_all();
-                                thread::sleep(Duration::from_secs(1));
+            for i in 0..self.threads {
+                let r_conn = client.get_connection();
+                match r_conn {
+                    Ok(mut conn) => {
+                        s.spawn(move |_| {
+                            loop {
+                                select! {
+                                    recv(at(deadline)) -> _ => {
+                                        break;
+                                    },
+                                    default => {
+                                        // do your task
+                                        let subffix = rand_string(self.key_len);
+                                        let db = conn.get_db();
+                                        let mut opt = RedisOpt {
+                                            redis_conn: &mut conn,
+                                            redis_version: self.redis_version.clone(),
+                                            opt_type: OptType::OPT_APPEND,
+                                            key_suffix: subffix,
+                                            loopstep: self.loopstep,
+                                            expire: self.expire,
+                                            db: db as usize,
+                                            log_out: self.log_out,
+                                        };
+                                        opt.exec_all();
+                                        thread::sleep(Duration::from_secs(1));
+                                    }
+                                }
                             }
-                        }
+                            if self.log_out {
+                                log::info!("generate by duration thread {} end", i);
+                            }
+                        });
                     }
-                });
+                    Err(e) => {
+                        log::error!("{}", e);
+                    }
+                }
             }
         });
 
@@ -124,13 +138,13 @@ mod test {
 
     const rurl: &str = "redis://:redistest0102@114.67.76.82:16374/";
 
-    //cargo test redisdatagen::gendatabyduration::test::test_GeneratorByDuration_exec --  --nocapture
+    //cargo test redisdatagen::gendatabyduration::test::test_generator_by_duration_exec --  --nocapture
     #[test]
-    fn test_GeneratorByDuration_exec() {
+    fn test_generator_by_duration_exec() {
         init_log();
         let mut gbd = GeneratorByDuration::default();
         gbd.redis_url = rurl.to_string();
-        gbd.duration = 30;
+        gbd.duration = 3600;
         gbd.loopstep = 10;
         gbd.threads = 2;
         gbd.log_out = true;

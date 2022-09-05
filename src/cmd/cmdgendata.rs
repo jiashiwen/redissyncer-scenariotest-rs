@@ -45,5 +45,8 @@ pub fn gendata_continuous_template_cmd() -> Command<'static> {
 pub fn gendata_continuous_from_cmd() -> Command<'static> {
     clap::Command::new("from")
         .about("generate big key from a yaml file")
-        .args(&[Arg::new("filepath").value_name("filepath").index(1)])
+        .args(&[Arg::new("filepath")
+            .value_name("filepath")
+            .index(1)
+            .required(true)])
 }

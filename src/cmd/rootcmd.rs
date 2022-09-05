@@ -269,8 +269,17 @@ fn cmd_match(matches: &ArgMatches) {
                     }
                 }
             }
+
             if let Some(from) = continuous.subcommand_matches("from") {
-                println!("gen  key continuous from a file");
+                if let Some(path) = from.value_of("filepath") {
+                    println!("path is {}", path);
+                    if let Ok(gbd) = from_yaml_file_to_struct::<GeneratorByDuration>(path) {
+                        let r_exec = gbd.exec();
+                        if let Err(e) = r_exec {
+                            eprintln!("{}", e);
+                        }
+                    }
+                }
             }
         }
     }

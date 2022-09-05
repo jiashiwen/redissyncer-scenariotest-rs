@@ -1,9 +1,10 @@
 use crate::util::rand_string;
-use enum_iterator::{all, Sequence};
+use anyhow::{anyhow, Result};
+use enum_iterator::Sequence;
 use redis::ToRedisArgs;
-use redis::{aio, Connection, ErrorKind, FromRedisValue, RedisError, RedisResult, Value};
+use redis::{aio, ErrorKind, FromRedisValue, RedisError, RedisResult, Value};
 use serde::{Deserialize, Serialize};
-use std::fmt::{write, Display, Formatter};
+use std::fmt::{Display, Formatter};
 
 #[derive(Debug, PartialEq, Sequence)]
 pub enum RedisKeyType {
@@ -79,6 +80,11 @@ pub struct GenerateBigKey {
     pub threads: usize,
     #[serde(default = "GenerateBigKey::key_len_default")]
     pub key_len: usize,
+    #[serde(default = "GenerateBigKey::value_len_default")]
+    pub value_len: usize,
+    // 集合长度 set、zset、hash长度
+    #[serde(default = "GenerateBigKey::collection_length_default")]
+    pub collection_length: usize,
     #[serde(default = "GenerateBigKey::log_out_default")]
     pub log_out: bool,
 }
@@ -93,6 +99,8 @@ impl Default for GenerateBigKey {
             generate_batch: 1,
             threads: 1,
             key_len: 4,
+            value_len: 4,
+            collection_length: 10,
             log_out: false,
         }
     }
@@ -115,15 +123,56 @@ impl GenerateBigKey {
     fn key_len_default() -> usize {
         4
     }
+    fn value_len_default() -> usize {
+        4
+    }
+    // 集合长度 set、zset、hash长度
+    fn collection_length_default() -> usize {
+        10
+    }
     fn log_out_default() -> bool {
         false
     }
 
-    pub fn exec(&self) -> RedisResult<()> {
-        let client = redis::Client::open(self.redis_url.clone())?;
-        let mut conn = client.get_connection()?;
-        let bkg = BigKeyGenerator::default(&mut conn);
-        println!("{}", bkg.collection_length);
+    pub fn exec(&self) -> Result<()> {
+        let client = redis::Client::open(self.redis_url.clone())
+            .map_err(|err| anyhow!("{}", err.to_string()))?;
+
+        let pool = rayon::ThreadPoolBuilder::new()
+            .num_threads(self.threads)
+            .build()
+            .map_err(|err| anyhow!("{}", err.to_string()))?;
+
+        pool.scope(|s| {
+            for i in 0..self.threads {
+                let r_conn = client.get_connection();
+                match r_conn {
+                    Ok(mut conn) => {
+                        s.spawn(move |_| {
+                            let mut bkg = BigKeyGenerator::default(&mut conn);
+                            bkg.key_len = self.key_len;
+                            bkg.value_len = self.value_len;
+                            bkg.collection_length = self.collection_length;
+
+                            for _ in 0..self.generate_batch {
+                                let r = bkg.exec();
+                                if self.log_out {
+                                    log::info!(
+                                        "exec generate big key result: {:?}, thread number: {}",
+                                        r,
+                                        i
+                                    );
+                                }
+                            }
+                        });
+                    }
+                    Err(e) => {
+                        eprintln!("{}", e);
+                    }
+                }
+            }
+        });
+
         Ok(())
     }
 }
@@ -136,6 +185,7 @@ pub struct BigKeyGenerator<'a> {
     pub value_len: usize,
     // 集合长度 set、zset、hash长度
     pub collection_length: usize,
+    pub log_out: bool,
     // redis connection
     pub redis_conn: &'a mut dyn redis::ConnectionLike,
 }
@@ -146,6 +196,7 @@ impl<'a> BigKeyGenerator<'a> {
             key_len: 1,
             value_len: 1,
             collection_length: 1,
+            log_out: false,
             redis_conn: conn,
         }
     }
@@ -232,7 +283,6 @@ pub fn gen_big_string(
     conn: &mut dyn redis::ConnectionLike,
 ) -> RedisResult<()> {
     let key_prefix = gen_key(RedisKeyType::TypeString, key_len);
-
     let mut val = "".to_string();
     if (value_len - 1) > 0 {
         val = rand_string(value_len - 1);
@@ -241,13 +291,11 @@ pub fn gen_big_string(
     for i in 0..keys {
         let key = key_prefix.clone() + "_" + &*i.to_string();
         let mut cmd_set = redis::cmd("set");
-        let r_set = conn.req_command(
+        let _ = conn.req_command(
             &cmd_set
                 .arg(key.to_redis_args())
                 .arg(val.clone() + &*i.to_string()),
         )?;
-
-        log::info!("{:?}", r_set);
     }
 
     Ok(())
@@ -353,14 +401,15 @@ pub fn gen_hash(
 mod test {
     use super::*;
     use crate::init_log;
+    use enum_iterator::all;
     use tokio::runtime::Runtime;
 
-    static redis_url: &str = "redis://:redistest0102@114.67.76.82:16377/?timeout=1s";
+    static REDIS_URL: &str = "redis://:redistest0102@114.67.76.82:16377/?timeout=1s";
 
-    //cargo test redisdatagen::generator::test::test_BigKeyGenerator_exec --  --nocapture
+    //cargo test redisdatagen::generator::test::test_big_key_generator_exec --  --nocapture
     #[test]
-    fn test_BigKeyGenerator_exec() {
-        let client = redis::Client::open(redis_url).unwrap();
+    fn test_big_key_generator_exec() {
+        let client = redis::Client::open(REDIS_URL).unwrap();
         let mut conn = client.get_connection().unwrap();
         let mut gen = BigKeyGenerator::default(&mut conn);
         gen.key_len = 4;
@@ -374,7 +423,6 @@ mod test {
     #[test]
     fn test_gen_key() {
         let len = 8 as usize;
-        // let mut ri = RedisKeyType::itor();
         let ri = all::<RedisKeyType>().collect::<Vec<_>>();
         for key_type in ri {
             let gen_k = gen_key(key_type, len);

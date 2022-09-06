@@ -6,11 +6,10 @@ use crate::compare::RedisCompare;
 use crate::configure::{self, get_config, get_config_file_path, Config};
 use crate::configure::{generate_default_config, set_config_file_path};
 use crate::request::{req, Request};
-use crate::util::from_yaml_file_to_struct;
+use crate::util::{flash_struct_to_yaml_file, from_yaml_file_to_struct};
 use crate::{configure::set_config_from_file, interact};
 use clap::{Arg, ArgMatches, Command as clap_Command};
 use lazy_static::lazy_static;
-use serde_yaml::from_str;
 use std::borrow::Borrow;
 
 use crate::cmd::cmdgendata::new_gendata_cmd;
@@ -145,17 +144,27 @@ fn cmd_match(matches: &ArgMatches) {
     }
 
     if let Some(ref compare) = matches.subcommand_matches("compare") {
+        if let Some(sample) = compare.subcommand_matches("sample") {
+            let mut file = "./compare_sample.yml".to_string();
+            let file_arg = sample.value_of("filepath");
+            if let Some(arg) = file_arg {
+                file = arg.to_string();
+            }
+
+            let compare = RedisCompare::default();
+            match flash_struct_to_yaml_file(&compare, &file) {
+                Ok(_) => println!("Ok"),
+                Err(e) => eprintln!("{}", e),
+            };
+        }
+
         if let Some(execute) = compare.subcommand_matches("exec") {
             let file = execute.value_of("file");
             if let Some(path) = file {
-                println!("{:?}", path);
-                // let contents = fs::read_to_string(path).expect("Read execution description file error!");
-                let contents = fs::read_to_string(path);
-                match contents {
-                    Ok(c) => {
-                        let compare =
-                            from_str::<RedisCompare>(c.as_str()).expect("Parse config.yml error!");
-                        println!("{:?}", compare);
+                let r = from_yaml_file_to_struct::<RedisCompare>(path);
+                match r {
+                    Ok(compare) => {
+                        compare.exec();
                     }
                     Err(e) => {
                         eprintln!("{}", e);

@@ -6,6 +6,7 @@ use std::fs;
 use std::path::Path;
 use std::sync::Mutex;
 use std::sync::RwLock;
+use crate::util::flash_struct_to_yaml_file;
 
 #[derive(Debug, PartialEq, Serialize, Deserialize, Clone)]
 pub struct Config {
@@ -31,9 +32,7 @@ impl Config {
     }
 
     pub fn flush_to_file(&self, path: String) -> Result<()> {
-        let yml = serde_yaml::to_string(&self)?;
-        fs::write(path, yml)?;
-        Ok(())
+        flash_struct_to_yaml_file(self, path.as_str())
     }
 }
 

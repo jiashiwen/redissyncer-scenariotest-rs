@@ -1,15 +1,14 @@
 // 通过命令组合生成key，尽量覆盖redis所有命令操作
 
+use crate::util::rand_string;
 use enum_iterator::{all, Sequence};
 use rand::Rng;
-use redis::{cmd, Commands, ConnectionLike, RedisResult, ToRedisArgs, Value};
+use redis::ConnectionLike;
+use redis::{RedisResult, ToRedisArgs};
 use std::fmt;
 use std::fmt::Formatter;
 use std::time::Duration;
 use tokio::time::Instant;
-
-use crate::redisdatagen::generator::gen_key;
-use crate::util::rand_string;
 
 #[derive(Debug, PartialEq, Sequence, Clone)]
 pub enum OptType {

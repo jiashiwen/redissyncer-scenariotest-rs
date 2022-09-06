@@ -6,7 +6,7 @@ use redis::{aio, ErrorKind, FromRedisValue, RedisError, RedisResult, Value};
 use serde::{Deserialize, Serialize};
 use std::fmt::{Display, Formatter};
 
-#[derive(Debug, PartialEq, Sequence)]
+#[derive(Debug, PartialEq, Sequence, Clone)]
 pub enum RedisKeyType {
     TypeString,
     TypeList,

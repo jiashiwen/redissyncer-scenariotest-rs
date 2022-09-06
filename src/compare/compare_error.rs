@@ -1,5 +1,5 @@
 use std::fmt;
-use std::fmt::{Display, Formatter, write};
+use std::fmt::{Display, Formatter};
 
 /// 错误的类型
 #[derive(Debug)]
@@ -23,18 +23,42 @@ pub enum CompareErrorType {
 impl fmt::Display for CompareErrorType {
     fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
         match self {
-            CompareErrorType::TTLDiff => { write!(f, "TTL different") }
-            CompareErrorType::ExistsErr => { write!(f, "Key not exists") }
-            CompareErrorType::ListLenDiff => { write!(f, "List length different") }
-            CompareErrorType::ListIndexValueDiff => { write!(f, "List index value different") }
-            CompareErrorType::SetCardDiff => { write!(f, "Set cardinality different") }
-            CompareErrorType::SetMemberNotIn => { write!(f, "mumber not in set") }
-            CompareErrorType::ZSetCardDiff => { write!(f, "Sorted set cardinality different") }
-            CompareErrorType::ZSetMemberScoreDiff => { write!(f, "mumber not in sorted set") }
-            CompareErrorType::HashLenDiff => { write!(f, "Hash length different") }
-            CompareErrorType::HashFieldValueDiff => { write!(f, "Hash field value different") }
-            CompareErrorType::StringValueNotEqual => { write!(f, "String value not equal") }
-            CompareErrorType::Unknown => { write!(f, "Unknown") }
+            CompareErrorType::TTLDiff => {
+                write!(f, "TTL different")
+            }
+            CompareErrorType::ExistsErr => {
+                write!(f, "Key not exists")
+            }
+            CompareErrorType::ListLenDiff => {
+                write!(f, "List length different")
+            }
+            CompareErrorType::ListIndexValueDiff => {
+                write!(f, "List index value different")
+            }
+            CompareErrorType::SetCardDiff => {
+                write!(f, "Set cardinality different")
+            }
+            CompareErrorType::SetMemberNotIn => {
+                write!(f, "mumber not in set")
+            }
+            CompareErrorType::ZSetCardDiff => {
+                write!(f, "Sorted set cardinality different")
+            }
+            CompareErrorType::ZSetMemberScoreDiff => {
+                write!(f, "mumber not in sorted set")
+            }
+            CompareErrorType::HashLenDiff => {
+                write!(f, "Hash length different")
+            }
+            CompareErrorType::HashFieldValueDiff => {
+                write!(f, "Hash field value different")
+            }
+            CompareErrorType::StringValueNotEqual => {
+                write!(f, "String value not equal")
+            }
+            CompareErrorType::Unknown => {
+                write!(f, "Unknown")
+            }
         }
     }
 }
@@ -66,7 +90,7 @@ impl CompareError {
             CompareErrorType::ZSetCardDiff => 1007,
             CompareErrorType::ZSetMemberScoreDiff => 1008,
             CompareErrorType::HashLenDiff => 1009,
-            CompareErrorType::HashFieldValueDiff => 1010
+            CompareErrorType::HashFieldValueDiff => 1010,
         }
     }
     /// 从上级错误中创建应用错误

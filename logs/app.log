@@ -14591,3 +14591,299 @@
 2022-08-31T18:38:47.050730+08:00 - ExecuteResult { elapsed: 1.134389767s, opt_type: OPT_ZREMRANGEBYLEX_ZREMRANGEBYRANK_ZREMRANGEBYSCORE, result: Ok(()), db: 0 }
 2022-08-31T18:38:48.154345+08:00 - ExecuteResult { elapsed: 1.103358444s, opt_type: OPT_ZUNIONSTORE_ZINTERSTORE, result: Ok(()), db: 0 }
 2022-08-31T18:38:49.158720+08:00 - generate by duration thread 0 end
+2022-09-05T11:32:52.580684+08:00 - ExecuteResult { elapsed: 909.888985ms, opt_type: OPT_APPEND, result: Ok(()), db: 0 }
+2022-09-05T11:32:53.329111+08:00 - ExecuteResult { elapsed: 748.09384ms, opt_type: OPT_BITOP, result: Ok(()), db: 0 }
+2022-09-05T11:32:53.455050+08:00 - ExecuteResult { elapsed: 125.699841ms, opt_type: OPT_DECR_DECRBY, result: Ok(()), db: 0 }
+2022-09-05T11:32:53.623873+08:00 - ExecuteResult { elapsed: 168.590938ms, opt_type: OPT_INCR_INCRBY_INCRBYFLOAT, result: Ok(()), db: 0 }
+2022-09-05T11:32:54.593928+08:00 - ExecuteResult { elapsed: 969.842962ms, opt_type: OPT_MSET_MSETNX, result: Ok(()), db: 0 }
+2022-09-05T11:32:54.699954+08:00 - ExecuteResult { elapsed: 105.822363ms, opt_type: OPT_PSETEX_SETEX, result: Ok(()), db: 0 }
+2022-09-05T11:32:55.159477+08:00 - ExecuteResult { elapsed: 459.279026ms, opt_type: OPT_PFADD, result: Ok(()), db: 0 }
+2022-09-05T11:32:56.166141+08:00 - ExecuteResult { elapsed: 1.006406702s, opt_type: OPT_PFMERGE, result: Ok(()), db: 0 }
+2022-09-05T11:32:56.328118+08:00 - ExecuteResult { elapsed: 161.74712ms, opt_type: OPT_SET_SETNX, result: Ok(()), db: 0 }
+2022-09-05T11:32:56.398900+08:00 - ExecuteResult { elapsed: 70.534085ms, opt_type: OPT_SETBIT, result: Ok(()), db: 0 }
+2022-09-05T11:32:56.527269+08:00 - ExecuteResult { elapsed: 128.130107ms, opt_type: OPT_SETRANGE, result: Ok(()), db: 0 }
+2022-09-05T11:32:57.342877+08:00 - ExecuteResult { elapsed: 815.383436ms, opt_type: OPT_HINCRBY_HINCRBYFLOAT, result: Ok(()), db: 0 }
+2022-09-05T11:32:58.197023+08:00 - ExecuteResult { elapsed: 853.940867ms, opt_type: OPT_HSET_HSETNX_HDEL_HMSET, result: Ok(()), db: 0 }
+2022-09-05T11:32:58.664683+08:00 - ExecuteResult { elapsed: 467.460413ms, opt_type: OPT_LPUSH_LPOP_LPUSHX_LSET, result: Ok(()), db: 0 }
+2022-09-05T11:32:59.280922+08:00 - ExecuteResult { elapsed: 616.027651ms, opt_type: OPT_LREM_LTRIM_LINSERT, result: Ok(()), db: 0 }
+2022-09-05T11:32:59.778317+08:00 - ExecuteResult { elapsed: 497.149473ms, opt_type: OPT_RPUSH_RPUSHX_RPOP_RPOPLPUSH, result: Ok(()), db: 0 }
+2022-09-05T11:33:00.673238+08:00 - ExecuteResult { elapsed: 894.673502ms, opt_type: OPT_BLPOP_BRPOP_BRPOPLPUSH, result: Ok(()), db: 0 }
+2022-09-05T11:33:02.694663+08:00 - ExecuteResult { elapsed: 2.021202745s, opt_type: OPT_LMOVE_BLMOVE_LMPOP_BLMPOP, result: Ok(()), db: 0 }
+2022-09-05T11:33:05.117195+08:00 - ExecuteResult { elapsed: 2.42227165s, opt_type: OPT_SADD_SMOVE_SPOP_SREM, result: Ok(()), db: 0 }
+2022-09-05T11:33:06.356867+08:00 - ExecuteResult { elapsed: 1.239409728s, opt_type: OPT_SDIFFSTORE_SINERTSTORE_SUNIONSTORE, result: Ok(()), db: 0 }
+2022-09-05T11:33:08.465411+08:00 - ExecuteResult { elapsed: 2.108264707s, opt_type: OPT_ZADD_ZINCRBY_ZERM, result: Ok(()), db: 0 }
+2022-09-05T11:33:09.397851+08:00 - ExecuteResult { elapsed: 932.236247ms, opt_type: OPT_ZMPOP_BZMPOP, result: Ok(()), db: 0 }
+2022-09-05T11:33:10.341044+08:00 - ExecuteResult { elapsed: 942.973467ms, opt_type: OPT_ZPOPMAX_ZPOPMIN, result: Ok(()), db: 0 }
+2022-09-05T11:33:11.312858+08:00 - ExecuteResult { elapsed: 971.553708ms, opt_type: OPT_BZPOPMAX_BZPOPMIN, result: Ok(()), db: 0 }
+2022-09-05T11:33:12.755194+08:00 - ExecuteResult { elapsed: 1.44206839s, opt_type: OPT_ZREMRANGEBYLEX_ZREMRANGEBYRANK_ZREMRANGEBYSCORE, result: Ok(()), db: 0 }
+2022-09-05T11:33:14.161168+08:00 - ExecuteResult { elapsed: 1.405704314s, opt_type: OPT_ZUNIONSTORE_ZINTERSTORE, result: Ok(()), db: 0 }
+2022-09-05T11:33:15.955133+08:00 - ExecuteResult { elapsed: 791.218802ms, opt_type: OPT_APPEND, result: Ok(()), db: 0 }
+2022-09-05T11:33:16.684479+08:00 - ExecuteResult { elapsed: 729.094802ms, opt_type: OPT_BITOP, result: Ok(()), db: 0 }
+2022-09-05T11:33:16.807842+08:00 - ExecuteResult { elapsed: 123.126795ms, opt_type: OPT_DECR_DECRBY, result: Ok(()), db: 0 }
+2022-09-05T11:33:16.959321+08:00 - ExecuteResult { elapsed: 151.244513ms, opt_type: OPT_INCR_INCRBY_INCRBYFLOAT, result: Ok(()), db: 0 }
+2022-09-05T11:33:18.034908+08:00 - ExecuteResult { elapsed: 1.075326878s, opt_type: OPT_MSET_MSETNX, result: Ok(()), db: 0 }
+2022-09-05T11:33:18.115927+08:00 - ExecuteResult { elapsed: 80.782252ms, opt_type: OPT_PSETEX_SETEX, result: Ok(()), db: 0 }
+2022-09-05T11:33:18.548242+08:00 - ExecuteResult { elapsed: 432.0702ms, opt_type: OPT_PFADD, result: Ok(()), db: 0 }
+2022-09-05T11:33:19.538501+08:00 - ExecuteResult { elapsed: 990.003245ms, opt_type: OPT_PFMERGE, result: Ok(()), db: 0 }
+2022-09-05T11:33:19.718243+08:00 - ExecuteResult { elapsed: 179.561145ms, opt_type: OPT_SET_SETNX, result: Ok(()), db: 0 }
+2022-09-05T11:33:19.789927+08:00 - ExecuteResult { elapsed: 71.498265ms, opt_type: OPT_SETBIT, result: Ok(()), db: 0 }
+2022-09-05T11:33:19.909412+08:00 - ExecuteResult { elapsed: 119.246625ms, opt_type: OPT_SETRANGE, result: Ok(()), db: 0 }
+2022-09-05T11:33:20.768133+08:00 - ExecuteResult { elapsed: 858.46989ms, opt_type: OPT_HINCRBY_HINCRBYFLOAT, result: Ok(()), db: 0 }
+2022-09-05T11:33:21.757171+08:00 - ExecuteResult { elapsed: 988.782409ms, opt_type: OPT_HSET_HSETNX_HDEL_HMSET, result: Ok(()), db: 0 }
+2022-09-05T11:33:22.174280+08:00 - ExecuteResult { elapsed: 416.867663ms, opt_type: OPT_LPUSH_LPOP_LPUSHX_LSET, result: Ok(()), db: 0 }
+2022-09-05T11:33:22.731379+08:00 - ExecuteResult { elapsed: 556.840761ms, opt_type: OPT_LREM_LTRIM_LINSERT, result: Ok(()), db: 0 }
+2022-09-05T11:33:23.361533+08:00 - ExecuteResult { elapsed: 629.899168ms, opt_type: OPT_RPUSH_RPUSHX_RPOP_RPOPLPUSH, result: Ok(()), db: 0 }
+2022-09-05T11:33:24.191552+08:00 - ExecuteResult { elapsed: 829.754825ms, opt_type: OPT_BLPOP_BRPOP_BRPOPLPUSH, result: Ok(()), db: 0 }
+2022-09-05T11:33:26.027199+08:00 - ExecuteResult { elapsed: 1.835403656s, opt_type: OPT_LMOVE_BLMOVE_LMPOP_BLMPOP, result: Ok(()), db: 0 }
+2022-09-05T11:33:28.281180+08:00 - ExecuteResult { elapsed: 2.253758611s, opt_type: OPT_SADD_SMOVE_SPOP_SREM, result: Ok(()), db: 0 }
+2022-09-05T11:33:29.288639+08:00 - ExecuteResult { elapsed: 1.007236646s, opt_type: OPT_SDIFFSTORE_SINERTSTORE_SUNIONSTORE, result: Ok(()), db: 0 }
+2022-09-05T11:33:31.074312+08:00 - ExecuteResult { elapsed: 1.785458739s, opt_type: OPT_ZADD_ZINCRBY_ZERM, result: Ok(()), db: 0 }
+2022-09-05T11:33:32.057083+08:00 - ExecuteResult { elapsed: 982.604355ms, opt_type: OPT_ZMPOP_BZMPOP, result: Ok(()), db: 0 }
+2022-09-05T11:33:32.994847+08:00 - ExecuteResult { elapsed: 937.556931ms, opt_type: OPT_ZPOPMAX_ZPOPMIN, result: Ok(()), db: 0 }
+2022-09-05T11:33:33.980404+08:00 - ExecuteResult { elapsed: 985.301919ms, opt_type: OPT_BZPOPMAX_BZPOPMIN, result: Ok(()), db: 0 }
+2022-09-05T11:33:35.344156+08:00 - ExecuteResult { elapsed: 1.363484526s, opt_type: OPT_ZREMRANGEBYLEX_ZREMRANGEBYRANK_ZREMRANGEBYSCORE, result: Ok(()), db: 0 }
+2022-09-05T11:33:36.730278+08:00 - ExecuteResult { elapsed: 1.385847718s, opt_type: OPT_ZUNIONSTORE_ZINTERSTORE, result: Ok(()), db: 0 }
+2022-09-05T11:33:38.572456+08:00 - ExecuteResult { elapsed: 837.68693ms, opt_type: OPT_APPEND, result: Ok(()), db: 0 }
+2022-09-05T11:33:39.273010+08:00 - ExecuteResult { elapsed: 700.297202ms, opt_type: OPT_BITOP, result: Ok(()), db: 0 }
+2022-09-05T11:33:39.402197+08:00 - ExecuteResult { elapsed: 128.947783ms, opt_type: OPT_DECR_DECRBY, result: Ok(()), db: 0 }
+2022-09-05T11:33:39.554837+08:00 - ExecuteResult { elapsed: 152.406967ms, opt_type: OPT_INCR_INCRBY_INCRBYFLOAT, result: Ok(()), db: 0 }
+2022-09-05T11:33:40.500573+08:00 - ExecuteResult { elapsed: 945.482162ms, opt_type: OPT_MSET_MSETNX, result: Ok(()), db: 0 }
+2022-09-05T11:33:40.577062+08:00 - ExecuteResult { elapsed: 76.260407ms, opt_type: OPT_PSETEX_SETEX, result: Ok(()), db: 0 }
+2022-09-05T11:33:41.007801+08:00 - ExecuteResult { elapsed: 430.55056ms, opt_type: OPT_PFADD, result: Ok(()), db: 0 }
+2022-09-05T11:33:41.872759+08:00 - ExecuteResult { elapsed: 864.740167ms, opt_type: OPT_PFMERGE, result: Ok(()), db: 0 }
+2022-09-05T11:33:42.030949+08:00 - ExecuteResult { elapsed: 157.954461ms, opt_type: OPT_SET_SETNX, result: Ok(()), db: 0 }
+2022-09-05T11:33:42.118439+08:00 - ExecuteResult { elapsed: 87.247083ms, opt_type: OPT_SETBIT, result: Ok(()), db: 0 }
+2022-09-05T11:33:42.224209+08:00 - ExecuteResult { elapsed: 105.531675ms, opt_type: OPT_SETRANGE, result: Ok(()), db: 0 }
+2022-09-05T11:33:43.000248+08:00 - ExecuteResult { elapsed: 775.784968ms, opt_type: OPT_HINCRBY_HINCRBYFLOAT, result: Ok(()), db: 0 }
+2022-09-05T11:33:43.905566+08:00 - ExecuteResult { elapsed: 905.098464ms, opt_type: OPT_HSET_HSETNX_HDEL_HMSET, result: Ok(()), db: 0 }
+2022-09-05T11:33:44.213560+08:00 - ExecuteResult { elapsed: 307.784626ms, opt_type: OPT_LPUSH_LPOP_LPUSHX_LSET, result: Ok(()), db: 0 }
+2022-09-05T11:33:44.745366+08:00 - ExecuteResult { elapsed: 531.55287ms, opt_type: OPT_LREM_LTRIM_LINSERT, result: Ok(()), db: 0 }
+2022-09-05T11:33:45.331257+08:00 - ExecuteResult { elapsed: 585.644607ms, opt_type: OPT_RPUSH_RPUSHX_RPOP_RPOPLPUSH, result: Ok(()), db: 0 }
+2022-09-05T11:33:45.931478+08:00 - ExecuteResult { elapsed: 599.977547ms, opt_type: OPT_BLPOP_BRPOP_BRPOPLPUSH, result: Ok(()), db: 0 }
+2022-09-05T11:33:47.812477+08:00 - ExecuteResult { elapsed: 1.880708961s, opt_type: OPT_LMOVE_BLMOVE_LMPOP_BLMPOP, result: Ok(()), db: 0 }
+2022-09-05T11:33:50.207284+08:00 - ExecuteResult { elapsed: 2.394516951s, opt_type: OPT_SADD_SMOVE_SPOP_SREM, result: Ok(()), db: 0 }
+2022-09-05T11:33:51.314327+08:00 - ExecuteResult { elapsed: 1.106775281s, opt_type: OPT_SDIFFSTORE_SINERTSTORE_SUNIONSTORE, result: Ok(()), db: 0 }
+2022-09-05T11:33:52.986399+08:00 - ExecuteResult { elapsed: 1.671801538s, opt_type: OPT_ZADD_ZINCRBY_ZERM, result: Ok(()), db: 0 }
+2022-09-05T11:33:53.928385+08:00 - ExecuteResult { elapsed: 941.730708ms, opt_type: OPT_ZMPOP_BZMPOP, result: Ok(()), db: 0 }
+2022-09-05T11:33:54.937608+08:00 - ExecuteResult { elapsed: 1.008967582s, opt_type: OPT_ZPOPMAX_ZPOPMIN, result: Ok(()), db: 0 }
+2022-09-05T11:33:55.851193+08:00 - ExecuteResult { elapsed: 913.331867ms, opt_type: OPT_BZPOPMAX_BZPOPMIN, result: Ok(()), db: 0 }
+2022-09-05T11:33:57.261920+08:00 - ExecuteResult { elapsed: 1.410459524s, opt_type: OPT_ZREMRANGEBYLEX_ZREMRANGEBYRANK_ZREMRANGEBYSCORE, result: Ok(()), db: 0 }
+2022-09-05T11:33:58.616677+08:00 - ExecuteResult { elapsed: 1.354497476s, opt_type: OPT_ZUNIONSTORE_ZINTERSTORE, result: Ok(()), db: 0 }
+2022-09-05T11:34:00.455282+08:00 - ExecuteResult { elapsed: 833.170035ms, opt_type: OPT_APPEND, result: Ok(()), db: 0 }
+2022-09-05T11:34:01.126635+08:00 - ExecuteResult { elapsed: 671.103714ms, opt_type: OPT_BITOP, result: Ok(()), db: 0 }
+2022-09-05T11:34:01.251710+08:00 - ExecuteResult { elapsed: 124.804562ms, opt_type: OPT_DECR_DECRBY, result: Ok(()), db: 0 }
+2022-09-05T11:34:01.425188+08:00 - ExecuteResult { elapsed: 173.236747ms, opt_type: OPT_INCR_INCRBY_INCRBYFLOAT, result: Ok(()), db: 0 }
+2022-09-05T11:34:02.352585+08:00 - ExecuteResult { elapsed: 927.138324ms, opt_type: OPT_MSET_MSETNX, result: Ok(()), db: 0 }
+2022-09-05T11:34:02.421467+08:00 - ExecuteResult { elapsed: 68.647233ms, opt_type: OPT_PSETEX_SETEX, result: Ok(()), db: 0 }
+2022-09-05T11:34:02.849931+08:00 - ExecuteResult { elapsed: 428.27415ms, opt_type: OPT_PFADD, result: Ok(()), db: 0 }
+2022-09-05T11:34:03.709408+08:00 - ExecuteResult { elapsed: 859.267929ms, opt_type: OPT_PFMERGE, result: Ok(()), db: 0 }
+2022-09-05T11:34:03.871225+08:00 - ExecuteResult { elapsed: 161.649966ms, opt_type: OPT_SET_SETNX, result: Ok(()), db: 0 }
+2022-09-05T11:34:03.957029+08:00 - ExecuteResult { elapsed: 85.696395ms, opt_type: OPT_SETBIT, result: Ok(()), db: 0 }
+2022-09-05T11:34:04.149102+08:00 - ExecuteResult { elapsed: 191.957714ms, opt_type: OPT_SETRANGE, result: Ok(()), db: 0 }
+2022-09-05T11:34:04.936384+08:00 - ExecuteResult { elapsed: 787.089381ms, opt_type: OPT_HINCRBY_HINCRBYFLOAT, result: Ok(()), db: 0 }
+2022-09-05T11:34:05.794435+08:00 - ExecuteResult { elapsed: 857.840103ms, opt_type: OPT_HSET_HSETNX_HDEL_HMSET, result: Ok(()), db: 0 }
+2022-09-05T11:34:06.122435+08:00 - ExecuteResult { elapsed: 327.792153ms, opt_type: OPT_LPUSH_LPOP_LPUSHX_LSET, result: Ok(()), db: 0 }
+2022-09-05T11:34:06.633339+08:00 - ExecuteResult { elapsed: 510.660337ms, opt_type: OPT_LREM_LTRIM_LINSERT, result: Ok(()), db: 0 }
+2022-09-05T11:34:07.189324+08:00 - ExecuteResult { elapsed: 555.735897ms, opt_type: OPT_RPUSH_RPUSHX_RPOP_RPOPLPUSH, result: Ok(()), db: 0 }
+2022-09-05T11:34:08.023092+08:00 - ExecuteResult { elapsed: 833.509307ms, opt_type: OPT_BLPOP_BRPOP_BRPOPLPUSH, result: Ok(()), db: 0 }
+2022-09-05T11:34:10.935409+08:00 - ExecuteResult { elapsed: 2.912007606s, opt_type: OPT_LMOVE_BLMOVE_LMPOP_BLMPOP, result: Ok(()), db: 0 }
+2022-09-05T11:34:13.085681+08:00 - ExecuteResult { elapsed: 2.149978931s, opt_type: OPT_SADD_SMOVE_SPOP_SREM, result: Ok(()), db: 0 }
+2022-09-05T11:34:14.172067+08:00 - ExecuteResult { elapsed: 1.086124516s, opt_type: OPT_SDIFFSTORE_SINERTSTORE_SUNIONSTORE, result: Ok(()), db: 0 }
+2022-09-05T11:34:15.714259+08:00 - ExecuteResult { elapsed: 1.541929306s, opt_type: OPT_ZADD_ZINCRBY_ZERM, result: Ok(()), db: 0 }
+2022-09-05T11:34:16.629599+08:00 - ExecuteResult { elapsed: 915.087567ms, opt_type: OPT_ZMPOP_BZMPOP, result: Ok(()), db: 0 }
+2022-09-05T11:34:17.616504+08:00 - ExecuteResult { elapsed: 986.648933ms, opt_type: OPT_ZPOPMAX_ZPOPMIN, result: Ok(()), db: 0 }
+2022-09-05T11:34:18.600320+08:00 - ExecuteResult { elapsed: 983.623841ms, opt_type: OPT_BZPOPMAX_BZPOPMIN, result: Ok(()), db: 0 }
+2022-09-05T11:34:20.031410+08:00 - ExecuteResult { elapsed: 1.430873402s, opt_type: OPT_ZREMRANGEBYLEX_ZREMRANGEBYRANK_ZREMRANGEBYSCORE, result: Ok(()), db: 0 }
+2022-09-05T11:34:21.367679+08:00 - ExecuteResult { elapsed: 1.336047166s, opt_type: OPT_ZUNIONSTORE_ZINTERSTORE, result: Ok(()), db: 0 }
+2022-09-05T11:34:23.159451+08:00 - ExecuteResult { elapsed: 789.081477ms, opt_type: OPT_APPEND, result: Ok(()), db: 0 }
+2022-09-05T11:34:23.866912+08:00 - ExecuteResult { elapsed: 706.851266ms, opt_type: OPT_BITOP, result: Ok(()), db: 0 }
+2022-09-05T11:34:23.996989+08:00 - ExecuteResult { elapsed: 129.883362ms, opt_type: OPT_DECR_DECRBY, result: Ok(()), db: 0 }
+2022-09-05T11:34:24.145077+08:00 - ExecuteResult { elapsed: 147.927714ms, opt_type: OPT_INCR_INCRBY_INCRBYFLOAT, result: Ok(()), db: 0 }
+2022-09-05T11:34:25.099423+08:00 - ExecuteResult { elapsed: 954.108572ms, opt_type: OPT_MSET_MSETNX, result: Ok(()), db: 0 }
+2022-09-05T11:34:25.180553+08:00 - ExecuteResult { elapsed: 80.894131ms, opt_type: OPT_PSETEX_SETEX, result: Ok(()), db: 0 }
+2022-09-05T11:34:25.610915+08:00 - ExecuteResult { elapsed: 430.174192ms, opt_type: OPT_PFADD, result: Ok(()), db: 0 }
+2022-09-05T11:34:26.468645+08:00 - ExecuteResult { elapsed: 857.518213ms, opt_type: OPT_PFMERGE, result: Ok(()), db: 0 }
+2022-09-05T11:34:26.623508+08:00 - ExecuteResult { elapsed: 154.606679ms, opt_type: OPT_SET_SETNX, result: Ok(()), db: 0 }
+2022-09-05T11:34:26.703470+08:00 - ExecuteResult { elapsed: 79.728134ms, opt_type: OPT_SETBIT, result: Ok(()), db: 0 }
+2022-09-05T11:34:26.819013+08:00 - ExecuteResult { elapsed: 115.362818ms, opt_type: OPT_SETRANGE, result: Ok(()), db: 0 }
+2022-09-05T11:34:27.627379+08:00 - ExecuteResult { elapsed: 808.166394ms, opt_type: OPT_HINCRBY_HINCRBYFLOAT, result: Ok(()), db: 0 }
+2022-09-05T11:36:53.258851+08:00 - ExecuteResult { elapsed: 898.226052ms, opt_type: OPT_APPEND, result: Ok(()), db: 0 }
+2022-09-05T11:36:54.139773+08:00 - ExecuteResult { elapsed: 880.678673ms, opt_type: OPT_BITOP, result: Ok(()), db: 0 }
+2022-09-05T11:36:54.273171+08:00 - ExecuteResult { elapsed: 133.156607ms, opt_type: OPT_DECR_DECRBY, result: Ok(()), db: 0 }
+2022-09-05T11:36:54.440123+08:00 - ExecuteResult { elapsed: 166.709836ms, opt_type: OPT_INCR_INCRBY_INCRBYFLOAT, result: Ok(()), db: 0 }
+2022-09-05T11:36:55.544928+08:00 - ExecuteResult { elapsed: 1.104539077s, opt_type: OPT_MSET_MSETNX, result: Ok(()), db: 0 }
+2022-09-05T11:36:55.624305+08:00 - ExecuteResult { elapsed: 79.115175ms, opt_type: OPT_PSETEX_SETEX, result: Ok(()), db: 0 }
+2022-09-05T11:36:56.078894+08:00 - ExecuteResult { elapsed: 454.342811ms, opt_type: OPT_PFADD, result: Ok(()), db: 0 }
+2022-09-05T11:36:56.965932+08:00 - ExecuteResult { elapsed: 886.777022ms, opt_type: OPT_PFMERGE, result: Ok(()), db: 0 }
+2022-09-05T11:36:57.137834+08:00 - ExecuteResult { elapsed: 171.660594ms, opt_type: OPT_SET_SETNX, result: Ok(()), db: 0 }
+2022-09-05T11:36:57.207957+08:00 - ExecuteResult { elapsed: 69.88592ms, opt_type: OPT_SETBIT, result: Ok(()), db: 0 }
+2022-09-05T11:36:57.321272+08:00 - ExecuteResult { elapsed: 113.07675ms, opt_type: OPT_SETRANGE, result: Ok(()), db: 0 }
+2022-09-05T11:36:58.139015+08:00 - ExecuteResult { elapsed: 817.487296ms, opt_type: OPT_HINCRBY_HINCRBYFLOAT, result: Ok(()), db: 0 }
+2022-09-05T11:36:59.198879+08:00 - ExecuteResult { elapsed: 1.059653558s, opt_type: OPT_HSET_HSETNX_HDEL_HMSET, result: Ok(()), db: 0 }
+2022-09-05T11:36:59.489139+08:00 - ExecuteResult { elapsed: 290.057559ms, opt_type: OPT_LPUSH_LPOP_LPUSHX_LSET, result: Ok(()), db: 0 }
+2022-09-05T11:37:00.088910+08:00 - ExecuteResult { elapsed: 599.516799ms, opt_type: OPT_LREM_LTRIM_LINSERT, result: Ok(()), db: 0 }
+2022-09-05T11:37:00.801189+08:00 - ExecuteResult { elapsed: 712.02171ms, opt_type: OPT_RPUSH_RPUSHX_RPOP_RPOPLPUSH, result: Ok(()), db: 0 }
+2022-09-05T11:37:01.547217+08:00 - ExecuteResult { elapsed: 745.76714ms, opt_type: OPT_BLPOP_BRPOP_BRPOPLPUSH, result: Ok(()), db: 0 }
+2022-09-05T11:37:03.581511+08:00 - ExecuteResult { elapsed: 2.033972079s, opt_type: OPT_LMOVE_BLMOVE_LMPOP_BLMPOP, result: Ok(()), db: 0 }
+2022-09-05T11:37:06.169908+08:00 - ExecuteResult { elapsed: 2.588085694s, opt_type: OPT_SADD_SMOVE_SPOP_SREM, result: Ok(()), db: 0 }
+2022-09-05T11:37:07.268888+08:00 - ExecuteResult { elapsed: 1.098718615s, opt_type: OPT_SDIFFSTORE_SINERTSTORE_SUNIONSTORE, result: Ok(()), db: 0 }
+2022-09-05T11:37:08.770731+08:00 - ExecuteResult { elapsed: 1.501614542s, opt_type: OPT_ZADD_ZINCRBY_ZERM, result: Ok(()), db: 0 }
+2022-09-05T11:37:09.887221+08:00 - ExecuteResult { elapsed: 1.116271363s, opt_type: OPT_ZMPOP_BZMPOP, result: Ok(()), db: 0 }
+2022-09-05T11:37:10.861804+08:00 - ExecuteResult { elapsed: 974.362594ms, opt_type: OPT_ZPOPMAX_ZPOPMIN, result: Ok(()), db: 0 }
+2022-09-05T11:37:11.815238+08:00 - ExecuteResult { elapsed: 953.183867ms, opt_type: OPT_BZPOPMAX_BZPOPMIN, result: Ok(()), db: 0 }
+2022-09-05T11:37:13.238859+08:00 - ExecuteResult { elapsed: 1.42334938s, opt_type: OPT_ZREMRANGEBYLEX_ZREMRANGEBYRANK_ZREMRANGEBYSCORE, result: Ok(()), db: 0 }
+2022-09-05T11:37:14.696959+08:00 - ExecuteResult { elapsed: 1.457829958s, opt_type: OPT_ZUNIONSTORE_ZINTERSTORE, result: Ok(()), db: 0 }
+2022-09-05T11:37:16.511759+08:00 - ExecuteResult { elapsed: 809.841449ms, opt_type: OPT_APPEND, result: Ok(()), db: 0 }
+2022-09-05T11:37:17.225871+08:00 - ExecuteResult { elapsed: 713.85658ms, opt_type: OPT_BITOP, result: Ok(()), db: 0 }
+2022-09-05T11:37:17.341205+08:00 - ExecuteResult { elapsed: 115.091545ms, opt_type: OPT_DECR_DECRBY, result: Ok(()), db: 0 }
+2022-09-05T11:37:17.489142+08:00 - ExecuteResult { elapsed: 147.702421ms, opt_type: OPT_INCR_INCRBY_INCRBYFLOAT, result: Ok(()), db: 0 }
+2022-09-05T11:37:18.492133+08:00 - ExecuteResult { elapsed: 1.002731526s, opt_type: OPT_MSET_MSETNX, result: Ok(()), db: 0 }
+2022-09-05T11:37:18.588195+08:00 - ExecuteResult { elapsed: 95.823276ms, opt_type: OPT_PSETEX_SETEX, result: Ok(()), db: 0 }
+2022-09-05T11:37:19.130095+08:00 - ExecuteResult { elapsed: 541.721949ms, opt_type: OPT_PFADD, result: Ok(()), db: 0 }
+2022-09-05T11:37:19.976837+08:00 - ExecuteResult { elapsed: 846.61624ms, opt_type: OPT_PFMERGE, result: Ok(()), db: 0 }
+2022-09-05T11:37:20.130775+08:00 - ExecuteResult { elapsed: 153.752472ms, opt_type: OPT_SET_SETNX, result: Ok(()), db: 0 }
+2022-09-05T11:37:20.208239+08:00 - ExecuteResult { elapsed: 77.226849ms, opt_type: OPT_SETBIT, result: Ok(()), db: 0 }
+2022-09-05T11:37:20.317609+08:00 - ExecuteResult { elapsed: 109.174937ms, opt_type: OPT_SETRANGE, result: Ok(()), db: 0 }
+2022-09-05T11:37:21.100257+08:00 - ExecuteResult { elapsed: 782.433225ms, opt_type: OPT_HINCRBY_HINCRBYFLOAT, result: Ok(()), db: 0 }
+2022-09-05T11:37:22.020058+08:00 - ExecuteResult { elapsed: 919.541887ms, opt_type: OPT_HSET_HSETNX_HDEL_HMSET, result: Ok(()), db: 0 }
+2022-09-05T11:37:22.269883+08:00 - ExecuteResult { elapsed: 249.642887ms, opt_type: OPT_LPUSH_LPOP_LPUSHX_LSET, result: Ok(()), db: 0 }
+2022-09-05T11:37:22.815705+08:00 - ExecuteResult { elapsed: 545.681867ms, opt_type: OPT_LREM_LTRIM_LINSERT, result: Ok(()), db: 0 }
+2022-09-05T11:37:23.321917+08:00 - ExecuteResult { elapsed: 506.011919ms, opt_type: OPT_RPUSH_RPUSHX_RPOP_RPOPLPUSH, result: Ok(()), db: 0 }
+2022-09-05T11:37:24.066923+08:00 - ExecuteResult { elapsed: 744.755706ms, opt_type: OPT_BLPOP_BRPOP_BRPOPLPUSH, result: Ok(()), db: 0 }
+2022-09-05T11:37:26.046039+08:00 - ExecuteResult { elapsed: 1.97882328s, opt_type: OPT_LMOVE_BLMOVE_LMPOP_BLMPOP, result: Ok(()), db: 0 }
+2022-09-05T11:37:28.372381+08:00 - ExecuteResult { elapsed: 2.326027814s, opt_type: OPT_SADD_SMOVE_SPOP_SREM, result: Ok(()), db: 0 }
+2022-09-05T11:37:29.417061+08:00 - ExecuteResult { elapsed: 1.044418744s, opt_type: OPT_SDIFFSTORE_SINERTSTORE_SUNIONSTORE, result: Ok(()), db: 0 }
+2022-09-05T11:37:31.066524+08:00 - ExecuteResult { elapsed: 1.649252865s, opt_type: OPT_ZADD_ZINCRBY_ZERM, result: Ok(()), db: 0 }
+2022-09-05T11:37:32.132255+08:00 - ExecuteResult { elapsed: 1.065496595s, opt_type: OPT_ZMPOP_BZMPOP, result: Ok(()), db: 0 }
+2022-09-05T11:37:33.096403+08:00 - ExecuteResult { elapsed: 963.885495ms, opt_type: OPT_ZPOPMAX_ZPOPMIN, result: Ok(()), db: 0 }
+2022-09-05T11:37:34.165278+08:00 - ExecuteResult { elapsed: 1.068617876s, opt_type: OPT_BZPOPMAX_BZPOPMIN, result: Ok(()), db: 0 }
+2022-09-05T11:37:35.733885+08:00 - ExecuteResult { elapsed: 1.568365509s, opt_type: OPT_ZREMRANGEBYLEX_ZREMRANGEBYRANK_ZREMRANGEBYSCORE, result: Ok(()), db: 0 }
+2022-09-05T11:37:37.189175+08:00 - ExecuteResult { elapsed: 1.455046378s, opt_type: OPT_ZUNIONSTORE_ZINTERSTORE, result: Ok(()), db: 0 }
+2022-09-05T11:37:39.050962+08:00 - ExecuteResult { elapsed: 857.345513ms, opt_type: OPT_APPEND, result: Ok(()), db: 0 }
+2022-09-05T11:37:39.788153+08:00 - ExecuteResult { elapsed: 736.974826ms, opt_type: OPT_BITOP, result: Ok(()), db: 0 }
+2022-09-05T11:37:39.910463+08:00 - ExecuteResult { elapsed: 122.072668ms, opt_type: OPT_DECR_DECRBY, result: Ok(()), db: 0 }
+2022-09-05T11:37:40.074904+08:00 - ExecuteResult { elapsed: 164.249207ms, opt_type: OPT_INCR_INCRBY_INCRBYFLOAT, result: Ok(()), db: 0 }
+2022-09-05T11:37:41.130096+08:00 - ExecuteResult { elapsed: 1.054950765s, opt_type: OPT_MSET_MSETNX, result: Ok(()), db: 0 }
+2022-09-05T11:37:41.222241+08:00 - ExecuteResult { elapsed: 91.938744ms, opt_type: OPT_PSETEX_SETEX, result: Ok(()), db: 0 }
+2022-09-05T11:37:41.679423+08:00 - ExecuteResult { elapsed: 456.935039ms, opt_type: OPT_PFADD, result: Ok(()), db: 0 }
+2022-09-05T11:37:42.549318+08:00 - ExecuteResult { elapsed: 869.638807ms, opt_type: OPT_PFMERGE, result: Ok(()), db: 0 }
+2022-09-05T11:37:42.713089+08:00 - ExecuteResult { elapsed: 163.577205ms, opt_type: OPT_SET_SETNX, result: Ok(()), db: 0 }
+2022-09-05T11:37:42.802135+08:00 - ExecuteResult { elapsed: 88.843381ms, opt_type: OPT_SETBIT, result: Ok(()), db: 0 }
+2022-09-05T11:37:42.926247+08:00 - ExecuteResult { elapsed: 123.918558ms, opt_type: OPT_SETRANGE, result: Ok(()), db: 0 }
+2022-09-05T11:37:43.798198+08:00 - ExecuteResult { elapsed: 871.773474ms, opt_type: OPT_HINCRBY_HINCRBYFLOAT, result: Ok(()), db: 0 }
+2022-09-05T11:37:44.804331+08:00 - ExecuteResult { elapsed: 1.005903823s, opt_type: OPT_HSET_HSETNX_HDEL_HMSET, result: Ok(()), db: 0 }
+2022-09-05T11:37:45.201917+08:00 - ExecuteResult { elapsed: 397.341443ms, opt_type: OPT_LPUSH_LPOP_LPUSHX_LSET, result: Ok(()), db: 0 }
+2022-09-05T11:37:45.855510+08:00 - ExecuteResult { elapsed: 653.338983ms, opt_type: OPT_LREM_LTRIM_LINSERT, result: Ok(()), db: 0 }
+2022-09-05T11:37:46.404494+08:00 - ExecuteResult { elapsed: 548.756619ms, opt_type: OPT_RPUSH_RPUSHX_RPOP_RPOPLPUSH, result: Ok(()), db: 0 }
+2022-09-05T11:37:46.964488+08:00 - ExecuteResult { elapsed: 559.789528ms, opt_type: OPT_BLPOP_BRPOP_BRPOPLPUSH, result: Ok(()), db: 0 }
+2022-09-06T11:48:06.577181+08:00 - CompareError { message: Some("zset member score diff"), cause: None, error_type: ZSetMemberScoreDiff }
+2022-09-06T11:48:12.019575+08:00 - CompareError { message: Some("zset member score diff"), cause: None, error_type: ZSetMemberScoreDiff }
+2022-09-06T11:48:13.795822+08:00 - CompareError { message: Some("zset member score diff"), cause: None, error_type: ZSetMemberScoreDiff }
+2022-09-06T11:48:15.700337+08:00 - CompareError { message: Some("zset member score diff"), cause: None, error_type: ZSetMemberScoreDiff }
+2022-09-06T11:48:18.541013+08:00 - CompareError { message: Some("zset member score diff"), cause: None, error_type: ZSetMemberScoreDiff }
+2022-09-06T11:48:25.484762+08:00 - CompareError { message: Some("zset member score diff"), cause: None, error_type: ZSetMemberScoreDiff }
+2022-09-06T11:48:26.232501+08:00 - CompareError { message: Some("zset member score diff"), cause: None, error_type: ZSetMemberScoreDiff }
+2022-09-06T11:48:32.145864+08:00 - CompareError { message: Some("zset member score diff"), cause: None, error_type: ZSetMemberScoreDiff }
+2022-09-06T11:48:33.499530+08:00 - CompareError { message: Some("zset member score diff"), cause: None, error_type: ZSetMemberScoreDiff }
+2022-09-06T11:48:33.557428+08:00 - CompareError { message: Some("zset member score diff"), cause: None, error_type: ZSetMemberScoreDiff }
+2022-09-06T11:48:35.570509+08:00 - CompareError { message: Some("zset member score diff"), cause: None, error_type: ZSetMemberScoreDiff }
+2022-09-06T11:51:31.020099+08:00 - Operation timed out (os error 60)
+2022-09-06T11:55:35.816866+08:00 - Missing hostname
+2022-09-06T12:17:13.112828+08:00 - Missing hostname
+2022-09-06T12:18:18.087212+08:00 - CompareError { message: Some("zset member score diff"), cause: None, error_type: ZSetMemberScoreDiff }
+2022-09-06T12:18:23.040679+08:00 - CompareError { message: Some("zset member score diff"), cause: None, error_type: ZSetMemberScoreDiff }
+2022-09-06T12:18:24.728412+08:00 - CompareError { message: Some("zset member score diff"), cause: None, error_type: ZSetMemberScoreDiff }
+2022-09-06T12:18:26.539211+08:00 - CompareError { message: Some("zset member score diff"), cause: None, error_type: ZSetMemberScoreDiff }
+2022-09-06T12:18:29.399344+08:00 - CompareError { message: Some("zset member score diff"), cause: None, error_type: ZSetMemberScoreDiff }
+2022-09-06T12:18:35.720361+08:00 - CompareError { message: Some("zset member score diff"), cause: None, error_type: ZSetMemberScoreDiff }
+2022-09-06T12:18:36.826311+08:00 - CompareError { message: Some("zset member score diff"), cause: None, error_type: ZSetMemberScoreDiff }
+2022-09-06T12:18:42.388850+08:00 - CompareError { message: Some("zset member score diff"), cause: None, error_type: ZSetMemberScoreDiff }
+2022-09-06T12:18:43.459202+08:00 - CompareError { message: Some("zset member score diff"), cause: None, error_type: ZSetMemberScoreDiff }
+2022-09-06T12:18:43.719321+08:00 - CompareError { message: Some("zset member score diff"), cause: None, error_type: ZSetMemberScoreDiff }
+2022-09-06T12:18:45.671508+08:00 - CompareError { message: Some("zset member score diff"), cause: None, error_type: ZSetMemberScoreDiff }
+2022-09-06T15:04:36.603140+08:00 - CompareError { message: Some("zset member score diff"), cause: None, error_type: ZSetMemberScoreDiff }
+2022-09-06T15:04:41.488748+08:00 - CompareError { message: Some("zset member score diff"), cause: None, error_type: ZSetMemberScoreDiff }
+2022-09-06T15:04:43.243240+08:00 - CompareError { message: Some("zset member score diff"), cause: None, error_type: ZSetMemberScoreDiff }
+2022-09-06T15:04:44.479764+08:00 - CompareError { message: Some("zset member score diff"), cause: None, error_type: ZSetMemberScoreDiff }
+2022-09-06T15:04:45.135296+08:00 - CompareError { message: Some("zset member score diff"), cause: None, error_type: ZSetMemberScoreDiff }
+2022-09-06T15:04:48.158385+08:00 - CompareError { message: Some("zset member score diff"), cause: None, error_type: ZSetMemberScoreDiff }
+2022-09-06T15:04:55.826801+08:00 - CompareError { message: Some("zset member score diff"), cause: None, error_type: ZSetMemberScoreDiff }
+2022-09-06T15:04:56.897135+08:00 - CompareError { message: Some("zset member score diff"), cause: None, error_type: ZSetMemberScoreDiff }
+2022-09-06T15:05:01.472556+08:00 - CompareError { message: Some("zset member score diff"), cause: None, error_type: ZSetMemberScoreDiff }
+2022-09-06T15:05:02.850952+08:00 - CompareError { message: Some("zset member score diff"), cause: None, error_type: ZSetMemberScoreDiff }
+2022-09-06T15:05:04.781256+08:00 - CompareError { message: Some("zset member score diff"), cause: None, error_type: ZSetMemberScoreDiff }
+2022-09-06T15:05:04.839887+08:00 - CompareError { message: Some("zset member score diff"), cause: None, error_type: ZSetMemberScoreDiff }
+2022-09-06T15:06:45.413072+08:00 - CompareError { message: Some("zset member score diff"), cause: None, error_type: ZSetMemberScoreDiff }
+2022-09-06T15:06:50.494431+08:00 - CompareError { message: Some("zset member score diff"), cause: None, error_type: ZSetMemberScoreDiff }
+2022-09-06T15:06:52.276803+08:00 - CompareError { message: Some("zset member score diff"), cause: None, error_type: ZSetMemberScoreDiff }
+2022-09-06T15:06:53.175182+08:00 - CompareError { message: Some("zset member score diff"), cause: None, error_type: ZSetMemberScoreDiff }
+2022-09-06T15:06:54.160330+08:00 - CompareError { message: Some("zset member score diff"), cause: None, error_type: ZSetMemberScoreDiff }
+2022-09-06T15:06:57.317067+08:00 - CompareError { message: Some("zset member score diff"), cause: None, error_type: ZSetMemberScoreDiff }
+2022-09-06T15:07:05.165252+08:00 - CompareError { message: Some("zset member score diff"), cause: None, error_type: ZSetMemberScoreDiff }
+2022-09-06T15:07:06.007+08:00 - CompareError { message: Some("zset member score diff"), cause: None, error_type: ZSetMemberScoreDiff }
+2022-09-06T15:07:10.812924+08:00 - CompareError { message: Some("zset member score diff"), cause: None, error_type: ZSetMemberScoreDiff }
+2022-09-06T15:07:12.233206+08:00 - CompareError { message: Some("zset member score diff"), cause: None, error_type: ZSetMemberScoreDiff }
+2022-09-06T15:07:13.851888+08:00 - CompareError { message: Some("zset member score diff"), cause: None, error_type: ZSetMemberScoreDiff }
+2022-09-06T15:07:14.293024+08:00 - CompareError { message: Some("zset member score diff"), cause: None, error_type: ZSetMemberScoreDiff }
+2022-09-06T15:12:20.634849+08:00 - CompareError { message: Some("zset member score diff"), cause: None, error_type: ZSetMemberScoreDiff }
+2022-09-06T15:12:25.649062+08:00 - CompareError { message: Some("zset member score diff"), cause: None, error_type: ZSetMemberScoreDiff }
+2022-09-06T15:12:27.474464+08:00 - CompareError { message: Some("zset member score diff"), cause: None, error_type: ZSetMemberScoreDiff }
+2022-09-06T15:12:28.552159+08:00 - CompareError { message: Some("zset member score diff"), cause: None, error_type: ZSetMemberScoreDiff }
+2022-09-06T15:12:29.552104+08:00 - CompareError { message: Some("zset member score diff"), cause: None, error_type: ZSetMemberScoreDiff }
+2022-09-06T15:12:32.552881+08:00 - CompareError { message: Some("zset member score diff"), cause: None, error_type: ZSetMemberScoreDiff }
+2022-09-06T15:12:40.438143+08:00 - CompareError { message: Some("zset member score diff"), cause: None, error_type: ZSetMemberScoreDiff }
+2022-09-06T15:12:41.291060+08:00 - CompareError { message: Some("zset member score diff"), cause: None, error_type: ZSetMemberScoreDiff }
+2022-09-06T15:12:46.768495+08:00 - CompareError { message: Some("zset member score diff"), cause: None, error_type: ZSetMemberScoreDiff }
+2022-09-06T15:12:48.274531+08:00 - CompareError { message: Some("zset member score diff"), cause: None, error_type: ZSetMemberScoreDiff }
+2022-09-06T15:12:50.946980+08:00 - CompareError { message: Some("zset member score diff"), cause: None, error_type: ZSetMemberScoreDiff }
+2022-09-06T15:12:51.473371+08:00 - CompareError { message: Some("zset member score diff"), cause: None, error_type: ZSetMemberScoreDiff }
+2022-09-06T15:17:22.523116+08:00 - CompareError { message: Some("zset member score diff"), cause: None, error_type: ZSetMemberScoreDiff }
+2022-09-06T15:17:27.666824+08:00 - CompareError { message: Some("zset member score diff"), cause: None, error_type: ZSetMemberScoreDiff }
+2022-09-06T15:17:29.348790+08:00 - CompareError { message: Some("zset member score diff"), cause: None, error_type: ZSetMemberScoreDiff }
+2022-09-06T15:17:30.621651+08:00 - CompareError { message: Some("zset member score diff"), cause: None, error_type: ZSetMemberScoreDiff }
+2022-09-06T15:17:31.215495+08:00 - CompareError { message: Some("zset member score diff"), cause: None, error_type: ZSetMemberScoreDiff }
+2022-09-06T15:17:34.118100+08:00 - CompareError { message: Some("zset member score diff"), cause: None, error_type: ZSetMemberScoreDiff }
+2022-09-06T15:17:41.880120+08:00 - CompareError { message: Some("zset member score diff"), cause: None, error_type: ZSetMemberScoreDiff }
+2022-09-06T15:17:43.161288+08:00 - CompareError { message: Some("zset member score diff"), cause: None, error_type: ZSetMemberScoreDiff }
+2022-09-06T15:17:47.514180+08:00 - CompareError { message: Some("zset member score diff"), cause: None, error_type: ZSetMemberScoreDiff }
+2022-09-06T15:17:48.966342+08:00 - CompareError { message: Some("zset member score diff"), cause: None, error_type: ZSetMemberScoreDiff }
+2022-09-06T15:17:52.051949+08:00 - CompareError { message: Some("zset member score diff"), cause: None, error_type: ZSetMemberScoreDiff }
+2022-09-06T15:17:52.316183+08:00 - CompareError { message: Some("zset member score diff"), cause: None, error_type: ZSetMemberScoreDiff }
+2022-09-06T15:24:05.178519+08:00 - CompareError { message: Some("zset member score diff"), cause: None, error_type: ZSetMemberScoreDiff }
+2022-09-06T15:24:10.117247+08:00 - CompareError { message: Some("zset member score diff"), cause: None, error_type: ZSetMemberScoreDiff }
+2022-09-06T15:24:11.843929+08:00 - CompareError { message: Some("zset member score diff"), cause: None, error_type: ZSetMemberScoreDiff }
+2022-09-06T15:24:13.048277+08:00 - CompareError { message: Some("zset member score diff"), cause: None, error_type: ZSetMemberScoreDiff }
+2022-09-06T15:24:13.763740+08:00 - CompareError { message: Some("zset member score diff"), cause: None, error_type: ZSetMemberScoreDiff }
+2022-09-06T15:24:16.619854+08:00 - CompareError { message: Some("zset member score diff"), cause: None, error_type: ZSetMemberScoreDiff }
+2022-09-06T15:24:24.268028+08:00 - CompareError { message: Some("zset member score diff"), cause: None, error_type: ZSetMemberScoreDiff }
+2022-09-06T15:24:25.608772+08:00 - CompareError { message: Some("zset member score diff"), cause: None, error_type: ZSetMemberScoreDiff }
+2022-09-06T15:24:29.815354+08:00 - CompareError { message: Some("zset member score diff"), cause: None, error_type: ZSetMemberScoreDiff }
+2022-09-06T15:24:31.231728+08:00 - CompareError { message: Some("zset member score diff"), cause: None, error_type: ZSetMemberScoreDiff }
+2022-09-06T15:24:33.310008+08:00 - CompareError { message: Some("zset member score diff"), cause: None, error_type: ZSetMemberScoreDiff }
+2022-09-06T15:24:33.310781+08:00 - CompareError { message: Some("zset member score diff"), cause: None, error_type: ZSetMemberScoreDiff }
+2022-09-06T16:17:32.808732+08:00 - CompareError { message: Some("zset member score diff"), cause: None, error_type: ZSetMemberScoreDiff }
+2022-09-06T16:18:46.984819+08:00 - CompareError { message: Some("zset member score diff"), cause: None, error_type: ZSetMemberScoreDiff }
+2022-09-06T16:18:52.240666+08:00 - CompareError { message: Some("zset member score diff"), cause: None, error_type: ZSetMemberScoreDiff }
+2022-09-06T16:18:53.998177+08:00 - CompareError { message: Some("zset member score diff"), cause: None, error_type: ZSetMemberScoreDiff }
+2022-09-06T16:18:55.375547+08:00 - CompareError { message: Some("zset member score diff"), cause: None, error_type: ZSetMemberScoreDiff }
+2022-09-06T16:18:56.009251+08:00 - CompareError { message: Some("zset member score diff"), cause: None, error_type: ZSetMemberScoreDiff }
+2022-09-06T16:18:59.144158+08:00 - CompareError { message: Some("zset member score diff"), cause: None, error_type: ZSetMemberScoreDiff }
+2022-09-06T16:19:06.980847+08:00 - CompareError { message: Some("zset member score diff"), cause: None, error_type: ZSetMemberScoreDiff }
+2022-09-06T16:19:08.192472+08:00 - CompareError { message: Some("zset member score diff"), cause: None, error_type: ZSetMemberScoreDiff }
+2022-09-06T16:19:12.896263+08:00 - CompareError { message: Some("zset member score diff"), cause: None, error_type: ZSetMemberScoreDiff }
+2022-09-06T16:19:14.315949+08:00 - CompareError { message: Some("zset member score diff"), cause: None, error_type: ZSetMemberScoreDiff }
+2022-09-06T16:19:16.702150+08:00 - CompareError { message: Some("zset member score diff"), cause: None, error_type: ZSetMemberScoreDiff }
+2022-09-06T16:19:16.811573+08:00 - CompareError { message: Some("zset member score diff"), cause: None, error_type: ZSetMemberScoreDiff }
+2022-09-06T16:47:42.966073+08:00 - CompareError { message: Some("zset member score diff"), cause: None, error_type: ZSetMemberScoreDiff }
+2022-09-06T16:47:48.134850+08:00 - CompareError { message: Some("zset member score diff"), cause: None, error_type: ZSetMemberScoreDiff }
+2022-09-06T16:47:50.028101+08:00 - CompareError { message: Some("zset member score diff"), cause: None, error_type: ZSetMemberScoreDiff }
+2022-09-06T16:47:52.183833+08:00 - CompareError { message: Some("zset member score diff"), cause: None, error_type: ZSetMemberScoreDiff }
+2022-09-06T16:47:53.087284+08:00 - CompareError { message: Some("zset member score diff"), cause: None, error_type: ZSetMemberScoreDiff }
+2022-09-06T16:47:56.431884+08:00 - CompareError { message: Some("zset member score diff"), cause: None, error_type: ZSetMemberScoreDiff }
+2022-09-06T16:48:06.630609+08:00 - CompareError { message: Some("zset member score diff"), cause: None, error_type: ZSetMemberScoreDiff }
+2022-09-06T16:48:07.739940+08:00 - CompareError { message: Some("zset member score diff"), cause: None, error_type: ZSetMemberScoreDiff }
+2022-09-06T16:48:13.102886+08:00 - CompareError { message: Some("zset member score diff"), cause: None, error_type: ZSetMemberScoreDiff }
+2022-09-06T16:48:14.635218+08:00 - CompareError { message: Some("zset member score diff"), cause: None, error_type: ZSetMemberScoreDiff }
+2022-09-06T16:48:16.827944+08:00 - CompareError { message: Some("zset member score diff"), cause: None, error_type: ZSetMemberScoreDiff }
+2022-09-06T16:48:16.835984+08:00 - CompareError { message: Some("zset member score diff"), cause: None, error_type: ZSetMemberScoreDiff }
+2022-09-06T17:38:41.893641+08:00 - failed to lookup address information: nodename nor servname provided, or not known

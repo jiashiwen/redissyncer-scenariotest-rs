@@ -1,8 +1,11 @@
+use anyhow::{anyhow, Result};
+use redis::Iter;
+use redis::{FromRedisValue, RedisResult, ToRedisArgs, Value};
 use std::collections::HashMap;
 use std::fmt::{Display, Formatter};
 use std::str::from_utf8;
-use redis::{RedisResult, ToRedisArgs, Value};
-use anyhow::{anyhow, Result};
+
+use crate::redisdatagen::RedisKeyType;
 
 pub enum InfoSection {
     Server,
@@ -50,24 +53,42 @@ impl Display for InfoSection {
             InfoSection::Commandstats => {
                 write!(f, "commandstats")
             }
-            InfoSection::Latencystats => { write!(f, "latencystats") }
-            InfoSection::Cluster => { write!(f, "cluster") }
-            InfoSection::Modules => { write!(f, "modules") }
-            InfoSection::Keyspace => { write!(f, "keyspace") }
-            InfoSection::Errorstats => { write!(f, "errorstats") }
-            InfoSection::All => { write!(f, "all") }
-            InfoSection::Default => { write!(f, "default") }
-            InfoSection::Everything => { write!(f, "everything") }
+            InfoSection::Latencystats => {
+                write!(f, "latencystats")
+            }
+            InfoSection::Cluster => {
+                write!(f, "cluster")
+            }
+            InfoSection::Modules => {
+                write!(f, "modules")
+            }
+            InfoSection::Keyspace => {
+                write!(f, "keyspace")
+            }
+            InfoSection::Errorstats => {
+                write!(f, "errorstats")
+            }
+            InfoSection::All => {
+                write!(f, "all")
+            }
+            InfoSection::Default => {
+                write!(f, "default")
+            }
+            InfoSection::Everything => {
+                write!(f, "everything")
+            }
         }
     }
 }
 
-pub fn info(section: InfoSection, conn: &mut dyn redis::ConnectionLike) -> Result<HashMap<String, HashMap<String, String>>>
-{
-    let info: Value = redis::cmd("info").arg(section.to_string()).query(conn)
-        .map_err(|err| {
-            anyhow!("{}", err.to_string())
-        })?;
+pub fn info(
+    section: InfoSection,
+    conn: &mut dyn redis::ConnectionLike,
+) -> Result<HashMap<String, HashMap<String, String>>> {
+    let info: Value = redis::cmd("info")
+        .arg(section.to_string())
+        .query(conn)
+        .map_err(|err| anyhow!("{}", err.to_string()))?;
     let mut info_map: HashMap<String, HashMap<String, String>> = HashMap::new();
 
     if let Value::Data(ref data) = info {
@@ -109,6 +130,24 @@ pub fn info(section: InfoSection, conn: &mut dyn redis::ConnectionLike) -> Resul
         info_map.insert(section.clone(), hash_kv.clone());
     }
     Ok(info_map)
+}
+
+pub fn scan<T>(con: &mut dyn redis::ConnectionLike) -> RedisResult<Iter<'_, T>>
+where
+    T: FromRedisValue,
+{
+    let mut c = redis::cmd("SCAN");
+    c.cursor_arg(0);
+    c.iter(con)
+}
+
+// 获取key类型
+pub fn key_type<T>(key: T, con: &mut dyn redis::ConnectionLike) -> RedisResult<RedisKeyType>
+where
+    T: ToRedisArgs,
+{
+    let key_type: RedisKeyType = redis::cmd("TYPE").arg(key).query(con)?;
+    Ok(key_type)
 }
 
 #[cfg(test)]

@@ -103,7 +103,7 @@ impl GeneratorByDuration {
                                         let mut opt = RedisOpt {
                                             redis_conn: &mut conn,
                                             redis_version: self.redis_version.clone(),
-                                            opt_type: OptType::OPT_APPEND,
+                                            opt_type: OptType::OptAppend,
                                             key_suffix: subffix,
                                             loopstep: self.loopstep,
                                             expire: self.expire,

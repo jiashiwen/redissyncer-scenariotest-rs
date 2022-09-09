@@ -12,113 +12,113 @@ use tokio::time::Instant;
 
 #[derive(Debug, PartialEq, Sequence, Clone)]
 pub enum OptType {
-    OPT_APPEND,
-    OPT_BITOP,
-    OPT_DECR_DECRBY,
-    OPT_INCR_INCRBY_INCRBYFLOAT,
-    OPT_MSET_MSETNX,
-    OPT_PSETEX_SETEX,
-    OPT_PFADD,
-    OPT_PFMERGE,
-    OPT_SET_SETNX,
-    OPT_SETBIT,
-    OPT_SETRANGE,
-    OPT_HINCRBY_HINCRBYFLOAT,
-    OPT_HSET_HSETNX_HDEL_HMSET,
-    OPT_LPUSH_LPOP_LPUSHX_LSET,
-    OPT_LREM_LTRIM_LINSERT,
-    OPT_RPUSH_RPUSHX_RPOP_RPOPLPUSH,
-    OPT_BLPOP_BRPOP_BRPOPLPUSH,
-    OPT_LMOVE_BLMOVE_LMPOP_BLMPOP,
-    OPT_SADD_SMOVE_SPOP_SREM,
-    OPT_SDIFFSTORE_SINERTSTORE_SUNIONSTORE,
-    OPT_ZADD_ZINCRBY_ZERM,
-    OPT_ZMPOP_BZMPOP,
-    OPT_ZPOPMAX_ZPOPMIN,
-    OPT_BZPOPMAX_BZPOPMIN,
-    OPT_ZREMRANGEBYLEX_ZREMRANGEBYRANK_ZREMRANGEBYSCORE,
-    OPT_ZUNIONSTORE_ZINTERSTORE,
+    OptAppend,
+    OptBitop,
+    OptDecrDecrby,
+    OptIncrIncrbyIncrbyfloat,
+    OptMsetMsetnx,
+    OptPsetexSetex,
+    OptPfadd,
+    OptPfmerge,
+    OptSetSetnx,
+    OptSetbit,
+    OptSetrange,
+    OptHincrbyHincrbyfloat,
+    OptHsetHsetnxHdelHmset,
+    OptLpushLpopLpushxLset,
+    OptLremLtrimLinsert,
+    OptRpushRpushxRpopRpoplpush,
+    OptBlpopBrpopBrpoplpush,
+    OptLmoveBlmoveLmpopBlmpop,
+    OptSaddSmoveSpopSrem,
+    OptSdiffstoreSinertstoreSunionstore,
+    OptZaddZincrbyZerm,
+    OptZmpopBzmpop,
+    OptZpopmaxZpopmin,
+    OptBzpopmaxBzpopmin,
+    OptZremrangebylexZremrangebyrankZremrangebyscore,
+    OptZunionstoreZinterstore,
 }
 
 impl fmt::Display for OptType {
     fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
         match self {
-            OptType::OPT_APPEND => {
+            OptType::OptAppend => {
                 write!(f, "opt_append")
             }
-            OptType::OPT_BITOP => {
+            OptType::OptBitop => {
                 write!(f, "opt_bitop")
             }
-            OptType::OPT_DECR_DECRBY => {
+            OptType::OptDecrDecrby => {
                 write!(f, "opt_decr_decrby")
             }
-            OptType::OPT_INCR_INCRBY_INCRBYFLOAT => {
+            OptType::OptIncrIncrbyIncrbyfloat => {
                 write!(f, "opt_incr_incrby_incrbyfloat")
             }
-            OptType::OPT_MSET_MSETNX => {
+            OptType::OptMsetMsetnx => {
                 write!(f, "opt_mset_msetnx")
             }
-            OptType::OPT_PSETEX_SETEX => {
+            OptType::OptPsetexSetex => {
                 write!(f, "opt_psetex_setex")
             }
-            OptType::OPT_PFADD => {
+            OptType::OptPfadd => {
                 write!(f, "opt_pfadd")
             }
-            OptType::OPT_PFMERGE => {
+            OptType::OptPfmerge => {
                 write!(f, "opt_pfmerge")
             }
-            OptType::OPT_SET_SETNX => {
+            OptType::OptSetSetnx => {
                 write!(f, "opt_set_setnx")
             }
-            OptType::OPT_SETBIT => {
+            OptType::OptSetbit => {
                 write!(f, "opt_setbit")
             }
-            OptType::OPT_SETRANGE => {
+            OptType::OptSetrange => {
                 write!(f, "opt_setrange")
             }
-            OptType::OPT_HINCRBY_HINCRBYFLOAT => {
+            OptType::OptHincrbyHincrbyfloat => {
                 write!(f, "opt_hincrby_hincrbyfloat")
             }
-            OptType::OPT_HSET_HSETNX_HDEL_HMSET => {
+            OptType::OptHsetHsetnxHdelHmset => {
                 write!(f, "opt_hset_hsetnx_hdel_hmset")
             }
-            OptType::OPT_LPUSH_LPOP_LPUSHX_LSET => {
+            OptType::OptLpushLpopLpushxLset => {
                 write!(f, "opt_lpush_lpop_lpushx_lset")
             }
-            OptType::OPT_LREM_LTRIM_LINSERT => {
+            OptType::OptLremLtrimLinsert => {
                 write!(f, "opt_lrem_ltrim_linsert")
             }
-            OptType::OPT_RPUSH_RPUSHX_RPOP_RPOPLPUSH => {
+            OptType::OptRpushRpushxRpopRpoplpush => {
                 write!(f, "opt_rpush_rpushx_rpop_rpoplpush")
             }
-            OptType::OPT_LMOVE_BLMOVE_LMPOP_BLMPOP => {
+            OptType::OptLmoveBlmoveLmpopBlmpop => {
                 write!(f, "opt_lmove_blmove_lmpop_blmpop")
             }
-            OptType::OPT_BLPOP_BRPOP_BRPOPLPUSH => {
+            OptType::OptBlpopBrpopBrpoplpush => {
                 write!(f, "opt_blpop_brpop_brpoplpush")
             }
-            OptType::OPT_SADD_SMOVE_SPOP_SREM => {
+            OptType::OptSaddSmoveSpopSrem => {
                 write!(f, "opt_sadd_smove_spop_srem")
             }
-            OptType::OPT_SDIFFSTORE_SINERTSTORE_SUNIONSTORE => {
+            OptType::OptSdiffstoreSinertstoreSunionstore => {
                 write!(f, "opt_sdiffstore_sinertstore_sunionstore")
             }
-            OptType::OPT_ZADD_ZINCRBY_ZERM => {
+            OptType::OptZaddZincrbyZerm => {
                 write!(f, "opt_zadd_zincrby_zerm")
             }
-            OptType::OPT_ZPOPMAX_ZPOPMIN => {
+            OptType::OptZpopmaxZpopmin => {
                 write!(f, "opt_zpopmax_zpopmin")
             }
-            OptType::OPT_ZMPOP_BZMPOP => {
+            OptType::OptZmpopBzmpop => {
                 write!(f, "opt_zmpop_bzmpop")
             }
-            OptType::OPT_BZPOPMAX_BZPOPMIN => {
+            OptType::OptBzpopmaxBzpopmin => {
                 write!(f, "opt_bzpopmax_bzpopmin")
             }
-            OptType::OPT_ZREMRANGEBYLEX_ZREMRANGEBYRANK_ZREMRANGEBYSCORE => {
+            OptType::OptZremrangebylexZremrangebyrankZremrangebyscore => {
                 write!(f, "opt_zremrangebylex_zremrangebyrank_zremrangebyscore")
             }
-            OptType::OPT_ZUNIONSTORE_ZINTERSTORE => {
+            OptType::OptZunionstoreZinterstore => {
                 write!(f, "opt_zunionstore_zinterstore")
             }
         }
@@ -126,7 +126,7 @@ impl fmt::Display for OptType {
 }
 
 pub struct RedisOpt<'a> {
-    pub redis_conn: &'a mut dyn redis::ConnectionLike,
+    pub redis_conn: &'a mut dyn ConnectionLike,
     pub redis_version: String,
     pub opt_type: OptType,
     pub key_suffix: String,
@@ -148,36 +148,36 @@ impl<'a> RedisOpt<'a> {
     pub fn exec(&mut self) -> RedisResult<()> {
         let start = Instant::now();
         let r = match self.opt_type {
-            OptType::OPT_APPEND => self.opt_append(),
-            OptType::OPT_BITOP => self.opt_bitop(),
-            OptType::OPT_DECR_DECRBY => self.opt_decr_decrby(),
-            OptType::OPT_INCR_INCRBY_INCRBYFLOAT => self.opt_incr_incrby_incrbyfloat(),
-            OptType::OPT_MSET_MSETNX => self.opt_mset_msetnx(),
-            OptType::OPT_PSETEX_SETEX => self.opt_psetex_setex(),
-            OptType::OPT_PFADD => self.opt_pfadd(),
-            OptType::OPT_PFMERGE => self.opt_pfmerge(),
-            OptType::OPT_SET_SETNX => self.opt_set_setnx(),
-            OptType::OPT_SETBIT => self.opt_setbit(),
-            OptType::OPT_SETRANGE => self.opt_setrange(),
-            OptType::OPT_HINCRBY_HINCRBYFLOAT => self.opt_hincrby_hincrbyfloat(),
-            OptType::OPT_HSET_HSETNX_HDEL_HMSET => self.opt_hset_hsetnx_hdel_hmset(),
-            OptType::OPT_LPUSH_LPOP_LPUSHX_LSET => self.opt_lpush_lpop_lpushx_lset(),
-            OptType::OPT_LREM_LTRIM_LINSERT => self.opt_lrem_ltrim_linsert(),
-            OptType::OPT_RPUSH_RPUSHX_RPOP_RPOPLPUSH => self.opt_rpush_rpushx_rpop_rpoplpush(),
-            OptType::OPT_LMOVE_BLMOVE_LMPOP_BLMPOP => self.opt_lmove_blmove_lmpop_blmpop(),
-            OptType::OPT_BLPOP_BRPOP_BRPOPLPUSH => self.opt_blpop_brpop_brpoplpush(),
-            OptType::OPT_SADD_SMOVE_SPOP_SREM => self.opt_sadd_smove_spop_srem(),
-            OptType::OPT_SDIFFSTORE_SINERTSTORE_SUNIONSTORE => {
+            OptType::OptAppend => self.opt_append(),
+            OptType::OptBitop => self.opt_bitop(),
+            OptType::OptDecrDecrby => self.opt_decr_decrby(),
+            OptType::OptIncrIncrbyIncrbyfloat => self.opt_incr_incrby_incrbyfloat(),
+            OptType::OptMsetMsetnx => self.opt_mset_msetnx(),
+            OptType::OptPsetexSetex => self.opt_psetex_setex(),
+            OptType::OptPfadd => self.opt_pfadd(),
+            OptType::OptPfmerge => self.opt_pfmerge(),
+            OptType::OptSetSetnx => self.opt_set_setnx(),
+            OptType::OptSetbit => self.opt_setbit(),
+            OptType::OptSetrange => self.opt_setrange(),
+            OptType::OptHincrbyHincrbyfloat => self.opt_hincrby_hincrbyfloat(),
+            OptType::OptHsetHsetnxHdelHmset => self.opt_hset_hsetnx_hdel_hmset(),
+            OptType::OptLpushLpopLpushxLset => self.opt_lpush_lpop_lpushx_lset(),
+            OptType::OptLremLtrimLinsert => self.opt_lrem_ltrim_linsert(),
+            OptType::OptRpushRpushxRpopRpoplpush => self.opt_rpush_rpushx_rpop_rpoplpush(),
+            OptType::OptLmoveBlmoveLmpopBlmpop => self.opt_lmove_blmove_lmpop_blmpop(),
+            OptType::OptBlpopBrpopBrpoplpush => self.opt_blpop_brpop_brpoplpush(),
+            OptType::OptSaddSmoveSpopSrem => self.opt_sadd_smove_spop_srem(),
+            OptType::OptSdiffstoreSinertstoreSunionstore => {
                 self.opt_sdiffstore_sinterstore_sunionstore()
             }
-            OptType::OPT_ZADD_ZINCRBY_ZERM => self.opt_zadd_zincrby_zerm(),
-            OptType::OPT_ZMPOP_BZMPOP => self.opt_zmpop_bzmpop(),
-            OptType::OPT_ZPOPMAX_ZPOPMIN => self.opt_zpopmax_zpopmin(),
-            OptType::OPT_BZPOPMAX_BZPOPMIN => self.opt_bzpopmax_bzpopmin(),
-            OptType::OPT_ZREMRANGEBYLEX_ZREMRANGEBYRANK_ZREMRANGEBYSCORE => {
+            OptType::OptZaddZincrbyZerm => self.opt_zadd_zincrby_zerm(),
+            OptType::OptZmpopBzmpop => self.opt_zmpop_bzmpop(),
+            OptType::OptZpopmaxZpopmin => self.opt_zpopmax_zpopmin(),
+            OptType::OptBzpopmaxBzpopmin => self.opt_bzpopmax_bzpopmin(),
+            OptType::OptZremrangebylexZremrangebyrankZremrangebyscore => {
                 self.opt_zremrangebylex_zremrangebyrank_zremrangebyscore()
             }
-            OptType::OPT_ZUNIONSTORE_ZINTERSTORE => self.opt_zunionstore_zinterstore(),
+            OptType::OptZunionstoreZinterstore => self.opt_zunionstore_zinterstore(),
         };
 
         let result = ExecuteResult {
@@ -1656,10 +1656,12 @@ mod test {
         let subffix = rand_string(4);
         let client = redis::Client::open(rurl).unwrap();
         let mut conn = client.get_connection().unwrap();
+        let cmd_select = redis::cmd("select");
+        conn.req_command(cmd_select.clone().arg("1"));
         let mut opt = RedisOpt {
             redis_conn: &mut conn,
             redis_version: "4".to_string(),
-            opt_type: OptType::OPT_APPEND,
+            opt_type: OptType::OptAppend,
             key_suffix: subffix,
             loopstep: 10,
             expire: 100,
@@ -1679,7 +1681,7 @@ mod test {
         let mut opt = RedisOpt {
             redis_conn: &mut conn,
             redis_version: "4".to_string(),
-            opt_type: OptType::OPT_APPEND,
+            opt_type: OptType::OptAppend,
             key_suffix: subffix,
             loopstep: 10,
             expire: 100,
@@ -1700,7 +1702,7 @@ mod test {
         let mut opt = RedisOpt {
             redis_conn: &mut conn,
             redis_version: "4".to_string(),
-            opt_type: OptType::OPT_APPEND,
+            opt_type: OptType::OptAppend,
             key_suffix: subffix,
             loopstep: 10,
             expire: 100,
@@ -1721,7 +1723,7 @@ mod test {
         let mut opt = RedisOpt {
             redis_conn: &mut conn,
             redis_version: "5".to_string(),
-            opt_type: OptType::OPT_APPEND,
+            opt_type: OptType::OptAppend,
             key_suffix: subffix,
             loopstep: 10,
             expire: 100,

@@ -1,4 +1,4 @@
-use crate::util::rand_string;
+use crate::util::{rand_string, RedisKeyType};
 use anyhow::{anyhow, Result};
 use enum_iterator::Sequence;
 use redis::ToRedisArgs;
@@ -6,66 +6,66 @@ use redis::{aio, ErrorKind, FromRedisValue, RedisError, RedisResult, Value};
 use serde::{Deserialize, Serialize};
 use std::fmt::{Display, Formatter};
 
-#[derive(Debug, PartialEq, Sequence, Clone)]
-pub enum RedisKeyType {
-    TypeString,
-    TypeList,
-    TypeSet,
-    TypeZSet,
-    TypeHash,
-}
+// #[derive(Debug, PartialEq, Sequence, Clone)]
+// pub enum RedisKeyType {
+//     TypeString,
+//     TypeList,
+//     TypeSet,
+//     TypeZSet,
+//     TypeHash,
+// }
 
-impl FromRedisValue for RedisKeyType {
-    fn from_redis_value(v: &Value) -> RedisResult<RedisKeyType> {
-        match *v {
-            Value::Status(ref val) => match val.to_string().as_str() {
-                "string" => Ok(RedisKeyType::TypeString),
-                "list" => Ok(RedisKeyType::TypeList),
-                "set" => Ok(RedisKeyType::TypeSet),
-                "zset" => Ok(RedisKeyType::TypeZSet),
-                "hash" => Ok(RedisKeyType::TypeHash),
-                _ => Err(RedisError::from((
-                    ErrorKind::TypeError,
-                    "Response was of incompatible type",
-                    format!(
-                        "{:?} (response was {:?})",
-                        "Response type not string compatible.", val
-                    ),
-                ))),
-            },
-            _ => Err(RedisError::from((
-                ErrorKind::TypeError,
-                "Response was of incompatible type",
-                format!(
-                    "{:?} (response was {:?})",
-                    "Response type not string compatible.", v
-                ),
-            ))),
-        }
-    }
-}
+// impl FromRedisValue for RedisKeyType {
+//     fn from_redis_value(v: &Value) -> RedisResult<RedisKeyType> {
+//         match *v {
+//             Value::Status(ref val) => match val.to_string().as_str() {
+//                 "string" => Ok(RedisKeyType::TypeString),
+//                 "list" => Ok(RedisKeyType::TypeList),
+//                 "set" => Ok(RedisKeyType::TypeSet),
+//                 "zset" => Ok(RedisKeyType::TypeZSet),
+//                 "hash" => Ok(RedisKeyType::TypeHash),
+//                 _ => Err(RedisError::from((
+//                     ErrorKind::TypeError,
+//                     "Response was of incompatible type",
+//                     format!(
+//                         "{:?} (response was {:?})",
+//                         "Response type not string compatible.", val
+//                     ),
+//                 ))),
+//             },
+//             _ => Err(RedisError::from((
+//                 ErrorKind::TypeError,
+//                 "Response was of incompatible type",
+//                 format!(
+//                     "{:?} (response was {:?})",
+//                     "Response type not string compatible.", v
+//                 ),
+//             ))),
+//         }
+//     }
+// }
 
-impl Display for RedisKeyType {
-    fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
-        match self {
-            RedisKeyType::TypeString => {
-                write!(f, "string")
-            }
-            RedisKeyType::TypeList => {
-                write!(f, "list")
-            }
-            RedisKeyType::TypeSet => {
-                write!(f, "set")
-            }
-            RedisKeyType::TypeZSet => {
-                write!(f, "zset")
-            }
-            RedisKeyType::TypeHash => {
-                write!(f, "hash")
-            }
-        }
-    }
-}
+// impl Display for RedisKeyType {
+//     fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
+//         match self {
+//             RedisKeyType::TypeString => {
+//                 write!(f, "string")
+//             }
+//             RedisKeyType::TypeList => {
+//                 write!(f, "list")
+//             }
+//             RedisKeyType::TypeSet => {
+//                 write!(f, "set")
+//             }
+//             RedisKeyType::TypeZSet => {
+//                 write!(f, "zset")
+//             }
+//             RedisKeyType::TypeHash => {
+//                 write!(f, "hash")
+//             }
+//         }
+//     }
+// }
 
 #[derive(Debug, PartialEq, Serialize, Deserialize, Clone)]
 pub struct GenerateBigKey {

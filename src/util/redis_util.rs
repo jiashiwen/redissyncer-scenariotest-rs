@@ -5,8 +5,11 @@ use std::collections::HashMap;
 use std::fmt::{Display, Formatter};
 use std::str::from_utf8;
 
-use crate::redisdatagen::RedisKeyType;
+use crate::util::RedisKeyType;
 
+use super::RedisKey;
+
+#[derive(Clone, Debug)]
 pub enum InfoSection {
     Server,
     Clients,
@@ -150,6 +153,81 @@ where
     Ok(key_type)
 }
 
+// 通过pipline 批量获取 key type
+pub fn key_type_pipline(
+    keys: Vec<String>,
+    con: &mut dyn redis::ConnectionLike,
+) -> RedisResult<Vec<RedisKey>> {
+    let mut pip = redis::pipe();
+    let mut vec_rediskeys: Vec<RedisKey> = vec![];
+    for key in keys.clone() {
+        let cmd_type = redis::cmd("TYPE").arg(key).to_owned();
+        pip.add_command(cmd_type);
+    }
+    let r: Vec<Value> = pip.query(con)?;
+    for (i, v) in r.iter().enumerate() {
+        if let Value::Status(s) = v {
+            match s.as_str() {
+                "string" => {
+                    let key = keys.get(i);
+                    if let Some(k) = key {
+                        let rediskey = RedisKey {
+                            key: k.to_string(),
+                            key_type: RedisKeyType::TypeString,
+                        };
+                        vec_rediskeys.push(rediskey);
+                    }
+                }
+                "list" => {
+                    let key = keys.get(i);
+                    if let Some(k) = key {
+                        let rediskey = RedisKey {
+                            key: k.to_string(),
+                            key_type: RedisKeyType::TypeList,
+                        };
+                        vec_rediskeys.push(rediskey);
+                    }
+                }
+                "set" => {
+                    let key = keys.get(i);
+                    if let Some(k) = key {
+                        let rediskey = RedisKey {
+                            key: k.to_string(),
+                            key_type: RedisKeyType::TypeSet,
+                        };
+                        vec_rediskeys.push(rediskey);
+                    }
+                }
+
+                "zset" => {
+                    let key = keys.get(i);
+                    if let Some(k) = key {
+                        let rediskey = RedisKey {
+                            key: k.to_string(),
+                            key_type: RedisKeyType::TypeZSet,
+                        };
+                        vec_rediskeys.push(rediskey);
+                    }
+                }
+                "hash" => {
+                    let key = keys.get(i);
+                    if let Some(k) = key {
+                        let rediskey = RedisKey {
+                            key: k.to_string(),
+                            key_type: RedisKeyType::TypeHash,
+                        };
+                        vec_rediskeys.push(rediskey);
+                    }
+                }
+
+                _ => {}
+            }
+        }
+    }
+
+    Ok(vec_rediskeys)
+}
+
 #[cfg(test)]
 mod test {
     use super::*;
@@ -166,5 +244,23 @@ mod test {
         for item in info.iter() {
             println!("section is:{:?},value is {:?} ", item.0, item.1);
         }
+    }
+
+    //cargo test util::redis_util::test::test_key_type_pipline --  --nocapture
+    #[test]
+    fn test_key_type_pipline() {
+        let client = redis::Client::open(S_URL).unwrap();
+        let mut conn = client.get_connection().unwrap();
+        let vk = vec![
+            "a".to_string(),
+            "b".to_string(),
+            "pfmerge_EciZ".to_string(),
+            "lmove_Ibak".to_string(),
+            "hset_iFV3".to_string(),
+            "zadd_D&G7".to_string(),
+            "srem_iFV3".to_string(),
+        ];
+        let r = key_type_pipline(vk, &mut conn);
+        println!("{:?}", r);
     }
 }

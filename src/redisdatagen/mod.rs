@@ -8,4 +8,3 @@ pub use gencmddata::RedisOpt;
 pub use gendatabyduration::GeneratorByDuration;
 pub use generator::gen_string;
 pub use generator::GenerateBigKey;
-pub use generator::RedisKeyType;

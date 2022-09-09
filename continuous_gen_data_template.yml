@@ -1,6 +1,6 @@
 ---
 duration: 300
-redis_url: "redis://:redistest0102@114.67.76.82:16377/?timeout=1s"
+redis_url: "redis://:redistest0102@114.67.76.82:16377/3?timeout=1s"
 redis_version: "0"
 threads: 1
 key_len: 4

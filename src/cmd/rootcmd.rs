@@ -2,10 +2,10 @@ use crate::cmd::requestsample::new_requestsample_cmd;
 use crate::cmd::{new_compare_cmd, new_config_cmd};
 use crate::commons::CommandCompleter;
 use crate::commons::SubCmd;
-use crate::compare::RedisCompare;
-use crate::configure::{self, get_config, get_config_file_path, Config};
+use crate::compare::{Compare, RedisCompare};
+use crate::configure::{self, get_config_file_path, Config};
 use crate::configure::{generate_default_config, set_config_file_path};
-use crate::request::{req, Request};
+use crate::request::req;
 use crate::util::{flash_struct_to_yaml_file, from_yaml_file_to_struct};
 use crate::{configure::set_config_from_file, interact};
 use clap::{Arg, ArgMatches, Command as clap_Command};
@@ -123,10 +123,6 @@ fn cmd_match(matches: &ArgMatches) {
         set_config_from_file("");
     }
 
-    let config = get_config().unwrap();
-    let server = config.server;
-    let req = Request::new(server.clone()).unwrap();
-
     if matches.is_present("interact") {
         interact::run();
         return;
@@ -151,9 +147,10 @@ fn cmd_match(matches: &ArgMatches) {
                 file = arg.to_string();
             }
 
-            let compare = RedisCompare::default();
+            // let compare = RedisCompare::default();
+            let compare = Compare::default();
             match flash_struct_to_yaml_file(&compare, &file) {
-                Ok(_) => println!("Ok"),
+                Ok(_) => println!("Create file {} Ok", file),
                 Err(e) => eprintln!("{}", e),
             };
         }
@@ -161,7 +158,8 @@ fn cmd_match(matches: &ArgMatches) {
         if let Some(execute) = compare.subcommand_matches("exec") {
             let file = execute.value_of("file");
             if let Some(path) = file {
-                let r = from_yaml_file_to_struct::<RedisCompare>(path);
+                // let r = from_yaml_file_to_struct::<RedisCompare>(path);
+                let r = from_yaml_file_to_struct::<Compare>(path);
                 match r {
                     Ok(compare) => {
                         compare.exec();

@@ -1,0 +1,15 @@
+---
+source:
+  - urls:
+      - "redis://127.0.0.1:6379"
+    dbmapper:
+      0: 0
+target:
+  - "redis://127.0.0.1/"
+batch_size: 10
+threads: 2
+ttl_diff: 1
+compare_times: 1
+compare_interval: 1
+report: false
+scenario: Single2single

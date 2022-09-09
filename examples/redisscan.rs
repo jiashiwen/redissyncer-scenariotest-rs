@@ -3,46 +3,20 @@ use redis::{Client, Value};
 
 use std::collections::HashMap;
 
-use std::ops::Add;
-use std::str::{from_utf8, Utf8Error};
+use std::str::from_utf8;
 
-use clap::arg;
-use futures::stream::{Next, StreamExt};
-use rand::Rng;
-use redis::aio::Connection;
-use redis::cluster::ClusterClient;
+use futures::stream::StreamExt;
+
 use redis::ConnectionLike;
 use redis::{AsyncCommands, AsyncIter};
 use std::string::String;
-use std::time::Instant;
-
-// fn main() -> redis::RedisResult<()> {
-//     println!("redisscan");
-//     let client = redis::Client::open("redis://:redistest0102@114.67.76.82:16374/").unwrap();
-//     let mut con = client.get_connection()?;
-//     for i in 0..1000 as i32 {
-//         let key = "k".to_owned() + &i.to_string();
-//         let r = con.set(key.to_redis_args(), i.to_redis_args())?;
-//         println!("{:?}", r);
-//     }
-//
-//
-//     // let rs = con.scan().unwrap();
-//     // // let rs = redis::cmd("scan").cursor_arg(0).arg("MATCH *").arg("count 2").query::<u64>(&mut con);
-//     // for item in rs {
-//     //     println!("{:?}", item);
-//     // }
-//
-//     Ok(())
-// }
 
 #[tokio::main]
 async fn main() -> redis::RedisResult<()> {
-    let i: usize = 10;
+    let _i: usize = 10;
 
-    let mut rng = rand::thread_rng();
+    let mut _rng = rand::thread_rng();
 
-    // let cluster = ClusterClient::open("redis://127.0.0.1/").unwrap();
     let client = Client::open("redis://:redistest0102@114.67.76.82:16377/").unwrap();
 
     let mut con = client.get_connection().unwrap();

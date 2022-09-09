@@ -9,19 +9,15 @@ fn main() -> Result<(), rayon::ThreadPoolBuildError> {
     let (sender, r) = unbounded::<isize>();
 
     let pool = rayon::ThreadPoolBuilder::new().num_threads(2).build()?;
-    // pool.scope(|s| {
-    //     for i in 0..9 {
-    //         s.spawn(move |_| task(i));
-    //     }
-    // });
     let i = 15;
     pool.scope(|s| {
-        // for i in 0..2 {
-        //     s.spawn(move |_| ticker_task());
-        // }
+        for _ in 0..2 {
+            s.spawn(move |_| ticker_task());
+        }
         s.spawn(move |_| {
             println!("print {}", i);
         });
+        s.spawn(move |_| task(i));
         s.spawn(move |_| deadline_task(Duration::from_secs(10)));
         s.spawn(move |_| signal_task(r));
         s.spawn(move |_| {

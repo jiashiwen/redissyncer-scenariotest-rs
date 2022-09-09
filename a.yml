@@ -1,0 +1,24 @@
+---
+source:
+  - urls:
+      - "redis://:redistest0102@114.67.76.82:16377"
+    dbmapper:
+      3: 4
+      5: 5  
+  - urls:
+      - "redis://127.0.0.2:6379"
+      - "redis://127.0.0.3:6777"
+    dbmapper:
+      0: 2
+      4: 6
+      5: 5
+target:
+  - "redis://:redistest0102@114.67.76.82:16377/"
+batch_size: 100
+threads: 2
+compare_threads: 2
+ttl_diff: 1
+compare_times: 1
+compare_interval: 1
+report: false
+scenario: Single2single

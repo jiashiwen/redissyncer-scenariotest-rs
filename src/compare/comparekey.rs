@@ -1,16 +1,17 @@
 use crate::compare::compare_error::{CompareError, CompareErrorType};
-use crate::redisdatagen::RedisKeyType;
+
+use crate::util::{RedisKey, RedisKeyType};
 use anyhow::{Error, Result};
 use redis::{AsyncIter, FromRedisValue, RedisResult, ToRedisArgs, Value};
 use redis::{ConnectionLike, Iter};
 use std::collections::HashMap;
 use std::str::from_utf8;
 
-#[derive(Debug, Clone)]
-pub struct RedisKey {
-    pub key: String,
-    pub key_type: RedisKeyType,
-}
+// #[derive(Debug, Clone)]
+// pub struct RedisKey {
+//     pub key: String,
+//     pub key_type: RedisKeyType,
+// }
 
 pub struct Comparer<'a> {
     pub sconn: &'a mut (dyn ConnectionLike + 'a),
@@ -106,7 +107,7 @@ impl<'a> Comparer<'a> {
         let quotient = s_len / self.batch; // integer division, decimals are truncated
         let remainder = s_len % self.batch;
 
-        let mut lrangeend = 0 as isize;
+        let mut lrangeend: isize = 0;
         if quotient != 0 {
             for i in 0..quotient {
                 if i == quotient - 1 {
@@ -143,7 +144,7 @@ impl<'a> Comparer<'a> {
         }
 
         if remainder != 0 {
-            let mut start = 0 as isize;
+            let mut start: isize = 0;
             if quotient == 0 {
                 start = 0;
             } else {
@@ -551,24 +552,24 @@ where
 #[cfg(test)]
 mod test {
     use super::*;
-    use redis::{Connection, ConnectionLike, ToRedisArgs};
+    use redis::{ConnectionLike, ToRedisArgs};
 
-    static s_url: &str = "redis://:redistest0102@114.67.76.82:16377/?timeout=1s";
-    static t_url: &str = "redis://:redistest0102@114.67.120.120:16376/?timeout=1s";
+    static S_URL: &str = "redis://:redistest0102@114.67.76.82:16377/?timeout=1s";
+    static T_URL: &str = "redis://:redistest0102@114.67.120.120:16376/?timeout=1s";
 
     //cargo test compare::comparekey::test::test_Comparer_string --  --nocapture
     #[test]
     fn test_Comparer_string() {
-        let s_client = redis::Client::open(s_url).unwrap();
-        let t_client = redis::Client::open(t_url).unwrap();
+        let s_client = redis::Client::open(S_URL).unwrap();
+        let t_client = redis::Client::open(T_URL).unwrap();
         let mut scon = s_client.get_connection().unwrap();
         let mut tcon = t_client.get_connection().unwrap();
 
         let mut comparer: Comparer = Comparer::new(&mut scon, &mut tcon);
 
-        let mut cmd_set = redis::cmd("set");
+        let cmd_set = redis::cmd("set");
 
-        let mut cmd_expire = redis::cmd("expire");
+        let cmd_expire = redis::cmd("expire");
         let s_r = comparer
             .sconn
             .req_command(cmd_set.clone().arg("a").arg("1123aaa"));
@@ -594,8 +595,8 @@ mod test {
     //cargo test compare::comparekey::test::test_Comparer_list --  --nocapture
     #[test]
     fn test_Comparer_list() {
-        let s_client = redis::Client::open(s_url).unwrap();
-        let t_client = redis::Client::open(t_url).unwrap();
+        let s_client = redis::Client::open(S_URL).unwrap();
+        let t_client = redis::Client::open(T_URL).unwrap();
         let mut scon = s_client.get_connection().unwrap();
         let mut tcon = t_client.get_connection().unwrap();
 
@@ -623,8 +624,8 @@ mod test {
     //cargo test compare::comparekey::test::test_Comparer_set --  --nocapture
     #[test]
     fn test_Comparer_set() {
-        let s_client = redis::Client::open(s_url).unwrap();
-        let t_client = redis::Client::open(t_url).unwrap();
+        let s_client = redis::Client::open(S_URL).unwrap();
+        let t_client = redis::Client::open(T_URL).unwrap();
         let mut scon = s_client.get_connection().unwrap();
         let mut tcon = t_client.get_connection().unwrap();
 
@@ -650,11 +651,11 @@ mod test {
         println!("{:?}", r);
     }
 
-    //cargo test compare::comparekey::test::test_Comparer_sorted_set --  --nocapture
+    //cargo test compare::comparekey::test::test_comparer_sorted_set --  --nocapture
     #[test]
-    fn test_Comparer_sorted_set() {
-        let s_client = redis::Client::open(s_url).unwrap();
-        let t_client = redis::Client::open(t_url).unwrap();
+    fn test_comparer_sorted_set() {
+        let s_client = redis::Client::open(S_URL).unwrap();
+        let t_client = redis::Client::open(T_URL).unwrap();
         let mut scon = s_client.get_connection().unwrap();
         let mut tcon = t_client.get_connection().unwrap();
 
@@ -688,17 +689,17 @@ mod test {
         println!("{:?}", r);
     }
 
-    //cargo test compare::comparekey::test::test_Comparer_hash --  --nocapture
+    //cargo test compare::comparekey::test::test_comparer_hash --  --nocapture
     #[test]
-    fn test_Comparer_hash() {
-        let s_client = redis::Client::open(s_url).unwrap();
-        let t_client = redis::Client::open(t_url).unwrap();
+    fn test_comparer_hash() {
+        let s_client = redis::Client::open(S_URL).unwrap();
+        let t_client = redis::Client::open(T_URL).unwrap();
         let mut scon = s_client.get_connection().unwrap();
         let mut tcon = t_client.get_connection().unwrap();
 
         let mut comparer: Comparer = Comparer::new(&mut scon, &mut tcon);
 
-        let mut cmd_hset = redis::cmd("hset");
+        let cmd_hset = redis::cmd("hset");
 
         let key_hash = RedisKey {
             key: "h1".to_string(),
@@ -726,10 +727,10 @@ mod test {
         println!("{:?}", r);
     }
 
-    //cargo test compare::comparekey::test::test_new_Comparer --  --nocapture
+    //cargo test compare::comparekey::test::test_new_comparer --  --nocapture
     #[test]
-    fn test_new_Comparer() {
-        let client = redis::Client::open(s_url).unwrap();
+    fn test_new_comparer() {
+        let client = redis::Client::open(S_URL).unwrap();
         let mut scon = client.get_connection().unwrap();
         let mut tcon = client.get_connection().unwrap();
 
@@ -742,7 +743,7 @@ mod test {
     //cargo test compare::comparekey::test::test_key_exists --  --nocapture
     #[test]
     fn test_key_exists() {
-        let client = redis::Client::open(s_url).unwrap();
+        let client = redis::Client::open(S_URL).unwrap();
         let mut conn = client.get_connection().unwrap();
         let exists = key_exists("hll".to_redis_args(), &mut conn);
         println!("{:?}", exists);
@@ -751,7 +752,7 @@ mod test {
     //cargo test compare::comparekey::test::test_ttl --  --nocapture
     #[test]
     fn test_ttl() {
-        let client = redis::Client::open(s_url).unwrap();
+        let client = redis::Client::open(S_URL).unwrap();
         let mut conn = client.get_connection().unwrap();
         let ttl = ttl("hl", &mut conn);
         let pttl = pttl("hll", &mut conn);
@@ -761,7 +762,7 @@ mod test {
     //cargo test compare::comparekey::test::test_key_type --  --nocapture
     #[test]
     fn test_key_type() {
-        let client = redis::Client::open(s_url).unwrap();
+        let client = redis::Client::open(S_URL).unwrap();
         let mut conn = client.get_connection().unwrap();
 
         let k_type = key_type("h1", &mut conn);
@@ -771,7 +772,7 @@ mod test {
     //cargo test compare::comparekey::test::test_get_instance_parameters --  --nocapture
     #[test]
     fn test_get_instance_parameters() {
-        let client = redis::Client::open(s_url).unwrap();
+        let client = redis::Client::open(S_URL).unwrap();
         let mut conn = client.get_connection().unwrap();
         let k_type = get_instance_parameters(&mut conn).unwrap();
         for item in k_type.iter() {
@@ -782,7 +783,7 @@ mod test {
     //cargo test compare::comparekey::test::test_select --  --nocapture
     #[test]
     fn test_select() {
-        let client = redis::Client::open(s_url).unwrap();
+        let client = redis::Client::open(S_URL).unwrap();
 
         let mut conn = client.get_connection().unwrap();
         let mut cmd_select = redis::cmd("select");

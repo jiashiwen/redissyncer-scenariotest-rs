@@ -41,6 +41,10 @@ name = "multithread"
 path = "examples/multithread.rs"
 
 [[example]]
+name = "threadinthread"
+path = "examples/threadinthread.rs"
+
+[[example]]
 name = "redisscan"
 path = "examples/redisscan.rs"
 

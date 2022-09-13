@@ -28,7 +28,7 @@ anyhow = "1.0.56"
 sysinfo = "0.23.6"
 chrono = "0.4.19"
 futures = "0.3"
-redis = { version = "0.21.5", features = ["default", "tokio-comp", "async-std-comp", "cluster"] }
+redis = { version = "0.21.6", features = ["default", "tokio-comp", "async-std-comp", "cluster"] }
 rand = "0.8.5"
 enum-iterator = "1.1.3"
 rayon = "1.5.3"
@@ -52,4 +52,6 @@ path = "examples/redisscan.rs"
 name = "callback"
 path = "examples/callback.rs"
 
-
+[[example]]
+name = "rediscluster"
+path = "examples/redisclustersample.rs"

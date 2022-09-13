@@ -7,12 +7,6 @@ use redis::{ConnectionLike, Iter};
 use std::collections::HashMap;
 use std::str::from_utf8;
 
-// #[derive(Debug, Clone)]
-// pub struct RedisKey {
-//     pub key: String,
-//     pub key_type: RedisKeyType,
-// }
-
 pub struct Comparer<'a> {
     pub sconn: &'a mut (dyn ConnectionLike + 'a),
     pub tconn: &'a mut (dyn ConnectionLike + 'a),

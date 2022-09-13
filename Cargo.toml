@@ -30,7 +30,9 @@ chrono = "0.4.19"
 futures = "0.3"
 redis = { version = "0.21.6", features = ["default", "tokio-comp", "async-std-comp", "cluster"] }
 rand = "0.8.5"
-enum-iterator = "1.1.3"
+# enum-iterator = "1.1.3"
+strum = "0.24"
+strum_macros = "0.24"
 rayon = "1.5.3"
 crossbeam = "0.8.2"
 

@@ -1,6 +1,8 @@
 use std::fmt;
 use std::fmt::{Display, Formatter};
 
+use redis::Value;
+
 /// 错误的类型
 #[derive(Debug)]
 pub enum CompareErrorType {
@@ -15,7 +17,6 @@ pub enum CompareErrorType {
     HashLenDiff,
     HashFieldValueDiff,
     StringValueNotEqual,
-
     /// 未知错误
     Unknown,
 }
@@ -63,6 +64,13 @@ impl fmt::Display for CompareErrorType {
     }
 }
 
+#[derive(Debug)]
+pub struct CompareErrorReason {
+    pub key_name: String,
+    pub source: Option<Value>,
+    pub target: Option<Value>,
+}
+
 /// 应用错误
 #[derive(Debug)]
 pub struct CompareError {
@@ -72,6 +80,7 @@ pub struct CompareError {
     pub cause: Option<String>,
     /// 错误类型
     pub error_type: CompareErrorType,
+    pub reason: Option<CompareErrorReason>,
 }
 
 impl CompareError {
@@ -99,6 +108,7 @@ impl CompareError {
             message: None,
             cause: Some(err.to_string()),
             error_type: error_type,
+            reason: None,
         }
     }
     /// 从字符串创建应用错误
@@ -108,6 +118,16 @@ impl CompareError {
             message: Some(msg.to_string()),
             cause: None,
             error_type: error_type,
+            reason: None,
+        }
+    }
+
+    pub fn from_reason(reason: CompareErrorReason, error_type: CompareErrorType) -> Self {
+        Self {
+            message: Some(error_type.to_string()),
+            cause: None,
+            error_type: error_type,
+            reason: Some(reason),
         }
     }
 }

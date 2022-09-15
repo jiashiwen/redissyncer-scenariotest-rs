@@ -1,7 +1,6 @@
 // 通过命令组合生成key，尽量覆盖redis所有命令操作
 
 use crate::util::rand_string;
-// use enum_iterator::{all, Sequence};
 use rand::Rng;
 use redis::ConnectionLike;
 use redis::{RedisResult, ToRedisArgs};
@@ -12,7 +11,6 @@ use strum::IntoEnumIterator;
 use strum_macros::EnumIter;
 use tokio::time::Instant;
 
-// #[derive(Debug, PartialEq, Sequence, Clone)]
 #[derive(Debug, PartialEq, EnumIter, Clone)]
 pub enum OptType {
     OptAppend,
@@ -197,17 +195,12 @@ impl<'a> RedisOpt<'a> {
     }
 
     pub fn exec_all(&mut self) {
-        // let ri = all::<OptType>().collect::<Vec<_>>();
         let opttype = self.opt_type.clone();
         for ot in OptType::iter() {
             self.opt_type = ot;
             let _ = self.exec();
         }
 
-        // for item in ri {
-        //     self.opt_type = item;
-        //     let _ = self.exec();
-        // }
         self.opt_type = opttype;
     }
 }

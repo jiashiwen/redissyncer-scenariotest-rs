@@ -2,7 +2,7 @@ use crate::cmd::requestsample::new_requestsample_cmd;
 use crate::cmd::{new_compare_cmd, new_config_cmd};
 use crate::commons::CommandCompleter;
 use crate::commons::SubCmd;
-use crate::compare::{Compare, RedisCompare};
+use crate::compare::{Compare, Instance, ScenarioType, SourceInstance};
 use crate::configure::{self, get_config_file_path, Config};
 use crate::configure::{generate_default_config, set_config_file_path};
 use crate::request::req;
@@ -11,6 +11,7 @@ use crate::{configure::set_config_from_file, interact};
 use clap::{Arg, ArgMatches, Command as clap_Command};
 use lazy_static::lazy_static;
 use std::borrow::Borrow;
+use std::collections::HashMap;
 
 use crate::cmd::cmdgendata::new_gendata_cmd;
 use crate::redisdatagen::{GenerateBigKey, GeneratorByDuration};
@@ -141,24 +142,232 @@ fn cmd_match(matches: &ArgMatches) {
 
     if let Some(ref compare) = matches.subcommand_matches("compare") {
         if let Some(sample) = compare.subcommand_matches("sample") {
-            let mut file = "./compare_sample.yml".to_string();
-            let file_arg = sample.value_of("filepath");
-            if let Some(arg) = file_arg {
-                file = arg.to_string();
+            if let Some(single2single) = sample.subcommand_matches("single2single") {
+                let mut file = "./compare_sample_single2single.yml".to_string();
+                let file_arg = single2single.value_of("filepath");
+                if let Some(arg) = file_arg {
+                    file = arg.to_string();
+                }
+
+                let mut compare = Compare::default();
+                compare.source[0].instance.urls[0] =
+                    "redis://:password@127.0.0.1:6379/?timeout=1s".to_string();
+                match flash_struct_to_yaml_file(&compare, &file) {
+                    Ok(_) => println!("Create file {} Ok", file),
+                    Err(e) => eprintln!("{}", e),
+                };
             }
 
-            // let compare = RedisCompare::default();
-            let compare = Compare::default();
-            match flash_struct_to_yaml_file(&compare, &file) {
-                Ok(_) => println!("Create file {} Ok", file),
-                Err(e) => eprintln!("{}", e),
-            };
+            if let Some(single2cluster) = sample.subcommand_matches("single2cluster") {
+                let mut file = "./compare_sample_single2cluster.yml".to_string();
+                let file_arg = single2cluster.value_of("filepath");
+                if let Some(arg) = file_arg {
+                    file = arg.to_string();
+                }
+
+                let mut compare = Compare::default();
+                let target_instance = Instance {
+                    urls: vec![
+                        "redis://127.0.0.1:6379".to_string(),
+                        "redis://127.0.0.1:6380".to_string(),
+                        "redis://127.0.0.1:6381".to_string(),
+                    ],
+                    password: "".to_string(),
+                };
+                compare.target = target_instance;
+                compare.scenario = ScenarioType::Single2cluster;
+                match flash_struct_to_yaml_file(&compare, &file) {
+                    Ok(_) => println!("Create file {} Ok", file),
+                    Err(e) => eprintln!("{}", e),
+                };
+            }
+
+            if let Some(cluster2cluster) = sample.subcommand_matches("cluster2cluster") {
+                let mut file = "./compare_sample_cluster2cluster.yml".to_string();
+                let file_arg = cluster2cluster.value_of("filepath");
+                if let Some(arg) = file_arg {
+                    file = arg.to_string();
+                }
+
+                let mut compare = Compare::default();
+                let mut dbmapper: HashMap<usize, usize> = HashMap::new();
+                dbmapper.insert(0, 0);
+
+                let source_instance = SourceInstance {
+                    instance: Instance {
+                        urls: vec![
+                            "redis://127.0.0.1:6379".to_string(),
+                            "redis://127.0.0.1:6380".to_string(),
+                            "redis://127.0.0.1:6381".to_string(),
+                        ],
+                        password: "xxx".to_string(),
+                    },
+                    dbmapper,
+                };
+                let target_instance = Instance {
+                    urls: vec![
+                        "redis://127.0.0.1:16379".to_string(),
+                        "redis://127.0.0.1:16380".to_string(),
+                        "redis://127.0.0.1:16381".to_string(),
+                    ],
+                    password: "xxx".to_string(),
+                };
+                compare.source[0] = source_instance;
+                compare.target = target_instance;
+                compare.scenario = ScenarioType::Cluster2cluster;
+                match flash_struct_to_yaml_file(&compare, &file) {
+                    Ok(_) => println!("Create file {} Ok", file),
+                    Err(e) => eprintln!("{}", e),
+                };
+            }
+
+            if let Some(multisingle2single) = sample.subcommand_matches("multisingle2single") {
+                let mut file = "./compare_sample_multisingle2single.yml".to_string();
+                let file_arg = multisingle2single.value_of("filepath");
+                if let Some(arg) = file_arg {
+                    file = arg.to_string();
+                }
+
+                let mut dbmapper: HashMap<usize, usize> = HashMap::new();
+
+                dbmapper.insert(0, 1);
+                dbmapper.insert(3, 5);
+                dbmapper.insert(4, 4);
+
+                let source_instance1 = SourceInstance {
+                    instance: Instance {
+                        urls: vec![
+                            "redis://:password_source_1@127.0.0.1:6379/?timeout=1s".to_string()
+                        ],
+                        password: "".to_string(),
+                    },
+                    dbmapper: dbmapper.clone(),
+                };
+
+                dbmapper.clear();
+                dbmapper.insert(0, 1);
+                dbmapper.insert(2, 5);
+                dbmapper.insert(4, 3);
+                let source_instance2 = SourceInstance {
+                    instance: Instance {
+                        urls: vec![
+                            "redis://:password_source_2@127.0.0.1:6380/?timeout=1s".to_string()
+                        ],
+                        password: "".to_string(),
+                    },
+                    dbmapper: dbmapper.clone(),
+                };
+
+                dbmapper.clear();
+                dbmapper.insert(2, 1);
+                dbmapper.insert(1, 5);
+                dbmapper.insert(4, 7);
+                let source_instance3 = SourceInstance {
+                    instance: Instance {
+                        urls: vec![
+                            "redis://:password_source_3@127.0.0.1:6381/?timeout=1s".to_string()
+                        ],
+                        password: "".to_string(),
+                    },
+                    dbmapper: dbmapper.clone(),
+                };
+
+                let target_instance = Instance {
+                    urls: vec!["redis://:password_target@127.0.0.1:6382/?timeout=1s".to_string()],
+                    password: "".to_string(),
+                };
+
+                let mut compare = Compare::default();
+                compare.source.clear();
+                compare.source.push(source_instance1);
+                compare.source.push(source_instance2);
+                compare.source.push(source_instance3);
+                compare.target = target_instance;
+                compare.scenario = ScenarioType::Multisingle2single;
+                match flash_struct_to_yaml_file(&compare, &file) {
+                    Ok(_) => println!("Create file {} Ok", file),
+                    Err(e) => eprintln!("{}", e),
+                };
+            }
+
+            if let Some(multisingle2cluster) = sample.subcommand_matches("multisingle2cluster") {
+                let mut file = "./compare_sample_multisingle2cluster.yml".to_string();
+                let file_arg = multisingle2cluster.value_of("filepath");
+                if let Some(arg) = file_arg {
+                    file = arg.to_string();
+                }
+
+                let mut dbmapper: HashMap<usize, usize> = HashMap::new();
+
+                dbmapper.insert(0, 1);
+                dbmapper.insert(2, 3);
+                dbmapper.insert(6, 6);
+
+                let source_instance1 = SourceInstance {
+                    instance: Instance {
+                        urls: vec![
+                            "redis://:password_source_1@127.0.0.1:6379/?timeout=1s".to_string()
+                        ],
+                        password: "".to_string(),
+                    },
+                    dbmapper: dbmapper.clone(),
+                };
+
+                dbmapper.clear();
+                dbmapper.insert(0, 0);
+                dbmapper.insert(2, 5);
+                dbmapper.insert(4, 3);
+                let source_instance2 = SourceInstance {
+                    instance: Instance {
+                        urls: vec![
+                            "redis://:password_source_2@127.0.0.1:6380/?timeout=1s".to_string()
+                        ],
+                        password: "".to_string(),
+                    },
+                    dbmapper: dbmapper.clone(),
+                };
+
+                dbmapper.clear();
+                dbmapper.insert(2, 1);
+                dbmapper.insert(1, 5);
+                dbmapper.insert(4, 7);
+                let source_instance3 = SourceInstance {
+                    instance: Instance {
+                        urls: vec![
+                            "redis://:password_source_3@127.0.0.1:6381/?timeout=1s".to_string()
+                        ],
+                        password: "".to_string(),
+                    },
+                    dbmapper: dbmapper.clone(),
+                };
+
+                let target_instance = Instance {
+                    urls: vec![
+                        "redis://127.0.0.1:16379".to_string(),
+                        "redis://127.0.0.1:16380".to_string(),
+                        "redis://127.0.0.1:16381".to_string(),
+                    ],
+                    password: "xxx".to_string(),
+                };
+
+                let mut compare = Compare::default();
+
+                compare.source.clear();
+                compare.source.push(source_instance1);
+                compare.source.push(source_instance2);
+                compare.source.push(source_instance3);
+                compare.target = target_instance;
+                compare.scenario = ScenarioType::Multisingle2cluster;
+                match flash_struct_to_yaml_file(&compare, &file) {
+                    Ok(_) => println!("Create file {} Ok", file),
+                    Err(e) => eprintln!("{}", e),
+                };
+            }
         }
 
         if let Some(execute) = compare.subcommand_matches("exec") {
             let file = execute.value_of("file");
             if let Some(path) = file {
-                // let r = from_yaml_file_to_struct::<RedisCompare>(path);
                 let r = from_yaml_file_to_struct::<Compare>(path);
                 match r {
                     Ok(compare) => {

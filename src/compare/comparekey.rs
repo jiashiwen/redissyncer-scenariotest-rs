@@ -2,10 +2,14 @@ use crate::compare::compare_error::{CompareError, CompareErrorType};
 
 use crate::util::{RedisKey, RedisKeyType};
 use anyhow::{Error, Result};
+
 use redis::{AsyncIter, FromRedisValue, RedisResult, ToRedisArgs, Value};
 use redis::{ConnectionLike, Iter};
 use std::collections::HashMap;
 use std::str::from_utf8;
+
+use super::compare_error::CompareErrorReason;
+use super::SourceInstance;
 
 pub struct Comparer<'a> {
     pub sconn: &'a mut (dyn ConnectionLike + 'a),
@@ -42,8 +46,14 @@ impl<'a> Comparer<'a> {
         let t_exist = key_exists(key.key.clone(), self.tconn)?;
 
         if !t_exist {
-            return Err(Error::from(CompareError::from_str(
-                "key not exists target",
+            let v = Value::Data(Vec::<u8>::from(key.key.clone()));
+            let reason = CompareErrorReason {
+                key_name: key.key.clone(),
+                source: Some(v),
+                target: None,
+            };
+            return Err(Error::from(CompareError::from_reason(
+                reason,
                 CompareErrorType::ExistsErr,
             )));
         }
@@ -56,8 +66,13 @@ impl<'a> Comparer<'a> {
             .tconn
             .req_command(redis::cmd("get").arg(key.key.clone()))?;
         if !sval.eq(&tval) {
-            return Err(Error::from(CompareError::from_str(
-                "key value not equal",
+            let reason = CompareErrorReason {
+                key_name: key.key.clone(),
+                source: Some(sval.clone()),
+                target: Some(tval.clone()),
+            };
+            return Err(Error::from(CompareError::from_reason(
+                reason,
                 CompareErrorType::StringValueNotEqual,
             )));
         }
@@ -67,8 +82,13 @@ impl<'a> Comparer<'a> {
         let t_ttl = ttl(key.key.clone(), self.tconn)?;
 
         if self.ttl_diff < (s_ttl - t_ttl).abs() as usize {
-            return Err(Error::from(CompareError::from_str(
-                "ttl diff too large",
+            let reason = CompareErrorReason {
+                key_name: key.key.clone(),
+                source: Some(Value::Data(Vec::<u8>::from(s_ttl.to_string()))),
+                target: Some(Value::Data(Vec::<u8>::from(t_ttl.to_string()))),
+            };
+            return Err(Error::from(CompareError::from_reason(
+                reason,
                 CompareErrorType::TTLDiff,
             )));
         }
@@ -80,8 +100,13 @@ impl<'a> Comparer<'a> {
         // target端key是否存在
         let t_exist = key_exists(key.key.clone(), self.tconn)?;
         if !t_exist {
-            return Err(Error::from(CompareError::from_str(
-                "key not exists target",
+            let reason = CompareErrorReason {
+                key_name: key.key.clone(),
+                source: Some(Value::Data(Vec::<u8>::from(key.key.clone()))),
+                target: None,
+            };
+            return Err(Error::from(CompareError::from_reason(
+                reason,
                 CompareErrorType::ExistsErr,
             )));
         }
@@ -91,9 +116,14 @@ impl<'a> Comparer<'a> {
         let t_len = list_len(key.key.clone(), self.tconn)?;
 
         if !s_len.eq(&t_len) {
-            return Err(Error::from(CompareError::from_str(
-                "list len diff",
-                CompareErrorType::ExistsErr,
+            let reason = CompareErrorReason {
+                key_name: key.key.clone(),
+                source: Some(Value::Data(Vec::<u8>::from(s_len.to_string()))),
+                target: Some(Value::Data(Vec::<u8>::from(t_len.to_string()))),
+            };
+            return Err(Error::from(CompareError::from_reason(
+                reason,
+                CompareErrorType::ListLenDiff,
             )));
         }
 
@@ -124,13 +154,26 @@ impl<'a> Comparer<'a> {
                 )?;
 
                 for i in 0..s_elements.len() {
-                    let s_val = s_elements.get(i);
-                    let t_val = t_elements.get(i);
+                    let s_val = match s_elements.get(i) {
+                        Some(s) => s.clone(),
+                        None => "".to_string(),
+                    };
+
+                    let t_val = match t_elements.get(i) {
+                        Some(s) => s.clone(),
+                        None => "".to_string(),
+                    };
 
                     if !s_val.eq(&t_val) {
-                        return Err(Error::from(CompareError::from_str(
-                            "list index value diff",
-                            CompareErrorType::ExistsErr,
+                        let name = format!("name:{};index:{}", key.key.clone(), i.to_string());
+                        let reason: CompareErrorReason = CompareErrorReason {
+                            key_name: name,
+                            source: Some(Value::Data(Vec::<u8>::from(s_val.clone()))),
+                            target: Some(Value::Data(Vec::<u8>::from(t_val.clone()))),
+                        };
+                        return Err(Error::from(CompareError::from_reason(
+                            reason,
+                            CompareErrorType::ListIndexValueDiff,
                         )));
                     }
                 }
@@ -158,13 +201,25 @@ impl<'a> Comparer<'a> {
                 self.tconn,
             )?;
             for i in 0..s_elements.len() {
-                let s_val = s_elements.get(i);
-                let t_val = t_elements.get(i);
+                let s_val = match s_elements.get(i) {
+                    Some(s) => s.clone(),
+                    None => "".to_string(),
+                };
+                let t_val = match t_elements.get(i) {
+                    Some(s) => s.clone(),
+                    None => "".to_string(),
+                };
 
                 if !s_val.eq(&t_val) {
-                    return Err(Error::from(CompareError::from_str(
-                        "list index value diff",
-                        CompareErrorType::ExistsErr,
+                    let name = format!("name:{};index:{}", key.key.clone(), i.to_string());
+                    let reason: CompareErrorReason = CompareErrorReason {
+                        key_name: name,
+                        source: Some(Value::Data(Vec::<u8>::from(s_val.clone()))),
+                        target: Some(Value::Data(Vec::<u8>::from(t_val.clone()))),
+                    };
+                    return Err(Error::from(CompareError::from_reason(
+                        reason,
+                        CompareErrorType::ListIndexValueDiff,
                     )));
                 }
             }
@@ -175,8 +230,13 @@ impl<'a> Comparer<'a> {
         let t_ttl = ttl(key.key.clone(), self.tconn)?;
 
         if self.ttl_diff < (s_ttl - t_ttl).abs() as usize {
-            return Err(Error::from(CompareError::from_str(
-                "ttl diff too large",
+            let reason: CompareErrorReason = CompareErrorReason {
+                key_name: key.key.clone(),
+                source: Some(Value::Data(Vec::<u8>::from(s_ttl.to_string()))),
+                target: Some(Value::Data(Vec::<u8>::from(t_ttl.to_string()))),
+            };
+            return Err(Error::from(CompareError::from_reason(
+                reason,
                 CompareErrorType::TTLDiff,
             )));
         }
@@ -187,8 +247,13 @@ impl<'a> Comparer<'a> {
         // target端key是否存在
         let t_exist = key_exists(key.key.clone(), self.tconn)?;
         if !t_exist {
-            return Err(Error::from(CompareError::from_str(
-                "key not exists target",
+            let reason: CompareErrorReason = CompareErrorReason {
+                key_name: key.key.clone(),
+                source: Some(Value::Data(Vec::<u8>::from(key.key.clone()))),
+                target: None,
+            };
+            return Err(Error::from(CompareError::from_reason(
+                reason,
                 CompareErrorType::ExistsErr,
             )));
         }
@@ -198,8 +263,13 @@ impl<'a> Comparer<'a> {
         let t_size = scard(key.key.clone(), self.tconn)?;
 
         if !s_size.eq(&t_size) {
-            return Err(Error::from(CompareError::from_str(
-                "set members diff",
+            let reason: CompareErrorReason = CompareErrorReason {
+                key_name: key.key.clone(),
+                source: Some(Value::Data(Vec::<u8>::from(s_size.to_string()))),
+                target: Some(Value::Data(Vec::<u8>::from(t_size.to_string()))),
+            };
+            return Err(Error::from(CompareError::from_reason(
+                reason,
                 CompareErrorType::SetCardDiff,
             )));
         }
@@ -209,10 +279,15 @@ impl<'a> Comparer<'a> {
         cmd_sscan.arg(key.key.clone()).cursor_arg(0);
         let iter: Iter<String> = cmd_sscan.iter(self.sconn)?;
         for item in iter {
-            let is = sismumber(key.key.clone(), item, self.tconn)?;
+            let is = sismumber(key.key.clone(), item.clone(), self.tconn)?;
             if !is {
-                return Err(Error::from(CompareError::from_str(
-                    "set members diff",
+                let reason: CompareErrorReason = CompareErrorReason {
+                    key_name: key.key.clone(),
+                    source: Some(Value::Data(Vec::<u8>::from(item.clone()))),
+                    target: None,
+                };
+                return Err(Error::from(CompareError::from_reason(
+                    reason,
                     CompareErrorType::SetMemberNotIn,
                 )));
             }
@@ -223,8 +298,13 @@ impl<'a> Comparer<'a> {
         let t_ttl = ttl(key.key.clone(), self.tconn)?;
 
         if self.ttl_diff < (s_ttl - t_ttl).abs() as usize {
-            return Err(Error::from(CompareError::from_str(
-                "ttl diff too large",
+            let reason: CompareErrorReason = CompareErrorReason {
+                key_name: key.key.clone(),
+                source: Some(Value::Data(Vec::<u8>::from(s_ttl.to_string()))),
+                target: Some(Value::Data(Vec::<u8>::from(t_ttl.to_string()))),
+            };
+            return Err(Error::from(CompareError::from_reason(
+                reason,
                 CompareErrorType::TTLDiff,
             )));
         }
@@ -235,8 +315,13 @@ impl<'a> Comparer<'a> {
         // target端key是否存在
         let t_exist = key_exists(key.key.clone(), self.tconn)?;
         if !t_exist {
-            return Err(Error::from(CompareError::from_str(
-                "key not exists target",
+            let reason: CompareErrorReason = CompareErrorReason {
+                key_name: key.key.clone(),
+                source: Some(Value::Data(Vec::<u8>::from(key.key.clone().to_string()))),
+                target: None,
+            };
+            return Err(Error::from(CompareError::from_reason(
+                reason,
                 CompareErrorType::ExistsErr,
             )));
         }
@@ -246,8 +331,13 @@ impl<'a> Comparer<'a> {
         let t_size = zcard(key.key.clone(), self.tconn)?;
 
         if !s_size.eq(&t_size) {
-            return Err(Error::from(CompareError::from_str(
-                "Sorted set members diff",
+            let reason: CompareErrorReason = CompareErrorReason {
+                key_name: key.key.clone(),
+                source: Some(Value::Data(Vec::<u8>::from(s_size.to_string()))),
+                target: Some(Value::Data(Vec::<u8>::from(t_size.to_string()))),
+            };
+            return Err(Error::from(CompareError::from_reason(
+                reason,
                 CompareErrorType::ZSetCardDiff,
             )));
         }
@@ -266,8 +356,13 @@ impl<'a> Comparer<'a> {
                 let t_scroe = zscore(key.key.clone(), member.clone(), self.tconn)?;
 
                 if !t_scroe.to_string().eq(&item) {
-                    return Err(Error::from(CompareError::from_str(
-                        "zset member score diff",
+                    let reason: CompareErrorReason = CompareErrorReason {
+                        key_name: key.key.clone(),
+                        source: Some(Value::Data(Vec::<u8>::from(item.clone()))),
+                        target: Some(Value::Data(Vec::<u8>::from(t_scroe.to_string()))),
+                    };
+                    return Err(Error::from(CompareError::from_reason(
+                        reason,
                         CompareErrorType::ZSetMemberScoreDiff,
                     )));
                 }
@@ -280,8 +375,13 @@ impl<'a> Comparer<'a> {
         let t_ttl = ttl(key.key.clone(), self.tconn)?;
 
         if self.ttl_diff < (s_ttl - t_ttl).abs() as usize {
-            return Err(Error::from(CompareError::from_str(
-                "ttl diff too large",
+            let reason: CompareErrorReason = CompareErrorReason {
+                key_name: key.key.clone(),
+                source: Some(Value::Data(Vec::<u8>::from(s_ttl.to_string()))),
+                target: Some(Value::Data(Vec::<u8>::from(t_ttl.to_string()))),
+            };
+            return Err(Error::from(CompareError::from_reason(
+                reason,
                 CompareErrorType::TTLDiff,
             )));
         }
@@ -292,8 +392,13 @@ impl<'a> Comparer<'a> {
         // target端key是否存在
         let t_exist = key_exists(key.key.clone(), self.tconn)?;
         if !t_exist {
-            return Err(Error::from(CompareError::from_str(
-                "key not exists target",
+            let reason: CompareErrorReason = CompareErrorReason {
+                key_name: key.key.clone(),
+                source: Some(Value::Data(Vec::<u8>::from(key.key.clone().to_string()))),
+                target: None,
+            };
+            return Err(Error::from(CompareError::from_reason(
+                reason,
                 CompareErrorType::ExistsErr,
             )));
         }
@@ -302,9 +407,14 @@ impl<'a> Comparer<'a> {
         let s_len = hlen(key.key.clone(), self.sconn)?;
         let t_len = hlen(key.key.clone(), self.tconn)?;
         if s_len != t_len {
-            return Err(Error::from(CompareError::from_str(
-                "hash len diff",
-                CompareErrorType::HashLenDiff,
+            let reason = CompareErrorReason {
+                key_name: key.key.clone(),
+                source: Some(Value::Data(Vec::<u8>::from(s_len.to_string()))),
+                target: Some(Value::Data(Vec::<u8>::from(t_len.to_string()))),
+            };
+            return Err(Error::from(CompareError::from_reason(
+                reason,
+                CompareErrorType::ExistsErr,
             )));
         }
 
@@ -320,8 +430,13 @@ impl<'a> Comparer<'a> {
             } else {
                 let t_val = hget(key.key.clone(), field.clone(), self.tconn)?;
                 if !item.eq(&t_val) {
-                    return Err(Error::from(CompareError::from_str(
-                        "hash field value diff",
+                    let reason = CompareErrorReason {
+                        key_name: key.key.clone(),
+                        source: Some(Value::Data(Vec::<u8>::from(item.clone()))),
+                        target: Some(Value::Data(Vec::<u8>::from(t_val.clone()))),
+                    };
+                    return Err(Error::from(CompareError::from_reason(
+                        reason,
                         CompareErrorType::HashFieldValueDiff,
                     )));
                 }
@@ -335,8 +450,13 @@ impl<'a> Comparer<'a> {
         let t_ttl = ttl(key.key.clone(), self.tconn)?;
 
         if self.ttl_diff < (s_ttl - t_ttl).abs() as usize {
-            return Err(Error::from(CompareError::from_str(
-                "ttl diff too large",
+            let reason: CompareErrorReason = CompareErrorReason {
+                key_name: key.key.clone(),
+                source: Some(Value::Data(Vec::<u8>::from(s_ttl.to_string()))),
+                target: Some(Value::Data(Vec::<u8>::from(t_ttl.to_string()))),
+            };
+            return Err(Error::from(CompareError::from_reason(
+                reason,
                 CompareErrorType::TTLDiff,
             )));
         }
@@ -470,36 +590,6 @@ where
 {
     let ttl: isize = redis::cmd("pttl").arg(key).query(conn)?;
     Ok(ttl)
-}
-
-// 获取key类型
-pub fn key_type<T, C>(key: T, con: &mut C) -> RedisResult<RedisKeyType>
-where
-    T: ToRedisArgs,
-    C: ConnectionLike,
-{
-    let key_type: RedisKeyType = redis::cmd("TYPE").arg(key).query(con)?;
-    Ok(key_type)
-}
-
-//scan
-pub fn scan<C, T>(con: &mut C) -> RedisResult<Iter<'_, T>>
-where
-    C: ConnectionLike,
-    T: FromRedisValue,
-{
-    let mut c = redis::cmd("SCAN");
-    c.cursor_arg(0);
-    c.iter(con)
-}
-
-// async scan
-async fn scan_async<'a, T: FromRedisValue + 'a>(
-    con: &'a mut (dyn redis::aio::ConnectionLike + Send),
-) -> RedisResult<AsyncIter<'a, T>> {
-    let mut c = redis::cmd("SCAN");
-    c.cursor_arg(0);
-    c.iter_async(con).await
 }
 
 // 获取redis实例配置参数
@@ -753,15 +843,15 @@ mod test {
         println!("ttl is:{:?} , pttl is: {:?}", ttl, pttl);
     }
 
-    //cargo test compare::comparekey::test::test_key_type --  --nocapture
-    #[test]
-    fn test_key_type() {
-        let client = redis::Client::open(S_URL).unwrap();
-        let mut conn = client.get_connection().unwrap();
+    // //cargo test compare::comparekey::test::test_key_type --  --nocapture
+    // #[test]
+    // fn test_key_type() {
+    //     let client = redis::Client::open(S_URL).unwrap();
+    //     let mut conn = client.get_connection().unwrap();
 
-        let k_type = key_type("h1", &mut conn);
-        println!("key type  is:{:?}", k_type);
-    }
+    //     let k_type = key_type("h1", &mut conn);
+    //     println!("key type  is:{:?}", k_type);
+    // }
 
     //cargo test compare::comparekey::test::test_get_instance_parameters --  --nocapture
     #[test]

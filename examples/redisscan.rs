@@ -1,5 +1,6 @@
 use redis::{aio, cmd, Commands, Iter, RedisResult, ToRedisArgs};
 use redis::{Client, Value};
+use reqwest::ClientBuilder;
 
 use std::collections::HashMap;
 

@@ -5,10 +5,12 @@ use crate::util::RedisKey;
 use crate::util::{key_type, scan};
 use anyhow::anyhow;
 use anyhow::Result;
+use redis::cluster::ClusterClientBuilder;
 use redis::ConnectionLike;
 use serde::{Deserialize, Serialize};
 
 #[derive(Debug, PartialEq, Serialize, Deserialize, Clone)]
+#[serde(rename_all = "lowercase")]
 pub enum ScenarioType {
     Single2single,
     Single2cluster,
@@ -16,29 +18,69 @@ pub enum ScenarioType {
     Multisingle2single,
     Multisingle2cluster,
 }
+
 #[derive(Debug, PartialEq, Serialize, Deserialize, Clone)]
-pub struct SourceDescription {
-    urls: Vec<String>,
-    dbmapper: HashMap<usize, usize>,
+pub struct Instance {
+    #[serde(default = "Instance::urls_default")]
+    pub urls: Vec<String>,
+    #[serde(default = "Instance::password_default")]
+    pub password: String,
 }
 
-impl Default for SourceDescription {
+impl Default for Instance {
+    fn default() -> Self {
+        Self {
+            urls: vec!["redis://127.0.0.1:6379".to_string()],
+            password: "".to_string(),
+        }
+    }
+}
+
+impl Instance {
+    pub fn urls_default() -> Vec<String> {
+        vec!["redis://127.0.0.1:6379".to_string()]
+    }
+    pub fn password_default() -> String {
+        "".to_string()
+    }
+}
+
+#[derive(Debug, PartialEq, Serialize, Deserialize, Clone)]
+pub struct SourceInstance {
+    #[serde(default = "SourceInstance::instance_default")]
+    pub instance: Instance,
+    #[serde(default = "SourceInstance::dbmapper_default")]
+    pub dbmapper: HashMap<usize, usize>,
+}
+
+impl Default for SourceInstance {
     fn default() -> Self {
         let mut mapper = HashMap::new();
         mapper.insert(0, 0);
         Self {
-            urls: vec!["redis://127.0.0.1:6379".to_string()],
+            instance: Instance::default(),
             dbmapper: mapper,
         }
+    }
+}
+
+impl SourceInstance {
+    pub fn instance_default() -> Instance {
+        Instance::default()
+    }
+    pub fn dbmapper_default() -> HashMap<usize, usize> {
+        let mut mapper = HashMap::new();
+        mapper.insert(0, 0);
+        mapper
     }
 }
 
 #[derive(Debug, PartialEq, Serialize, Deserialize, Clone)]
 pub struct Compare {
     #[serde(default = "Compare::source_default")]
-    pub source: Vec<SourceDescription>,
+    pub source: Vec<SourceInstance>,
     #[serde(default = "Compare::target_default")]
-    pub target: Vec<String>,
+    pub target: Instance,
     #[serde(default = "Compare::batch_size_default")]
     pub batch_size: usize,
     #[serde(default = "Compare::threads_default")]
@@ -60,8 +102,8 @@ pub struct Compare {
 impl Default for Compare {
     fn default() -> Self {
         Self {
-            source: vec![SourceDescription::default()],
-            target: vec!["redis://127.0.0.1:6379/".to_string()],
+            source: vec![SourceInstance::default()],
+            target: Instance::default(),
             batch_size: 10,
             threads: 1,
             compare_threads: 1,
@@ -75,11 +117,11 @@ impl Default for Compare {
 }
 
 impl Compare {
-    fn source_default() -> Vec<SourceDescription> {
-        vec![SourceDescription::default()]
+    fn source_default() -> Vec<SourceInstance> {
+        vec![SourceInstance::default()]
     }
-    fn target_default() -> Vec<String> {
-        vec!["redis://127.0.0.1:6379/0?timeout=1s".to_string()]
+    fn target_default() -> Instance {
+        Instance::default()
     }
     fn batch_size_default() -> usize {
         10
@@ -124,15 +166,14 @@ impl Compare {
                     }
 
                     for (k, v) in dbmapper {
-                        println!("{}:{}", k, v);
-                        let sclient = redis::Client::open(self.source[0].urls[0].as_str())
+                        let sclient = redis::Client::open(self.source[0].instance.urls[0].as_str())
                             .map_err(|e| {
                                 log::error!("{}", e);
                                 return;
                             })
                             .unwrap();
 
-                        let tclient = redis::Client::open(self.target[0].as_str())
+                        let tclient = redis::Client::open(self.target.urls[0].as_str())
                             .map_err(|e| {
                                 log::error!("{}", e);
                                 return;
@@ -284,6 +325,181 @@ impl Compare {
             }
             ScenarioType::Single2cluster => {
                 println!("exec single2cluster");
+                let pool = rayon::ThreadPoolBuilder::new()
+                    .num_threads(self.threads)
+                    .build();
+                if let Err(e) = pool {
+                    log::error!("{}", e);
+                    return;
+                }
+                let dbmapper = self.source[0].dbmapper.clone();
+                pool.unwrap().scope(|s| {
+                    if self.source.len() == 0 {
+                        return;
+                    }
+
+                    for (k, v) in dbmapper {
+                        if v != 0 {
+                            return;
+                        }
+                        let sclient = redis::Client::open(self.source[0].instance.urls[0].as_str())
+                            .map_err(|e| {
+                                log::error!("{}", e);
+                                return;
+                            })
+                            .unwrap();
+
+                        let tclient = ClusterClientBuilder::new(self.target.urls.clone())
+                            .password(self.target.password.clone())
+                            .open()
+                            .map_err(|e| {
+                                log::error!("{}", e);
+                                return;
+                            })
+                            .unwrap();
+
+                        let scan_conn = sclient.get_connection();
+                        if let Err(e) = scan_conn {
+                            log::error!("{}", e);
+                            return;
+                        }
+
+                        s.spawn(move |_| {
+                            let pool_compare = rayon::ThreadPoolBuilder::new()
+                                .num_threads(self.compare_threads)
+                                .build();
+                            if let Err(e) = pool_compare {
+                                log::error!("{}", e);
+                                return;
+                            }
+
+                            pool_compare.unwrap().scope(|s| {
+                                let cmd_select = redis::cmd("select");
+                                match scan_conn {
+                                    Ok(mut conn) => {
+                                        let _ = conn.req_command(cmd_select.clone().arg(k));
+                                        let s_iter = scan::<String>(&mut conn);
+                                        match s_iter {
+                                            Ok(i) => {
+                                                let mut vec_keys: Vec<String> = Vec::new();
+                                                let mut count = 0 as usize;
+
+                                                for item in i {
+                                                    if count < self.batch_size {
+                                                        vec_keys.push(item.clone());
+                                                        count += 1;
+                                                        continue;
+                                                    }
+                                                    let sconn = sclient.get_connection();
+                                                    if let Err(e) = sconn {
+                                                        log::error!("{}", e);
+                                                        return;
+                                                    }
+                                                    let tconn = tclient.get_connection();
+                                                    if let Err(e) = tconn {
+                                                        log::error!("{}", e);
+                                                        return;
+                                                    }
+
+                                                    let vk = vec_keys.clone();
+                                                    s.spawn(move |_| {
+                                                        let cmd_select = redis::cmd("select");
+                                                        let mut s = sconn.unwrap();
+                                                        let _ = s
+                                                            .req_command(cmd_select.clone().arg(k));
+                                                        let mut t = tconn.unwrap();
+                                                        let _ = t
+                                                            .req_command(cmd_select.clone().arg(v));
+
+                                                        let mut rediskeys: Vec<RedisKey> =
+                                                            Vec::new();
+                                                        for key in vk {
+                                                            let key_type =
+                                                                key_type(key.clone(), &mut s);
+                                                            if let Ok(kt) = key_type {
+                                                                let rediskey = RedisKey {
+                                                                    key: key.clone(),
+                                                                    key_type: kt,
+                                                                };
+                                                                rediskeys.push(rediskey);
+                                                            }
+                                                        }
+
+                                                        let mut comparer = Comparer {
+                                                            sconn: &mut s,
+                                                            tconn: &mut t,
+                                                            ttl_diff: self.ttl_diff,
+                                                            batch: self.batch_size,
+                                                        };
+                                                        compare_rediskeys(&mut comparer, rediskeys);
+                                                    });
+
+                                                    count = 0;
+                                                    vec_keys.clear();
+                                                    vec_keys.push(item.clone());
+                                                    count += 1;
+                                                }
+
+                                                if vec_keys.len() > 0 {
+                                                    let sconn = sclient.get_connection();
+                                                    if let Err(e) = sconn {
+                                                        log::error!("{}", e);
+                                                        return;
+                                                    }
+                                                    let tconn = tclient.get_connection();
+                                                    if let Err(e) = tconn {
+                                                        log::error!("{}", e);
+                                                        return;
+                                                    }
+                                                    s.spawn(move |_| {
+                                                        let cmd_select = redis::cmd("select");
+                                                        let mut s = sconn.unwrap();
+                                                        let _ = s
+                                                            .req_command(cmd_select.clone().arg(k));
+                                                        let mut t = tconn.unwrap();
+                                                        let _ = t
+                                                            .req_command(cmd_select.clone().arg(v));
+
+                                                        let mut rediskeys: Vec<RedisKey> =
+                                                            Vec::new();
+                                                        for key in vec_keys.clone() {
+                                                            let key_type =
+                                                                key_type(key.clone(), &mut s);
+                                                            if let Ok(kt) = key_type {
+                                                                let rediskey = RedisKey {
+                                                                    key: key.clone(),
+                                                                    key_type: kt,
+                                                                };
+                                                                rediskeys.push(rediskey);
+                                                            }
+                                                        }
+
+                                                        let mut comparer = Comparer {
+                                                            sconn: &mut s,
+                                                            tconn: &mut t,
+                                                            ttl_diff: self.ttl_diff,
+                                                            batch: self.batch_size,
+                                                        };
+                                                        compare_rediskeys(&mut comparer, rediskeys);
+                                                    });
+                                                }
+                                            }
+                                            Err(e) => {
+                                                log::error!("{}", e);
+                                                return;
+                                            }
+                                        }
+                                    }
+                                    Err(e) => {
+                                        log::error!("{}", e);
+                                        return;
+                                    }
+                                }
+                            });
+                            println!("compare {}: {} finished", k, v);
+                        });
+                    }
+                });
             }
             ScenarioType::Cluster2cluster => {
                 println!("exec cluster2cluster");

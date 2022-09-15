@@ -1,0 +1,22 @@
+---
+source:
+  - instance:
+      urls:
+        - "redis://:redistest0102@114.67.76.82:16377"
+      password: ""
+    dbmapper:
+      1: 0
+target:
+  urls:
+    - "redis://114.67.76.82:26379/"
+    - "redis://114.67.76.82:26380/"
+    - "redis://114.67.76.82:26380/"
+  password: "redistest0102"
+batch_size: 10
+threads: 1
+compare_threads: 1
+ttl_diff: 1
+compare_times: 1
+compare_interval: 1
+report: false
+scenario: single2cluster

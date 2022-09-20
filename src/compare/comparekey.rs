@@ -3,14 +3,55 @@ use crate::compare::compare_error::{CompareError, CompareErrorType};
 use crate::util::{RedisKey, RedisKeyType};
 use anyhow::{Error, Result};
 
-use redis::{AsyncIter, FromRedisValue, RedisResult, ToRedisArgs, Value};
 use redis::{ConnectionLike, Iter};
+use redis::{RedisResult, ToRedisArgs, Value};
 use std::collections::HashMap;
+
 use std::str::from_utf8;
 
 use super::compare_error::CompareErrorReason;
-use super::SourceInstance;
 
+// pub struct ComparerMulti<'a> {
+//     pub sconn: &'a mut (dyn ConnectionLike + 'a),
+//     pub tconns: Vec<&'a mut (dyn ConnectionLike + 'a)>,
+// }
+
+// impl<'a> ComparerMulti<'a> {
+//     pub fn new(
+//         s_conn: &'a mut dyn ConnectionLike,
+//         t_conns: Vec<&'a mut dyn ConnectionLike>,
+//     ) -> Self {
+//         Self {
+//             sconn: s_conn,
+//             tconns: t_conns,
+//         }
+//     }
+
+//     // 比较key在多个db中是否存在，在任意一个库中存在则返回true，key在所有key中都不存在返回false
+//     pub fn compare_mulit_exists(&mut self, key: String) -> Result<()> {
+//         let mut key_existes = false;
+//         for i in 0..self.tconns.len() {
+//             let exists = key_exists(key.clone(), self.tconns[i])?;
+//             if exists {
+//                 key_existes = exists;
+//             }
+//         }
+
+//         if !key_existes {
+//             let v = Value::Data(Vec::<u8>::from(key.clone()));
+//             let reason = CompareErrorReason {
+//                 key_name: key.clone(),
+//                 source: Some(v),
+//                 target: None,
+//             };
+//             return Err(Error::from(CompareError::from_reason(
+//                 reason,
+//                 CompareErrorType::ExistsErr,
+//             )));
+//         }
+//         Ok(())
+//     }
+// }
 pub struct Comparer<'a> {
     pub sconn: &'a mut (dyn ConnectionLike + 'a),
     pub tconn: &'a mut (dyn ConnectionLike + 'a),

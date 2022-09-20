@@ -136,8 +136,8 @@ pub fn info(
 }
 
 pub fn scan<T>(con: &mut dyn redis::ConnectionLike) -> RedisResult<Iter<'_, T>>
-where
-    T: FromRedisValue,
+    where
+        T: FromRedisValue,
 {
     let mut c = redis::cmd("SCAN");
     c.cursor_arg(0);
@@ -146,8 +146,8 @@ where
 
 // 获取key类型
 pub fn key_type<T>(key: T, con: &mut dyn redis::ConnectionLike) -> RedisResult<RedisKeyType>
-where
-    T: ToRedisArgs,
+    where
+        T: ToRedisArgs,
 {
     let key_type: RedisKeyType = redis::cmd("TYPE").arg(key).query(con)?;
     Ok(key_type)

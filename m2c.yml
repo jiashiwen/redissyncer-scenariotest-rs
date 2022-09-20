@@ -1,0 +1,44 @@
+---
+source:
+  - instance:
+      urls:
+        - "redis://:password_source_1@127.0.0.1:6379/?timeout=1s"
+      password: ""
+      instance_type: single
+    dbmapper:
+      2: 0
+      6: 0
+      1: 0
+  - instance:
+      urls:
+        - "redis://:password_source_2@127.0.0.1:6380/?timeout=1s"
+      password: ""
+      instance_type: single
+    dbmapper:
+      5: 0
+      0: 0
+  - instance:
+      urls:
+        - "redis://127.0.0.1:26379"
+        - "redis://127.0.0.1:26380"
+        - "redis://127.0.0.1:26381"
+      password: ""
+      instance_type: cluster
+    dbmapper:
+      0: 0
+target:
+  urls:
+    - "redis://127.0.0.1:16379"
+    - "redis://127.0.0.1:16380"
+    - "redis://127.0.0.1:16381"
+  password: xxx
+  instance_type: cluster
+batch_size: 10
+threads: 1
+compare_threads: 1
+ttl_diff: 1
+compare_times: 1
+compare_interval: 1
+report: false
+scenario: multisingle2cluster
+bothway: false

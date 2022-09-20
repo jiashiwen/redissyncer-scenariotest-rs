@@ -3,18 +3,19 @@ use std::{thread, time};
 // 验证多线程，可控制时间cancel
 // 验证rayon 线程池
 fn main() -> Result<(), rayon::ThreadPoolBuildError> {
-    // let (sender, r) = unbounded::<isize>();
+    let pool_out = rayon::ThreadPoolBuilder::new().num_threads(3).build()?;
+    let pool_task = rayon::ThreadPoolBuilder::new()
+        .num_threads(3)
+        .build()
+        .unwrap();
 
-    let pool_out = rayon::ThreadPoolBuilder::new().num_threads(2).build()?;
-
-    // let i = 15;
     pool_out.scope(|s| {
         for _ in 0..10 {
-            s.spawn(move |_| {
-                let pool_task = rayon::ThreadPoolBuilder::new()
-                    .num_threads(2)
-                    .build()
-                    .unwrap();
+            s.spawn(|_| {
+                // let pool_task = rayon::ThreadPoolBuilder::new()
+                //     .num_threads(2)
+                //     .build()
+                //     .unwrap();
                 for i in 0..5 {
                     pool_task.scope(|s| {
                         s.spawn(move |_| {

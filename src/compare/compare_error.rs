@@ -76,8 +76,6 @@ pub struct CompareErrorReason {
 pub struct CompareError {
     /// 错误信息
     pub message: Option<String>,
-    /// 错误原因（上一级的错误）
-    pub cause: Option<String>,
     /// 错误类型
     pub error_type: CompareErrorType,
     pub reason: Option<CompareErrorReason>,
@@ -106,8 +104,7 @@ impl CompareError {
     pub(crate) fn from_err(err: impl ToString, error_type: CompareErrorType) -> Self {
         Self {
             message: None,
-            cause: Some(err.to_string()),
-            error_type: error_type,
+            error_type,
             reason: None,
         }
     }
@@ -116,8 +113,7 @@ impl CompareError {
     pub fn from_str(msg: &str, error_type: CompareErrorType) -> Self {
         Self {
             message: Some(msg.to_string()),
-            cause: None,
-            error_type: error_type,
+            error_type,
             reason: None,
         }
     }
@@ -125,8 +121,7 @@ impl CompareError {
     pub fn from_reason(reason: CompareErrorReason, error_type: CompareErrorType) -> Self {
         Self {
             message: Some(error_type.to_string()),
-            cause: None,
-            error_type: error_type,
+            error_type,
             reason: Some(reason),
         }
     }
@@ -137,5 +132,27 @@ impl std::error::Error for CompareError {}
 impl Display for CompareError {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         write!(f, "{:?}", self)
+        // let msg = match self.message.as_ref() {
+        //     Some(msg) => msg.clone(),
+        //     None => "".to_string(),
+        // };
+
+        // let none_reason = CompareErrorReason {
+        //     key_name: "".to_string(),
+        //     target: None,
+        //     source: None,
+        // };
+
+        // let reason = match self.reason.as_ref() {
+        //     Some(reason) => reason,
+        //     None => &none_reason,
+        // };
+
+        // f.debug_struct("CompareError")
+        //     .field("error_type", &self.error_type)
+        //     .field("message", &msg)
+        //     // .field("reason", &reason)
+        //     .field("reason", &reason::Display)
+        //     .finish()
     }
 }

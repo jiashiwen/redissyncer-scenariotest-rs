@@ -2,7 +2,7 @@ use crate::cmd::requestsample::new_requestsample_cmd;
 use crate::cmd::{new_compare_cmd, new_config_cmd};
 use crate::commons::CommandCompleter;
 use crate::commons::SubCmd;
-use crate::compare::{Compare, Instance, ScenarioType, SourceInstance};
+use crate::compare::{Compare, Instance, InstanceType, ScenarioType, SourceInstance};
 use crate::configure::{self, get_config_file_path, Config};
 use crate::configure::{generate_default_config, set_config_file_path};
 use crate::request::req;
@@ -173,6 +173,7 @@ fn cmd_match(matches: &ArgMatches) {
                         "redis://127.0.0.1:6381".to_string(),
                     ],
                     password: "".to_string(),
+                    instance_type: InstanceType::Cluster,
                 };
                 compare.target = target_instance;
                 compare.scenario = ScenarioType::Single2cluster;
@@ -201,6 +202,7 @@ fn cmd_match(matches: &ArgMatches) {
                             "redis://127.0.0.1:6381".to_string(),
                         ],
                         password: "xxx".to_string(),
+                        instance_type: InstanceType::Cluster,
                     },
                     dbmapper,
                 };
@@ -211,6 +213,7 @@ fn cmd_match(matches: &ArgMatches) {
                         "redis://127.0.0.1:16381".to_string(),
                     ],
                     password: "xxx".to_string(),
+                    instance_type: InstanceType::Cluster,
                 };
                 compare.source[0] = source_instance;
                 compare.target = target_instance;
@@ -240,6 +243,7 @@ fn cmd_match(matches: &ArgMatches) {
                             "redis://:password_source_1@127.0.0.1:6379/?timeout=1s".to_string()
                         ],
                         password: "".to_string(),
+                        instance_type: InstanceType::Single,
                     },
                     dbmapper: dbmapper.clone(),
                 };
@@ -254,6 +258,7 @@ fn cmd_match(matches: &ArgMatches) {
                             "redis://:password_source_2@127.0.0.1:6380/?timeout=1s".to_string()
                         ],
                         password: "".to_string(),
+                        instance_type: InstanceType::Single,
                     },
                     dbmapper: dbmapper.clone(),
                 };
@@ -268,6 +273,7 @@ fn cmd_match(matches: &ArgMatches) {
                             "redis://:password_source_3@127.0.0.1:6381/?timeout=1s".to_string()
                         ],
                         password: "".to_string(),
+                        instance_type: InstanceType::Single,
                     },
                     dbmapper: dbmapper.clone(),
                 };
@@ -275,6 +281,7 @@ fn cmd_match(matches: &ArgMatches) {
                 let target_instance = Instance {
                     urls: vec!["redis://:password_target@127.0.0.1:6382/?timeout=1s".to_string()],
                     password: "".to_string(),
+                    instance_type: InstanceType::Single,
                 };
 
                 let mut compare = Compare::default();
@@ -309,6 +316,7 @@ fn cmd_match(matches: &ArgMatches) {
                             "redis://:password_source_1@127.0.0.1:6379/?timeout=1s".to_string()
                         ],
                         password: "".to_string(),
+                        instance_type: InstanceType::Single,
                     },
                     dbmapper: dbmapper.clone(),
                 };
@@ -323,6 +331,7 @@ fn cmd_match(matches: &ArgMatches) {
                             "redis://:password_source_2@127.0.0.1:6380/?timeout=1s".to_string()
                         ],
                         password: "".to_string(),
+                        instance_type: InstanceType::Single,
                     },
                     dbmapper: dbmapper.clone(),
                 };
@@ -337,6 +346,7 @@ fn cmd_match(matches: &ArgMatches) {
                             "redis://:password_source_3@127.0.0.1:6381/?timeout=1s".to_string()
                         ],
                         password: "".to_string(),
+                        instance_type: InstanceType::Single,
                     },
                     dbmapper: dbmapper.clone(),
                 };
@@ -348,6 +358,158 @@ fn cmd_match(matches: &ArgMatches) {
                         "redis://127.0.0.1:16381".to_string(),
                     ],
                     password: "xxx".to_string(),
+                    instance_type: InstanceType::Cluster,
+                };
+
+                let mut compare = Compare::default();
+
+                compare.source.clear();
+                compare.source.push(source_instance1);
+                compare.source.push(source_instance2);
+                compare.source.push(source_instance3);
+                compare.target = target_instance;
+                compare.scenario = ScenarioType::Multisingle2cluster;
+                match flash_struct_to_yaml_file(&compare, &file) {
+                    Ok(_) => println!("Create file {} Ok", file),
+                    Err(e) => eprintln!("{}", e),
+                };
+            }
+
+            if let Some(multisingle2single) = sample.subcommand_matches("multi2single") {
+                let mut file = "./compare_sample_multi2single.yml".to_string();
+                let file_arg = multisingle2single.value_of("filepath");
+                if let Some(arg) = file_arg {
+                    file = arg.to_string();
+                }
+
+                let mut dbmapper: HashMap<usize, usize> = HashMap::new();
+
+                dbmapper.insert(0, 1);
+                dbmapper.insert(3, 5);
+                dbmapper.insert(4, 4);
+
+                let source_instance1 = SourceInstance {
+                    instance: Instance {
+                        urls: vec![
+                            "redis://:password_source_1@127.0.0.1:6379/?timeout=1s".to_string()
+                        ],
+                        password: "".to_string(),
+                        instance_type: InstanceType::Single,
+                    },
+                    dbmapper: dbmapper.clone(),
+                };
+
+                dbmapper.clear();
+                dbmapper.insert(0, 1);
+                dbmapper.insert(2, 5);
+                dbmapper.insert(4, 3);
+                let source_instance2 = SourceInstance {
+                    instance: Instance {
+                        urls: vec![
+                            "redis://:password_source_2@127.0.0.1:6380/?timeout=1s".to_string()
+                        ],
+                        password: "".to_string(),
+                        instance_type: InstanceType::Single,
+                    },
+                    dbmapper: dbmapper.clone(),
+                };
+
+                dbmapper.clear();
+                dbmapper.insert(0, 1);
+                let source_instance3 = SourceInstance {
+                    instance: Instance {
+                        urls: vec![
+                            "redis://127.0.0.1:26379".to_string(),
+                            "redis://127.0.0.1:26380".to_string(),
+                            "redis://127.0.0.1:26381".to_string(),
+                        ],
+                        password: "xxxx".to_string(),
+                        instance_type: InstanceType::Cluster,
+                    },
+                    dbmapper: dbmapper.clone(),
+                };
+
+                let target_instance = Instance {
+                    urls: vec!["redis://:password_target@127.0.0.1:6382/?timeout=1s".to_string()],
+                    password: "".to_string(),
+                    instance_type: InstanceType::Single,
+                };
+
+                let mut compare = Compare::default();
+                compare.source.clear();
+                compare.source.push(source_instance1);
+                compare.source.push(source_instance2);
+                compare.source.push(source_instance3);
+                compare.target = target_instance;
+                compare.scenario = ScenarioType::Multisingle2single;
+                match flash_struct_to_yaml_file(&compare, &file) {
+                    Ok(_) => println!("Create file {} Ok", file),
+                    Err(e) => eprintln!("{}", e),
+                };
+            }
+
+            if let Some(multisingle2cluster) = sample.subcommand_matches("multi2cluster") {
+                let mut file = "./compare_sample_multi2cluster.yml".to_string();
+                let file_arg = multisingle2cluster.value_of("filepath");
+                if let Some(arg) = file_arg {
+                    file = arg.to_string();
+                }
+
+                let mut dbmapper: HashMap<usize, usize> = HashMap::new();
+
+                dbmapper.insert(1, 0);
+                dbmapper.insert(2, 0);
+                dbmapper.insert(6, 0);
+
+                let source_instance1 = SourceInstance {
+                    instance: Instance {
+                        urls: vec![
+                            "redis://:password_source_1@127.0.0.1:6379/?timeout=1s".to_string()
+                        ],
+                        password: "".to_string(),
+                        instance_type: InstanceType::Single,
+                    },
+                    dbmapper: dbmapper.clone(),
+                };
+
+                dbmapper.clear();
+                dbmapper.insert(0, 0);
+                dbmapper.insert(5, 0);
+                let source_instance2 = SourceInstance {
+                    instance: Instance {
+                        urls: vec![
+                            "redis://:password_source_2@127.0.0.1:6380/?timeout=1s".to_string()
+                        ],
+                        password: "".to_string(),
+                        instance_type: InstanceType::Single,
+                    },
+                    dbmapper: dbmapper.clone(),
+                };
+
+                dbmapper.clear();
+                dbmapper.insert(0, 0);
+
+                let source_instance3 = SourceInstance {
+                    instance: Instance {
+                        urls: vec![
+                            "redis://127.0.0.1:26379".to_string(),
+                            "redis://127.0.0.1:26380".to_string(),
+                            "redis://127.0.0.1:26381".to_string(),
+                        ],
+                        password: "".to_string(),
+                        instance_type: InstanceType::Cluster,
+                    },
+                    dbmapper: dbmapper.clone(),
+                };
+
+                let target_instance = Instance {
+                    urls: vec![
+                        "redis://127.0.0.1:16379".to_string(),
+                        "redis://127.0.0.1:16380".to_string(),
+                        "redis://127.0.0.1:16381".to_string(),
+                    ],
+                    password: "xxx".to_string(),
+                    instance_type: InstanceType::Cluster,
                 };
 
                 let mut compare = Compare::default();
@@ -371,6 +533,7 @@ fn cmd_match(matches: &ArgMatches) {
                 let r = from_yaml_file_to_struct::<Compare>(path);
                 match r {
                     Ok(compare) => {
+                        // compare.exec_scenario();
                         compare.exec();
                     }
                     Err(e) => {

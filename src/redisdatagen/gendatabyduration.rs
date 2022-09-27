@@ -136,14 +136,14 @@ mod test {
     use crate::init_log;
     use crate::redisdatagen::gendatabyduration::GeneratorByDuration;
 
-    const rurl: &str = "redis://:redistest0102@114.67.76.82:16374/";
+    const RURL: &str = "redis://:redistest0102@114.67.76.82:16374/";
 
     //cargo test redisdatagen::gendatabyduration::test::test_generator_by_duration_exec --  --nocapture
     #[test]
     fn test_generator_by_duration_exec() {
         init_log();
         let mut gbd = GeneratorByDuration::default();
-        gbd.redis_url = rurl.to_string();
+        gbd.redis_url = RURL.to_string();
         gbd.duration = 3600;
         gbd.loopstep = 10;
         gbd.threads = 2;

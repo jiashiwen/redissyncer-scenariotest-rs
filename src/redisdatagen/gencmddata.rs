@@ -601,7 +601,7 @@ impl<'a> RedisOpt<'a> {
         let cmd_hincrby = redis::cmd("hincrby");
         let cmd_hincrbyfloat = redis::cmd("hincrbyfloat");
         let mut rng = rand::thread_rng();
-        for i in 0..self.loopstep {
+        for _i in 0..self.loopstep {
             self.redis_conn.req_command(
                 cmd_hincrby
                     .clone()

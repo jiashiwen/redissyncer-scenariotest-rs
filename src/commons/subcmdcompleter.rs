@@ -2,8 +2,6 @@ use rustyline::completion::{Completer, Pair};
 use rustyline::Context;
 use rustyline::Result;
 
-// const DOUBLE_QUOTES_ESCAPE_CHAR: Option<char> = Some('\\');
-
 #[derive(Debug, Clone)]
 pub struct SubCmd {
     pub level: usize,

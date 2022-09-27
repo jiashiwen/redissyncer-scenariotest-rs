@@ -1,5 +1,6 @@
 use chrono::{DateTime, Local};
 use crossbeam::channel::{after, at, select, tick, unbounded, Receiver};
+
 use std::time::{Duration, Instant};
 use std::{thread, time};
 
@@ -28,6 +29,14 @@ fn main() -> Result<(), rayon::ThreadPoolBuildError> {
         s.spawn(move |_| delay_task(Duration::from_secs(10)));
         s.spawn(move |_| println!("end"));
     });
+    // for i in 0..20 {
+    //     pool.scope(move |s| {
+    //         let mut rng = rand::thread_rng();
+    //         let secs = rng.gen_range(0..5);
+    //         thread::sleep(Duration::from_secs(secs));
+    //         println!("{}", i);
+    //     });
+    // }
 
     Ok(())
 }

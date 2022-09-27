@@ -1,12 +1,9 @@
-use redis::{aio, cmd, Commands, Iter, RedisResult, ToRedisArgs};
+use redis::{aio, cmd, Iter, RedisResult, ToRedisArgs};
 use redis::{Client, Value};
-use reqwest::ClientBuilder;
 
 use std::collections::HashMap;
 
 use std::str::from_utf8;
-
-use futures::stream::StreamExt;
 
 use redis::ConnectionLike;
 use redis::{AsyncCommands, AsyncIter};
@@ -84,10 +81,19 @@ async fn main() -> redis::RedisResult<()> {
         }
     }
 
+    let url = "redis://114.67.76.82:16377/".to_string();
+    let password = "redistest0102".to_string();
+
+    let vec_url = url.split(r#"//"#).collect::<Vec<&str>>();
+
+    println!("{:?}", vec_url[0]);
+    println!("{:?}", vec_url[1]);
+
+    let url_single = vec_url[0].to_string() + "//" + ":" + &password + "@" + vec_url[1];
+    println!("url_single is {}", url_single);
     Ok(())
 }
 
-// get redis parameters
 async fn get_instance_parameters<C>(con: &mut C) -> RedisResult<HashMap<String, String>>
 where
     C: aio::ConnectionLike,
@@ -131,7 +137,7 @@ where
 }
 
 // value to String
-fn Value_to_String(val: &Value) -> String {
+fn value_to_string(val: &Value) -> String {
     return match val {
         Value::Nil => "nil".to_string(),
         Value::Int(val) => val.to_string(),

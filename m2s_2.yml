@@ -2,17 +2,32 @@
 source:
   - instance:
       urls:
-         - "redis://:redistest0102@114.67.76.82:16377"
+        - "redis://:redistest0102@114.67.76.82:16377"
       password: ""
     dbmapper:
-      0: 0 
+      0: 0  
+  - instance:
+      urls:
+         - "redis://114.67.76.82:26379/"
+         - "redis://114.67.76.82:26380/"
+         - "redis://114.67.76.82:26381/"
+      password: "redistest0102"
+      instance_type: cluster
+    dbmapper:
+      0: 0
 target:
-  urls:
-    - "redis://:redistest0102@114.67.76.82:16377/"
-  password: ""
-batch_size: 10
-threads: 1
-compare_threads: 1
+   urls:
+     - "redis://114.67.76.82:26379/"
+     - "redis://114.67.76.82:26380/"
+     - "redis://114.67.76.82:26381/"
+   password: "redistest0102"
+   instance_type: cluster
+  #  urls:
+  #  - "redis://:redistest0102@114.67.76.82:16377/"
+  #password: ""
+batch_size: 20
+threads: 2
+compare_threads: 2 
 ttl_diff: 1
 compare_times: 1
 compare_interval: 1

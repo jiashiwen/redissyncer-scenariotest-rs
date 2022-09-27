@@ -2,9 +2,8 @@ use crate::util::{rand_string, RedisKeyType};
 use anyhow::{anyhow, Result};
 // use enum_iterator::Sequence;
 use redis::ToRedisArgs;
-use redis::{aio, ErrorKind, FromRedisValue, RedisError, RedisResult, Value};
+use redis::{aio, RedisResult};
 use serde::{Deserialize, Serialize};
-use std::fmt::{Display, Formatter};
 
 #[derive(Debug, PartialEq, Serialize, Deserialize, Clone)]
 pub struct GenerateBigKey {

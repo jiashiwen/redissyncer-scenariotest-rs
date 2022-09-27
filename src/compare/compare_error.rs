@@ -4,7 +4,7 @@ use std::fmt::{Display, Formatter};
 use redis::Value;
 
 /// 错误的类型
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub enum CompareErrorType {
     TTLDiff,
     ExistsErr,
@@ -17,6 +17,12 @@ pub enum CompareErrorType {
     HashLenDiff,
     HashFieldValueDiff,
     StringValueNotEqual,
+    RedisConnectionErr,
+    KeyTypeNotString,
+    KeyTypeNotList,
+    KeyTypeNotSet,
+    KeyTypeNotZSet,
+    KeyTypeNotHash,
     /// 未知错误
     Unknown,
 }
@@ -57,6 +63,24 @@ impl fmt::Display for CompareErrorType {
             CompareErrorType::StringValueNotEqual => {
                 write!(f, "String value not equal")
             }
+            CompareErrorType::RedisConnectionErr => {
+                write!(f, "Redis connection error")
+            }
+            CompareErrorType::KeyTypeNotString => {
+                write!(f, "Key type not string")
+            }
+            CompareErrorType::KeyTypeNotList => {
+                write!(f, "Key type not list")
+            }
+            CompareErrorType::KeyTypeNotSet => {
+                write!(f, "Key type not set")
+            }
+            CompareErrorType::KeyTypeNotZSet => {
+                write!(f, "Key type not zset")
+            }
+            CompareErrorType::KeyTypeNotHash => {
+                write!(f, "Key type not hash")
+            }
             CompareErrorType::Unknown => {
                 write!(f, "Unknown")
             }
@@ -64,15 +88,17 @@ impl fmt::Display for CompareErrorType {
     }
 }
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct CompareErrorReason {
     pub key_name: String,
+    pub source_db_num: i64,
+    pub target_db_num: i64,
     pub source: Option<Value>,
     pub target: Option<Value>,
 }
 
 /// 应用错误
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct CompareError {
     /// 错误信息
     pub message: Option<String>,
@@ -98,16 +124,15 @@ impl CompareError {
             CompareErrorType::ZSetMemberScoreDiff => 1008,
             CompareErrorType::HashLenDiff => 1009,
             CompareErrorType::HashFieldValueDiff => 1010,
+            CompareErrorType::RedisConnectionErr => 1011,
+            CompareErrorType::KeyTypeNotString => 1011,
+            CompareErrorType::KeyTypeNotList => 1012,
+            CompareErrorType::KeyTypeNotSet => 1013,
+            CompareErrorType::KeyTypeNotZSet => 1014,
+            CompareErrorType::KeyTypeNotHash => 1015,
         }
     }
-    /// 从上级错误中创建应用错误
-    pub(crate) fn from_err(err: impl ToString, error_type: CompareErrorType) -> Self {
-        Self {
-            message: None,
-            error_type,
-            reason: None,
-        }
-    }
+
     /// 从字符串创建应用错误
     #[allow(dead_code)]
     pub fn from_str(msg: &str, error_type: CompareErrorType) -> Self {
@@ -127,32 +152,16 @@ impl CompareError {
     }
 }
 
+impl From<anyhow::Error> for CompareError {
+    fn from(e: anyhow::Error) -> Self {
+        e.into()
+    }
+}
+
 impl std::error::Error for CompareError {}
 
 impl Display for CompareError {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         write!(f, "{:?}", self)
-        // let msg = match self.message.as_ref() {
-        //     Some(msg) => msg.clone(),
-        //     None => "".to_string(),
-        // };
-
-        // let none_reason = CompareErrorReason {
-        //     key_name: "".to_string(),
-        //     target: None,
-        //     source: None,
-        // };
-
-        // let reason = match self.reason.as_ref() {
-        //     Some(reason) => reason,
-        //     None => &none_reason,
-        // };
-
-        // f.debug_struct("CompareError")
-        //     .field("error_type", &self.error_type)
-        //     .field("message", &msg)
-        //     // .field("reason", &reason)
-        //     .field("reason", &reason::Display)
-        //     .finish()
     }
 }

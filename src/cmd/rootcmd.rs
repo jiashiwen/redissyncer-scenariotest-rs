@@ -2,7 +2,7 @@ use crate::cmd::requestsample::new_requestsample_cmd;
 use crate::cmd::{new_compare_cmd, new_config_cmd};
 use crate::commons::CommandCompleter;
 use crate::commons::SubCmd;
-use crate::compare::{Compare, Instance, InstanceType, ScenarioType, SourceInstance};
+use crate::compare::{Compare, InstanceType, RedisInstance, ScenarioType, SourceInstance};
 use crate::configure::{self, get_config_file_path, Config};
 use crate::configure::{generate_default_config, set_config_file_path};
 use crate::request::req;
@@ -58,7 +58,6 @@ pub fn run_app() {
         println!("config path is:{}", c);
         set_config_file_path(c.to_string());
     }
-    // set_config(&get_config_file_path());
     cmd_match(&matches);
 }
 
@@ -166,7 +165,7 @@ fn cmd_match(matches: &ArgMatches) {
                 }
 
                 let mut compare = Compare::default();
-                let target_instance = Instance {
+                let target_instance = RedisInstance {
                     urls: vec![
                         "redis://127.0.0.1:6379".to_string(),
                         "redis://127.0.0.1:6380".to_string(),
@@ -195,7 +194,7 @@ fn cmd_match(matches: &ArgMatches) {
                 dbmapper.insert(0, 0);
 
                 let source_instance = SourceInstance {
-                    instance: Instance {
+                    instance: RedisInstance {
                         urls: vec![
                             "redis://127.0.0.1:6379".to_string(),
                             "redis://127.0.0.1:6380".to_string(),
@@ -206,7 +205,7 @@ fn cmd_match(matches: &ArgMatches) {
                     },
                     dbmapper,
                 };
-                let target_instance = Instance {
+                let target_instance = RedisInstance {
                     urls: vec![
                         "redis://127.0.0.1:16379".to_string(),
                         "redis://127.0.0.1:16380".to_string(),
@@ -238,7 +237,7 @@ fn cmd_match(matches: &ArgMatches) {
                 dbmapper.insert(4, 4);
 
                 let source_instance1 = SourceInstance {
-                    instance: Instance {
+                    instance: RedisInstance {
                         urls: vec![
                             "redis://:password_source_1@127.0.0.1:6379/?timeout=1s".to_string()
                         ],
@@ -253,7 +252,7 @@ fn cmd_match(matches: &ArgMatches) {
                 dbmapper.insert(2, 5);
                 dbmapper.insert(4, 3);
                 let source_instance2 = SourceInstance {
-                    instance: Instance {
+                    instance: RedisInstance {
                         urls: vec![
                             "redis://:password_source_2@127.0.0.1:6380/?timeout=1s".to_string()
                         ],
@@ -268,7 +267,7 @@ fn cmd_match(matches: &ArgMatches) {
                 dbmapper.insert(1, 5);
                 dbmapper.insert(4, 7);
                 let source_instance3 = SourceInstance {
-                    instance: Instance {
+                    instance: RedisInstance {
                         urls: vec![
                             "redis://:password_source_3@127.0.0.1:6381/?timeout=1s".to_string()
                         ],
@@ -278,7 +277,7 @@ fn cmd_match(matches: &ArgMatches) {
                     dbmapper: dbmapper.clone(),
                 };
 
-                let target_instance = Instance {
+                let target_instance = RedisInstance {
                     urls: vec!["redis://:password_target@127.0.0.1:6382/?timeout=1s".to_string()],
                     password: "".to_string(),
                     instance_type: InstanceType::Single,
@@ -311,7 +310,7 @@ fn cmd_match(matches: &ArgMatches) {
                 dbmapper.insert(6, 6);
 
                 let source_instance1 = SourceInstance {
-                    instance: Instance {
+                    instance: RedisInstance {
                         urls: vec![
                             "redis://:password_source_1@127.0.0.1:6379/?timeout=1s".to_string()
                         ],
@@ -326,7 +325,7 @@ fn cmd_match(matches: &ArgMatches) {
                 dbmapper.insert(2, 5);
                 dbmapper.insert(4, 3);
                 let source_instance2 = SourceInstance {
-                    instance: Instance {
+                    instance: RedisInstance {
                         urls: vec![
                             "redis://:password_source_2@127.0.0.1:6380/?timeout=1s".to_string()
                         ],
@@ -341,7 +340,7 @@ fn cmd_match(matches: &ArgMatches) {
                 dbmapper.insert(1, 5);
                 dbmapper.insert(4, 7);
                 let source_instance3 = SourceInstance {
-                    instance: Instance {
+                    instance: RedisInstance {
                         urls: vec![
                             "redis://:password_source_3@127.0.0.1:6381/?timeout=1s".to_string()
                         ],
@@ -351,7 +350,7 @@ fn cmd_match(matches: &ArgMatches) {
                     dbmapper: dbmapper.clone(),
                 };
 
-                let target_instance = Instance {
+                let target_instance = RedisInstance {
                     urls: vec![
                         "redis://127.0.0.1:16379".to_string(),
                         "redis://127.0.0.1:16380".to_string(),
@@ -389,7 +388,7 @@ fn cmd_match(matches: &ArgMatches) {
                 dbmapper.insert(4, 4);
 
                 let source_instance1 = SourceInstance {
-                    instance: Instance {
+                    instance: RedisInstance {
                         urls: vec![
                             "redis://:password_source_1@127.0.0.1:6379/?timeout=1s".to_string()
                         ],
@@ -404,7 +403,7 @@ fn cmd_match(matches: &ArgMatches) {
                 dbmapper.insert(2, 5);
                 dbmapper.insert(4, 3);
                 let source_instance2 = SourceInstance {
-                    instance: Instance {
+                    instance: RedisInstance {
                         urls: vec![
                             "redis://:password_source_2@127.0.0.1:6380/?timeout=1s".to_string()
                         ],
@@ -417,7 +416,7 @@ fn cmd_match(matches: &ArgMatches) {
                 dbmapper.clear();
                 dbmapper.insert(0, 1);
                 let source_instance3 = SourceInstance {
-                    instance: Instance {
+                    instance: RedisInstance {
                         urls: vec![
                             "redis://127.0.0.1:26379".to_string(),
                             "redis://127.0.0.1:26380".to_string(),
@@ -429,7 +428,7 @@ fn cmd_match(matches: &ArgMatches) {
                     dbmapper: dbmapper.clone(),
                 };
 
-                let target_instance = Instance {
+                let target_instance = RedisInstance {
                     urls: vec!["redis://:password_target@127.0.0.1:6382/?timeout=1s".to_string()],
                     password: "".to_string(),
                     instance_type: InstanceType::Single,
@@ -462,7 +461,7 @@ fn cmd_match(matches: &ArgMatches) {
                 dbmapper.insert(6, 0);
 
                 let source_instance1 = SourceInstance {
-                    instance: Instance {
+                    instance: RedisInstance {
                         urls: vec![
                             "redis://:password_source_1@127.0.0.1:6379/?timeout=1s".to_string()
                         ],
@@ -476,7 +475,7 @@ fn cmd_match(matches: &ArgMatches) {
                 dbmapper.insert(0, 0);
                 dbmapper.insert(5, 0);
                 let source_instance2 = SourceInstance {
-                    instance: Instance {
+                    instance: RedisInstance {
                         urls: vec![
                             "redis://:password_source_2@127.0.0.1:6380/?timeout=1s".to_string()
                         ],
@@ -490,7 +489,7 @@ fn cmd_match(matches: &ArgMatches) {
                 dbmapper.insert(0, 0);
 
                 let source_instance3 = SourceInstance {
-                    instance: Instance {
+                    instance: RedisInstance {
                         urls: vec![
                             "redis://127.0.0.1:26379".to_string(),
                             "redis://127.0.0.1:26380".to_string(),
@@ -502,7 +501,7 @@ fn cmd_match(matches: &ArgMatches) {
                     dbmapper: dbmapper.clone(),
                 };
 
-                let target_instance = Instance {
+                let target_instance = RedisInstance {
                     urls: vec![
                         "redis://127.0.0.1:16379".to_string(),
                         "redis://127.0.0.1:16380".to_string(),

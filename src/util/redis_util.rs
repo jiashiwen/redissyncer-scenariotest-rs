@@ -1,5 +1,6 @@
 use anyhow::{anyhow, Result};
-use redis::Iter;
+
+use redis::{ConnectionLike, Iter, RedisError};
 use redis::{FromRedisValue, RedisResult, ToRedisArgs, Value};
 use std::collections::HashMap;
 use std::fmt::{Display, Formatter};
@@ -8,6 +9,44 @@ use std::str::from_utf8;
 use crate::util::RedisKeyType;
 
 use super::RedisKey;
+
+#[derive(Clone)]
+pub enum RedisClient {
+    Single(redis::Client),
+    Cluster(redis::cluster::ClusterClient),
+}
+
+impl RedisClient {
+    pub fn get_redis_connection(&self) -> RedisResult<RedisConnection> {
+        return match self {
+            RedisClient::Single(s) => {
+                let conn = s.get_connection()?;
+                Ok(RedisConnection::Single(conn))
+            }
+            RedisClient::Cluster(c) => {
+                let conn = c.get_connection()?;
+                Ok(RedisConnection::Cluster(conn))
+            }
+        };
+    }
+}
+
+pub enum RedisConnection {
+    Single(redis::Connection),
+    Cluster(redis::cluster::ClusterConnection),
+}
+
+impl RedisConnection {
+    pub fn get_dyn_connection(self) -> Box<dyn ConnectionLike> {
+        let r: Box<dyn ConnectionLike> = match self {
+            RedisConnection::Single(s) => Box::new(s),
+            RedisConnection::Cluster(c) => Box::new(c),
+        };
+        r
+    }
+}
+
+impl RedisClient {}
 
 #[derive(Clone, Debug)]
 pub enum InfoSection {
@@ -136,8 +175,8 @@ pub fn info(
 }
 
 pub fn scan<T>(con: &mut dyn redis::ConnectionLike) -> RedisResult<Iter<'_, T>>
-    where
-        T: FromRedisValue,
+where
+    T: FromRedisValue,
 {
     let mut c = redis::cmd("SCAN");
     c.cursor_arg(0);
@@ -146,13 +185,181 @@ pub fn scan<T>(con: &mut dyn redis::ConnectionLike) -> RedisResult<Iter<'_, T>>
 
 // 获取key类型
 pub fn key_type<T>(key: T, con: &mut dyn redis::ConnectionLike) -> RedisResult<RedisKeyType>
-    where
-        T: ToRedisArgs,
+where
+    T: ToRedisArgs,
 {
     let key_type: RedisKeyType = redis::cmd("TYPE").arg(key).query(con)?;
     Ok(key_type)
 }
 
+// key 是否存在
+pub fn key_exists<T>(key: T, conn: &mut dyn redis::ConnectionLike) -> RedisResult<bool>
+where
+    T: ToRedisArgs,
+{
+    let exists: bool = redis::cmd("exists").arg(key).query(conn)?;
+    Ok(exists)
+}
+
+pub fn ttl<T>(key: T, conn: &mut dyn redis::ConnectionLike) -> RedisResult<isize>
+where
+    T: ToRedisArgs,
+{
+    let ttl: isize = redis::cmd("ttl").arg(key).query(conn)?;
+    Ok(ttl)
+}
+
+// List 长度
+pub fn list_len<T>(key: T, conn: &mut dyn redis::ConnectionLike) -> RedisResult<usize>
+where
+    T: ToRedisArgs,
+{
+    let l: usize = redis::cmd("llen").arg(key).query(conn)?;
+
+    Ok(l)
+}
+
+//Lrange
+pub fn lrange<T>(
+    key: T,
+    start: isize,
+    end: isize,
+    conn: &mut dyn redis::ConnectionLike,
+) -> RedisResult<Vec<String>>
+where
+    T: ToRedisArgs,
+{
+    let elements: Vec<String> = redis::cmd("lrange")
+        .arg(key)
+        .arg(start)
+        .arg(end)
+        .query(conn)?;
+    Ok(elements)
+}
+
+// scard 获取set 元素数量
+pub fn scard<T>(key: T, conn: &mut dyn redis::ConnectionLike) -> RedisResult<usize>
+where
+    T: ToRedisArgs,
+{
+    let size: usize = redis::cmd("scard").arg(key).query(conn)?;
+    Ok(size)
+}
+
+// sismumber
+pub fn sismumber<T>(key: T, member: T, conn: &mut dyn redis::ConnectionLike) -> RedisResult<bool>
+where
+    T: ToRedisArgs,
+{
+    let is: bool = redis::cmd("SISMEMBER").arg(key).arg(member).query(conn)?;
+    Ok(is)
+}
+
+//zcard 获取 sorted set 元素数量
+pub fn zcard<T>(key: T, conn: &mut dyn redis::ConnectionLike) -> RedisResult<usize>
+where
+    T: ToRedisArgs,
+{
+    let size: usize = redis::cmd("zcard").arg(key).query(conn)?;
+    Ok(size)
+}
+
+//zrank
+pub fn zrank<T>(key: T, member: T, conn: &mut dyn redis::ConnectionLike) -> RedisResult<f64>
+where
+    T: ToRedisArgs,
+{
+    let size: f64 = redis::cmd("zrank").arg(key).arg(member).query(conn)?;
+    Ok(size)
+}
+
+//zscore
+pub fn zscore<T>(key: T, member: T, conn: &mut dyn redis::ConnectionLike) -> RedisResult<f64>
+where
+    T: ToRedisArgs,
+{
+    let size: f64 = redis::cmd("zscore").arg(key).arg(member).query(conn)?;
+    Ok(size)
+}
+
+// hlen
+pub fn hlen<T>(key: T, conn: &mut dyn redis::ConnectionLike) -> RedisResult<usize>
+where
+    T: ToRedisArgs,
+{
+    let size: usize = redis::cmd("hlen").arg(key).query(conn)?;
+    Ok(size)
+}
+
+// hget
+pub fn hget<T>(key: T, field: T, conn: &mut dyn redis::ConnectionLike) -> RedisResult<String>
+where
+    T: ToRedisArgs,
+{
+    let v: Value = redis::cmd("hget").arg(key).arg(field).query(conn)?;
+
+    return match v {
+        Value::Nil => Ok("".to_string()),
+        Value::Int(val) => Ok(val.to_string()),
+        Value::Data(ref val) => match from_utf8(val) {
+            Ok(x) => Ok(x.to_string()),
+            Err(_) => Ok("".to_string()),
+        },
+        Value::Bulk(ref values) => Ok("".to_string()),
+        Value::Okay => Ok("ok".to_string()),
+        Value::Status(ref s) => Ok(s.to_string()),
+    };
+}
+
+pub fn pttl<T, C>(key: T, conn: &mut C) -> RedisResult<isize>
+where
+    T: ToRedisArgs,
+    C: redis::ConnectionLike,
+{
+    let ttl: isize = redis::cmd("pttl").arg(key).query(conn)?;
+    Ok(ttl)
+}
+
+// 获取redis实例配置参数
+pub fn get_instance_parameters<C>(con: &mut C) -> RedisResult<HashMap<String, String>>
+where
+    C: ConnectionLike,
+{
+    let mut cmd_config = redis::cmd("config");
+    let r_config = con.req_command(&cmd_config.arg("get").arg("*"))?;
+    let mut parameters = HashMap::new();
+    if let Value::Bulk(ref values) = r_config {
+        for i in (0..values.len()).step_by(2) {
+            let key = values.get(i);
+            let val = values.get(i + 1);
+
+            if let Some(k) = key {
+                if let Value::Data(ref s) = k {
+                    match from_utf8(s) {
+                        Ok(kstr) => {
+                            let mut vstr = String::from("");
+                            match val {
+                                None => vstr = "".to_string(),
+                                Some(vv) => {
+                                    if let Value::Data(ref val) = vv {
+                                        match from_utf8(val) {
+                                            Ok(x) => vstr = x.to_string(),
+                                            Err(_) => {}
+                                        };
+                                    }
+                                }
+                            };
+                            parameters.insert(kstr.to_string(), vstr);
+                        }
+                        Err(_) => {}
+                    }
+                }
+            }
+        }
+    }
+
+    Ok(parameters)
+}
 // 通过pipline 批量获取 key type
 pub fn key_type_pipline(
     keys: Vec<String>,

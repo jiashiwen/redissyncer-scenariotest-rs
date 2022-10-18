@@ -319,7 +319,7 @@ pub fn gen_hash(
         val = rand_string(value_len - 1);
     }
     for i in 0..hash_size {
-        let field = key.clone() + "_" + &*i.to_string();
+        // let field = key.clone() + "_" + &*i.to_string();
         let mut cmd_hset = redis::cmd("hset");
         let _ = conn.req_command(
             &cmd_hset

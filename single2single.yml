@@ -8,7 +8,7 @@ source:
        5: 5
 target:
   urls:
-    - "redis://:redistest0102@114.67.76.82:16377/"
+    - "redis://:redistest0102@114.67.76.82:1637/"
   password: ""
 batch_size: 10
 threads: 1
@@ -18,3 +18,5 @@ compare_times: 1
 compare_interval: 1
 report: false
 scenario: single2single
+bothway: true
+frequency: 3

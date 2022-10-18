@@ -42,3 +42,4 @@ compare_interval: 1
 report: false
 scenario: multisingle2cluster
 bothway: false
+frequency: 1

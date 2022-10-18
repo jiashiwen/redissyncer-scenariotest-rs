@@ -2,8 +2,9 @@ use std::fmt::{Display, Formatter};
 
 // use enum_iterator::Sequence;
 use redis::{ErrorKind, FromRedisValue, RedisError, RedisResult, Value};
-// use serde::{Deserialize, Serialize};
-#[derive(Debug, PartialEq, Clone)]
+use serde::{Deserialize, Serialize};
+
+#[derive(Debug, PartialEq, Clone, Serialize, Deserialize)]
 pub enum RedisKeyType {
     TypeString,
     TypeList,
@@ -64,7 +65,7 @@ impl Display for RedisKeyType {
     }
 }
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Serialize, Deserialize, Clone)]
 pub struct RedisKey {
     pub key: String,
     pub key_type: RedisKeyType,

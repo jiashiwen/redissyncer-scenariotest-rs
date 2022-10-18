@@ -12,6 +12,9 @@ fn main() -> Result<(), rayon::ThreadPoolBuildError> {
     let pool = rayon::ThreadPoolBuilder::new().num_threads(2).build()?;
     let i = 15;
     pool.scope(|s| {
+        println!("second scope");
+    });
+    pool.scope(|s| {
         for _ in 0..2 {
             s.spawn(move |_| ticker_task());
         }
@@ -28,6 +31,9 @@ fn main() -> Result<(), rayon::ThreadPoolBuildError> {
         // s.spawn(move |s| delay_task(Duration::from_secs(10), s));
         s.spawn(move |_| delay_task(Duration::from_secs(10)));
         s.spawn(move |_| println!("end"));
+    });
+    pool.scope(|s| {
+        println!("second scope");
     });
     // for i in 0..20 {
     //     pool.scope(move |s| {

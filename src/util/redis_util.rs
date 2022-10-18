@@ -1,6 +1,6 @@
 use anyhow::{anyhow, Result};
 
-use redis::{ConnectionLike, Iter, RedisError};
+use redis::{ConnectionLike, Iter};
 use redis::{FromRedisValue, RedisResult, ToRedisArgs, Value};
 use std::collections::HashMap;
 use std::fmt::{Display, Formatter};

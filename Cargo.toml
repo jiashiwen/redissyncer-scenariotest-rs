@@ -34,7 +34,7 @@ strum = "0.24"
 strum_macros = "0.24"
 rayon = "1.5.3"
 crossbeam = "0.8.2"
-
+rmp-serde = "1.1.1"
 
 
 [[example]]
@@ -56,3 +56,11 @@ path = "examples/callback.rs"
 [[example]]
 name = "rediscluster"
 path = "examples/redisclustersample.rs"
+
+[[example]]
+name = "rmp"
+path = "examples/rmp_sample.rs"
+
+[[example]]
+name = "write_one_file"
+path = "examples/multithread_write_one_file.rs"

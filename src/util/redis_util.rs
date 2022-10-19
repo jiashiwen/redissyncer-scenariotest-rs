@@ -17,6 +17,20 @@ pub enum RedisClient {
 }
 
 impl RedisClient {
+    pub fn get_single_client(&self) -> Result<redis::Client> {
+        return match self {
+            RedisClient::Single(sc) => Ok(sc.clone()),
+            RedisClient::Cluster(_) => Err(anyhow!("not single redis client")),
+        };
+    }
+
+    pub fn get_cluster_client(&self) -> Result<redis::cluster::ClusterClient> {
+        return match self {
+            RedisClient::Single(_) => Err(anyhow!("not single redis client")),
+            RedisClient::Cluster(cc) => Ok(cc.clone()),
+        };
+    }
+
     pub fn get_redis_connection(&self) -> RedisResult<RedisConnection> {
         return match self {
             RedisClient::Single(s) => {
@@ -379,7 +393,7 @@ pub fn key_type_pipline(
                     let key = keys.get(i);
                     if let Some(k) = key {
                         let rediskey = RedisKey {
-                            key: k.to_string(),
+                            key_name: k.to_string(),
                             key_type: RedisKeyType::TypeString,
                         };
                         vec_rediskeys.push(rediskey);
@@ -389,7 +403,7 @@ pub fn key_type_pipline(
                     let key = keys.get(i);
                     if let Some(k) = key {
                         let rediskey = RedisKey {
-                            key: k.to_string(),
+                            key_name: k.to_string(),
                             key_type: RedisKeyType::TypeList,
                         };
                         vec_rediskeys.push(rediskey);
@@ -399,7 +413,7 @@ pub fn key_type_pipline(
                     let key = keys.get(i);
                     if let Some(k) = key {
                         let rediskey = RedisKey {
-                            key: k.to_string(),
+                            key_name: k.to_string(),
                             key_type: RedisKeyType::TypeSet,
                         };
                         vec_rediskeys.push(rediskey);
@@ -410,7 +424,7 @@ pub fn key_type_pipline(
                     let key = keys.get(i);
                     if let Some(k) = key {
                         let rediskey = RedisKey {
-                            key: k.to_string(),
+                            key_name: k.to_string(),
                             key_type: RedisKeyType::TypeZSet,
                         };
                         vec_rediskeys.push(rediskey);
@@ -420,7 +434,7 @@ pub fn key_type_pipline(
                     let key = keys.get(i);
                     if let Some(k) = key {
                         let rediskey = RedisKey {
-                            key: k.to_string(),
+                            key_name: k.to_string(),
                             key_type: RedisKeyType::TypeHash,
                         };
                         vec_rediskeys.push(rediskey);

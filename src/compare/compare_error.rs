@@ -1,7 +1,8 @@
+use serde::{Deserialize, Serialize};
 use std::fmt;
 use std::fmt::{Display, Formatter};
 
-use redis::Value;
+use crate::util::RedisKey;
 
 /// 错误的类型
 #[derive(Debug, Clone)]
@@ -88,13 +89,21 @@ impl fmt::Display for CompareErrorType {
     }
 }
 
-#[derive(Debug, Clone)]
+// 用于描述集合类型元素位置，list index；zset member；hash field
+#[derive(Debug, Serialize, Deserialize, Clone)]
+pub enum Position {
+    ListIndex(usize),
+    ZsetMember(String),
+    HashField(String),
+}
+
+// #[derive(Debug, Clone)]
+#[derive(Debug, Serialize, Deserialize, Clone)]
 pub struct CompareErrorReason {
-    pub key_name: String,
-    pub source_db_num: i64,
-    pub target_db_num: i64,
-    pub source: Option<Value>,
-    pub target: Option<Value>,
+    pub redis_key: RedisKey,
+    pub position: Option<Position>,
+    pub source: Option<String>,
+    pub target: Option<String>,
 }
 
 /// 应用错误

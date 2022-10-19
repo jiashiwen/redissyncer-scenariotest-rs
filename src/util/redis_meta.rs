@@ -67,6 +67,6 @@ impl Display for RedisKeyType {
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
 pub struct RedisKey {
-    pub key: String,
+    pub key_name: String,
     pub key_type: RedisKeyType,
 }

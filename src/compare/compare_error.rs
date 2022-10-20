@@ -5,7 +5,7 @@ use std::fmt::{Display, Formatter};
 use crate::util::RedisKey;
 
 /// 错误的类型
-#[derive(Debug, Clone)]
+#[derive(Debug, Serialize, Deserialize, Clone)]
 pub enum CompareErrorType {
     TTLDiff,
     ExistsErr,
@@ -107,7 +107,7 @@ pub struct CompareErrorReason {
 }
 
 /// 应用错误
-#[derive(Debug, Clone)]
+#[derive(Debug, Serialize, Deserialize, Clone)]
 pub struct CompareError {
     /// 错误信息
     pub message: Option<String>,

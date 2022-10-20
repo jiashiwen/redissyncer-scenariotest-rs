@@ -5,8 +5,17 @@ use crate::util::{
     hget, hlen, key_exists, list_len, lrange, scard, sismumber, ttl, zcard, zscore, RedisKey,
     RedisKeyType,
 };
-use anyhow::{Error, Result};
+// use anyhow::{Error, Result};
 use redis::{ConnectionLike, Iter};
+use serde::{Deserialize, Serialize};
+
+pub type CompareResult<T, E = CompareError> = core::result::Result<T, E>;
+
+#[derive(Debug, Serialize, Deserialize, Clone)]
+pub struct IffyKey {
+    pub key: RedisKey,
+    pub error: CompareError,
+}
 
 pub struct Comparer<'a> {
     pub sconn: &'a mut (dyn ConnectionLike + 'a),
@@ -25,7 +34,23 @@ impl<'a> Comparer<'a> {
         }
     }
 
-    pub fn compare_key(&mut self, key: RedisKey) -> Result<()> {
+    // 返回校验不成功的key 列表
+    pub fn compare_rediskeys(mut self, keys_vec: &Vec<RedisKey>) -> Vec<IffyKey> {
+        let mut iffy_keys = vec![];
+        for key in keys_vec {
+            let r = self.compare_key(key.clone());
+            if let Err(e) = r {
+                let iffy = IffyKey {
+                    key: key.clone(),
+                    error: e,
+                };
+                iffy_keys.push(iffy);
+            }
+        }
+        iffy_keys
+    }
+
+    pub fn compare_key(&mut self, key: RedisKey) -> CompareResult<()> {
         return match key.key_type {
             RedisKeyType::TypeString => self.compare_string(key),
             RedisKeyType::TypeList => self.compare_list(key),
@@ -38,7 +63,7 @@ impl<'a> Comparer<'a> {
 
 //ToDo 错误输出统一到CompareError，使用into 获得CompareError，便于存储错误信息
 impl<'a> Comparer<'a> {
-    pub fn compare_string(&mut self, key: RedisKey) -> Result<()> {
+    pub fn compare_string(&mut self, key: RedisKey) -> CompareResult<()> {
         // target端key是否存在
         self.target_key_exists(&key)?;
 
@@ -51,7 +76,7 @@ impl<'a> Comparer<'a> {
         Ok(())
     }
 
-    pub fn compare_list(&mut self, key: RedisKey) -> Result<()> {
+    pub fn compare_list(&mut self, key: RedisKey) -> CompareResult<()> {
         // target端key是否存在
         self.target_key_exists(&key)?;
 
@@ -115,10 +140,10 @@ impl<'a> Comparer<'a> {
                             source: Some(s_val.clone()),
                             target: Some(t_val.clone()),
                         };
-                        return Err(Error::from(CompareError::from_reason(
+                        return Err(CompareError::from_reason(
                             reason,
                             CompareErrorType::ListIndexValueDiff,
-                        )));
+                        ));
                     }
                 }
             }
@@ -168,10 +193,10 @@ impl<'a> Comparer<'a> {
                         source: Some(s_val.clone()),
                         target: Some(t_val.clone()),
                     };
-                    return Err(Error::from(CompareError::from_reason(
+                    return Err(CompareError::from_reason(
                         reason,
                         CompareErrorType::ListIndexValueDiff,
-                    )));
+                    ));
                 }
             }
         }
@@ -182,7 +207,7 @@ impl<'a> Comparer<'a> {
         Ok(())
     }
 
-    pub fn compare_set(&mut self, key: RedisKey) -> Result<()> {
+    pub fn compare_set(&mut self, key: RedisKey) -> CompareResult<()> {
         // target端key是否存在
         self.target_key_exists(&key)?;
 
@@ -197,7 +222,7 @@ impl<'a> Comparer<'a> {
         Ok(())
     }
 
-    pub fn compare_zset(&mut self, key: RedisKey) -> Result<()> {
+    pub fn compare_zset(&mut self, key: RedisKey) -> CompareResult<()> {
         // target端key是否存在
         self.target_key_exists(&key)?;
 
@@ -212,7 +237,7 @@ impl<'a> Comparer<'a> {
         Ok(())
     }
 
-    pub fn compare_hash(&mut self, key: RedisKey) -> Result<()> {
+    pub fn compare_hash(&mut self, key: RedisKey) -> CompareResult<()> {
         // target端key是否存在
         self.target_key_exists(&key)?;
 
@@ -231,7 +256,7 @@ impl<'a> Comparer<'a> {
 
 impl<'a> Comparer<'a> {
     // fn target_key_exists(&mut self, key: String) -> Result<()> {
-    fn target_key_exists(&mut self, redis_key: &RedisKey) -> Result<()> {
+    fn target_key_exists(&mut self, redis_key: &RedisKey) -> CompareResult<()> {
         // target端key是否存在
         let t_exist =
             key_exists(redis_key.key_name.clone(), self.tconn).map_err(|e| -> CompareError {
@@ -244,15 +269,15 @@ impl<'a> Comparer<'a> {
                 source: Some(redis_key.key_name.clone()),
                 target: None,
             };
-            return Err(Error::from(CompareError::from_reason(
+            return Err(CompareError::from_reason(
                 reason,
                 CompareErrorType::ExistsErr,
-            )));
+            ));
         }
         Ok(())
     }
 
-    fn ttl_diff(&mut self, redis_key: &RedisKey) -> Result<()> {
+    fn ttl_diff(&mut self, redis_key: &RedisKey) -> CompareResult<()> {
         let s_ttl = ttl(redis_key.key_name.clone(), self.sconn).map_err(|e| -> CompareError {
             CompareError::from_str(e.to_string().as_str(), CompareErrorType::RedisConnectionErr)
         })?;
@@ -267,15 +292,12 @@ impl<'a> Comparer<'a> {
                 source: Some(s_ttl.to_string()),
                 target: Some(t_ttl.to_string()),
             };
-            return Err(Error::from(CompareError::from_reason(
-                reason,
-                CompareErrorType::TTLDiff,
-            )));
+            return Err(CompareError::from_reason(reason, CompareErrorType::TTLDiff));
         }
         Ok(())
     }
 
-    fn string_value_equal(&mut self, key: &RedisKey) -> Result<()> {
+    fn string_value_equal(&mut self, key: &RedisKey) -> CompareResult<()> {
         if !key.key_type.eq(&RedisKeyType::TypeString) {
             let reason = CompareErrorReason {
                 redis_key: key.clone(),
@@ -283,10 +305,10 @@ impl<'a> Comparer<'a> {
                 source: None,
                 target: None,
             };
-            return Err(Error::from(CompareError::from_reason(
+            return Err(CompareError::from_reason(
                 reason,
                 CompareErrorType::KeyTypeNotString,
-            )));
+            ));
         }
 
         let sval: String = redis::cmd("get")
@@ -309,15 +331,15 @@ impl<'a> Comparer<'a> {
                 source: Some(sval.clone()),
                 target: Some(tval.clone()),
             };
-            return Err(Error::from(CompareError::from_reason(
+            return Err(CompareError::from_reason(
                 reason,
                 CompareErrorType::StringValueNotEqual,
-            )));
+            ));
         }
         Ok(())
     }
 
-    fn list_len_equal(&mut self, key: &RedisKey) -> Result<(usize, usize)> {
+    fn list_len_equal(&mut self, key: &RedisKey) -> CompareResult<(usize, usize)> {
         if !key.key_type.eq(&RedisKeyType::TypeList) {
             let reason = CompareErrorReason {
                 redis_key: key.clone(),
@@ -325,10 +347,10 @@ impl<'a> Comparer<'a> {
                 source: None,
                 target: None,
             };
-            return Err(Error::from(CompareError::from_reason(
+            return Err(CompareError::from_reason(
                 reason,
                 CompareErrorType::KeyTypeNotList,
-            )));
+            ));
         }
 
         let s_len = list_len(key.key_name.clone(), self.sconn).map_err(|e| -> CompareError {
@@ -345,16 +367,16 @@ impl<'a> Comparer<'a> {
                 source: Some(s_len.to_string()),
                 target: Some(t_len.to_string()),
             };
-            return Err(Error::from(CompareError::from_reason(
+            return Err(CompareError::from_reason(
                 reason,
                 CompareErrorType::ListLenDiff,
-            )));
+            ));
         }
         Ok((s_len, t_len))
     }
 
     // 比较 set 元素数量 是否一致
-    fn set_members_number_equal(&mut self, key: &RedisKey) -> Result<()> {
+    fn set_members_number_equal(&mut self, key: &RedisKey) -> CompareResult<()> {
         if !key.key_type.eq(&RedisKeyType::TypeSet) {
             let reason = CompareErrorReason {
                 redis_key: key.clone(),
@@ -362,10 +384,10 @@ impl<'a> Comparer<'a> {
                 source: None,
                 target: None,
             };
-            return Err(Error::from(CompareError::from_reason(
+            return Err(CompareError::from_reason(
                 reason,
                 CompareErrorType::KeyTypeNotSet,
-            )));
+            ));
         }
 
         let s_size = scard(key.key_name.clone(), self.sconn).map_err(|e| -> CompareError {
@@ -382,16 +404,16 @@ impl<'a> Comparer<'a> {
                 source: Some(s_size.to_string()),
                 target: Some(t_size.to_string()),
             };
-            return Err(Error::from(CompareError::from_reason(
+            return Err(CompareError::from_reason(
                 reason,
                 CompareErrorType::SetCardDiff,
-            )));
+            ));
         }
         Ok(())
     }
 
     // 遍历source，核对在target是否存在
-    fn set_source_member_in_target(&mut self, key: &RedisKey) -> Result<()> {
+    fn set_source_member_in_target(&mut self, key: &RedisKey) -> CompareResult<()> {
         if !key.key_type.eq(&RedisKeyType::TypeSet) {
             let reason = CompareErrorReason {
                 redis_key: key.clone(),
@@ -399,10 +421,10 @@ impl<'a> Comparer<'a> {
                 source: None,
                 target: None,
             };
-            return Err(Error::from(CompareError::from_reason(
+            return Err(CompareError::from_reason(
                 reason,
                 CompareErrorType::KeyTypeNotSet,
-            )));
+            ));
         }
         let mut cmd_sscan = redis::cmd("sscan");
         cmd_sscan.arg(key.key_name.clone()).cursor_arg(0);
@@ -425,16 +447,16 @@ impl<'a> Comparer<'a> {
                     source: Some(item.clone()),
                     target: None,
                 };
-                return Err(Error::from(CompareError::from_reason(
+                return Err(CompareError::from_reason(
                     reason,
                     CompareErrorType::SetMemberNotIn,
-                )));
+                ));
             }
         }
         Ok(())
     }
 
-    fn zset_members_number_equal(&mut self, key: &RedisKey) -> Result<()> {
+    fn zset_members_number_equal(&mut self, key: &RedisKey) -> CompareResult<()> {
         if !key.key_type.eq(&RedisKeyType::TypeZSet) {
             let reason = CompareErrorReason {
                 redis_key: key.clone(),
@@ -442,10 +464,10 @@ impl<'a> Comparer<'a> {
                 source: None,
                 target: None,
             };
-            return Err(Error::from(CompareError::from_reason(
+            return Err(CompareError::from_reason(
                 reason,
                 CompareErrorType::KeyTypeNotZSet,
-            )));
+            ));
         }
         let s_size = zcard(key.key_name.clone(), self.sconn).map_err(|e| -> CompareError {
             CompareError::from_str(e.to_string().as_str(), CompareErrorType::RedisConnectionErr)
@@ -461,15 +483,15 @@ impl<'a> Comparer<'a> {
                 source: Some(s_size.to_string()),
                 target: Some(t_size.to_string()),
             };
-            return Err(Error::from(CompareError::from_reason(
+            return Err(CompareError::from_reason(
                 reason,
                 CompareErrorType::ZSetCardDiff,
-            )));
+            ));
         }
         Ok(())
     }
 
-    fn zset_source_members_in_target(&mut self, key: &RedisKey) -> Result<()> {
+    fn zset_source_members_in_target(&mut self, key: &RedisKey) -> CompareResult<()> {
         if !key.key_type.eq(&RedisKeyType::TypeZSet) {
             let reason = CompareErrorReason {
                 redis_key: key.clone(),
@@ -477,10 +499,10 @@ impl<'a> Comparer<'a> {
                 source: None,
                 target: None,
             };
-            return Err(Error::from(CompareError::from_reason(
+            return Err(CompareError::from_reason(
                 reason,
                 CompareErrorType::KeyTypeNotZSet,
-            )));
+            ));
         }
         let mut cmd_zscan = redis::cmd("zscan");
         cmd_zscan.arg(key.key_name.clone()).cursor_arg(0);
@@ -510,10 +532,10 @@ impl<'a> Comparer<'a> {
                         source: Some(item.clone()),
                         target: Some(t_scroe.to_string()),
                     };
-                    return Err(Error::from(CompareError::from_reason(
+                    return Err(CompareError::from_reason(
                         reason,
                         CompareErrorType::ZSetMemberScoreDiff,
-                    )));
+                    ));
                 }
             }
             count += 1;
@@ -521,7 +543,7 @@ impl<'a> Comparer<'a> {
         Ok(())
     }
 
-    fn hash_len_equal(&mut self, key: &RedisKey) -> Result<()> {
+    fn hash_len_equal(&mut self, key: &RedisKey) -> CompareResult<()> {
         if !key.key_type.eq(&RedisKeyType::TypeHash) {
             let reason = CompareErrorReason {
                 redis_key: key.clone(),
@@ -529,10 +551,10 @@ impl<'a> Comparer<'a> {
                 source: None,
                 target: None,
             };
-            return Err(Error::from(CompareError::from_reason(
+            return Err(CompareError::from_reason(
                 reason,
                 CompareErrorType::KeyTypeNotHash,
-            )));
+            ));
         }
         let s_len = hlen(key.key_name.clone(), self.sconn).map_err(|e| -> CompareError {
             CompareError::from_str(e.to_string().as_str(), CompareErrorType::RedisConnectionErr)
@@ -547,15 +569,15 @@ impl<'a> Comparer<'a> {
                 source: Some(s_len.to_string()),
                 target: Some(t_len.to_string()),
             };
-            return Err(Error::from(CompareError::from_reason(
+            return Err(CompareError::from_reason(
                 reason,
                 CompareErrorType::HashLenDiff,
-            )));
+            ));
         }
         Ok(())
     }
 
-    fn hash_field_vale_equal(&mut self, key: &RedisKey) -> Result<()> {
+    fn hash_field_vale_equal(&mut self, key: &RedisKey) -> CompareResult<()> {
         if !key.key_type.eq(&RedisKeyType::TypeHash) {
             let reason = CompareErrorReason {
                 redis_key: key.clone(),
@@ -563,10 +585,10 @@ impl<'a> Comparer<'a> {
                 source: None,
                 target: None,
             };
-            return Err(Error::from(CompareError::from_reason(
+            return Err(CompareError::from_reason(
                 reason,
                 CompareErrorType::KeyTypeNotHash,
-            )));
+            ));
         }
         let mut cmd_hscan = redis::cmd("hscan");
         cmd_hscan.arg(key.key_name.clone()).cursor_arg(0);
@@ -595,10 +617,10 @@ impl<'a> Comparer<'a> {
                         source: Some(item.clone()),
                         target: Some(t_val.clone()),
                     };
-                    return Err(Error::from(CompareError::from_reason(
+                    return Err(CompareError::from_reason(
                         reason,
                         CompareErrorType::HashFieldValueDiff,
-                    )));
+                    ));
                 }
                 tag = true;
             }

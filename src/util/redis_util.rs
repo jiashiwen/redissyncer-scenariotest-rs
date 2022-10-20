@@ -52,11 +52,11 @@ pub enum RedisConnection {
 
 impl RedisConnection {
     pub fn get_dyn_connection(self) -> Box<dyn ConnectionLike> {
-        let r: Box<dyn ConnectionLike> = match self {
+        let cl: Box<dyn ConnectionLike> = match self {
             RedisConnection::Single(s) => Box::new(s),
             RedisConnection::Cluster(c) => Box::new(c),
         };
-        r
+        cl
     }
 }
 

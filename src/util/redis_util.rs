@@ -11,20 +11,45 @@ use crate::util::RedisKeyType;
 use super::RedisKey;
 
 #[derive(Clone)]
+pub struct RedisClientWithDB {
+    pub client: RedisClient,
+    pub db: usize,
+}
+
+impl RedisClientWithDB {
+    // 返回RedisConnection ， 单实例返回 select db 的 connection
+    pub fn get_redis_connection(&self) -> RedisResult<RedisConnection> {
+        return match &self.client {
+            RedisClient::Single(sc) => {
+                let mut conn = sc.get_connection()?;
+                conn.req_command(redis::cmd("select").arg(self.db))?;
+                let r_conn = RedisConnection::Single(conn);
+                Ok(r_conn)
+            }
+            RedisClient::Cluster(cc) => {
+                let conn = cc.get_connection()?;
+                let r_conn = RedisConnection::Cluster(conn);
+                Ok(r_conn)
+            }
+        };
+    }
+}
+
+#[derive(Clone)]
 pub enum RedisClient {
     Single(redis::Client),
     Cluster(redis::cluster::ClusterClient),
 }
 
 impl RedisClient {
-    pub fn get_single_client(&self) -> Result<redis::Client> {
+    pub fn to_redis_client(&self) -> Result<redis::Client> {
         return match self {
             RedisClient::Single(sc) => Ok(sc.clone()),
             RedisClient::Cluster(_) => Err(anyhow!("not single redis client")),
         };
     }
 
-    pub fn get_cluster_client(&self) -> Result<redis::cluster::ClusterClient> {
+    pub fn to_cluster_client(&self) -> Result<redis::cluster::ClusterClient> {
         return match self {
             RedisClient::Single(_) => Err(anyhow!("not single redis client")),
             RedisClient::Cluster(cc) => Ok(cc.clone()),

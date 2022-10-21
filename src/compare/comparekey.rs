@@ -25,14 +25,14 @@ pub struct Comparer<'a> {
 }
 
 impl<'a> Comparer<'a> {
-    pub fn new(s_conn: &'a mut dyn ConnectionLike, t_conn: &'a mut dyn ConnectionLike) -> Self {
-        Self {
-            sconn: s_conn,
-            tconn: t_conn,
-            ttl_diff: 1,
-            batch: 10,
-        }
-    }
+    // pub fn new(s_conn: &'a mut dyn ConnectionLike, t_conn: &'a mut dyn ConnectionLike) -> Self {
+    //     Self {
+    //         sconn: s_conn,
+    //         tconn: t_conn,
+    //         ttl_diff: 1,
+    //         batch: 10,
+    //     }
+    // }
 
     // 返回校验不成功的key 列表
     pub fn compare_rediskeys(mut self, keys_vec: &Vec<RedisKey>) -> Vec<IffyKey> {
@@ -647,7 +647,12 @@ mod test {
         let mut scon = s_client.get_connection().unwrap();
         let mut tcon = t_client.get_connection().unwrap();
 
-        let mut comparer: Comparer = Comparer::new(&mut scon, &mut tcon);
+        let mut comparer: Comparer = Comparer {
+            sconn: &mut scon,
+            tconn: &mut tcon,
+            ttl_diff: 1,
+            batch: 10,
+        };
 
         let _cmd_set = redis::cmd("set");
 
@@ -676,7 +681,12 @@ mod test {
         let mut scon = s_client.get_connection().unwrap();
         let mut tcon = t_client.get_connection().unwrap();
 
-        let mut comparer: Comparer = Comparer::new(&mut scon, &mut tcon);
+        let mut comparer: Comparer = Comparer {
+            sconn: &mut scon,
+            tconn: &mut tcon,
+            ttl_diff: 1,
+            batch: 10,
+        };
         let cmd_rpush = redis::cmd("rpush");
 
         let key_list = RedisKey {
@@ -705,7 +715,12 @@ mod test {
         let mut scon = s_client.get_connection().unwrap();
         let mut tcon = t_client.get_connection().unwrap();
 
-        let mut comparer: Comparer = Comparer::new(&mut scon, &mut tcon);
+        let mut comparer: Comparer = Comparer {
+            sconn: &mut scon,
+            tconn: &mut tcon,
+            ttl_diff: 1,
+            batch: 10,
+        };
 
         let cmd_sadd = redis::cmd("sadd");
 
@@ -735,7 +750,12 @@ mod test {
         let mut scon = s_client.get_connection().unwrap();
         let mut tcon = t_client.get_connection().unwrap();
 
-        let mut comparer: Comparer = Comparer::new(&mut scon, &mut tcon);
+        let mut comparer: Comparer = Comparer {
+            sconn: &mut scon,
+            tconn: &mut tcon,
+            ttl_diff: 1,
+            batch: 10,
+        };
 
         let cmd_zadd = redis::cmd("zadd");
 
@@ -773,7 +793,12 @@ mod test {
         let mut scon = s_client.get_connection().unwrap();
         let mut tcon = t_client.get_connection().unwrap();
 
-        let mut comparer: Comparer = Comparer::new(&mut scon, &mut tcon);
+        let mut comparer: Comparer = Comparer {
+            sconn: &mut scon,
+            tconn: &mut tcon,
+            ttl_diff: 1,
+            batch: 10,
+        };
 
         let cmd_hset = redis::cmd("hset");
 
@@ -810,7 +835,12 @@ mod test {
         let mut scon = client.get_connection().unwrap();
         let mut tcon = client.get_connection().unwrap();
 
-        let comparer: Comparer = Comparer::new(&mut scon, &mut tcon);
+        let comparer: Comparer = Comparer {
+            sconn: &mut scon,
+            tconn: &mut tcon,
+            ttl_diff: 1,
+            batch: 10,
+        };
         let cmd = redis::cmd("ping");
         let r = comparer.sconn.req_command(&cmd);
         println!("{:?}", r);

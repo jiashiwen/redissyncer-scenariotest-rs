@@ -24,6 +24,7 @@ pub enum CompareErrorType {
     KeyTypeNotSet,
     KeyTypeNotZSet,
     KeyTypeNotHash,
+
     /// 未知错误
     Unknown,
 }

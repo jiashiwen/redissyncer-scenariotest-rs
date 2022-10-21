@@ -11,7 +11,7 @@ fn main() -> Result<(), rayon::ThreadPoolBuildError> {
 
     let pool = rayon::ThreadPoolBuilder::new().num_threads(2).build()?;
     let i = 15;
-    pool.scope(|s| {
+    pool.scope(|_| {
         println!("second scope");
     });
     pool.scope(|s| {

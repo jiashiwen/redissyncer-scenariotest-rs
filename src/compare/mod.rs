@@ -4,6 +4,7 @@ mod comparekey;
 mod rediscompare;
 
 pub use compare_db::CompareDB;
+pub use compare_db::CompareDBReverse;
 pub use compare_error::CompareError;
 pub use compare_error::Position;
 pub use rediscompare::Compare;

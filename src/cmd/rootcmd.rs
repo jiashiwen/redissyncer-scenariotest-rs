@@ -5,10 +5,9 @@ use crate::commons::SubCmd;
 use crate::compare::{Compare, InstanceType, RedisInstance, ScenarioType, SourceInstance};
 use crate::configure::{self, get_config_file_path, Config};
 use crate::configure::{generate_default_config, set_config_file_path};
-use crate::request::req;
 use crate::util::{flash_struct_to_yaml_file, from_yaml_file_to_struct};
 use crate::{configure::set_config_from_file, interact};
-use clap::{Arg, ArgMatches, Command as clap_Command};
+use clap::{Arg, ArgAction, ArgMatches, Command as clap_Command};
 use lazy_static::lazy_static;
 use std::borrow::Borrow;
 use std::collections::HashMap;
@@ -19,7 +18,7 @@ use std::fs;
 use sysinfo::{PidExt, System, SystemExt};
 
 lazy_static! {
-    static ref CLIAPP: clap::Command<'static> = clap::Command::new("rediscompare-rs")
+    static ref CLIAPP: clap::Command = clap::Command::new("rediscompare-rs")
         .version("0.1.0")
         .author("Shiwen Jia. <jiashiwen@gmail.com>")
         .about("For compare different redis instance data")
@@ -30,19 +29,20 @@ lazy_static! {
                 .long("config")
                 .value_name("FILE")
                 .help("Sets a custom config file")
-                .takes_value(true)
+                // .takes_value(true)
         )
         .arg(
             Arg::new("interact")
                 .short('i')
                 .long("interact")
+                .action(ArgAction::SetTrue)
                 .help("run as interact mod")
         )
         .arg(
             Arg::new("v")
                 .short('v')
-                .multiple_occurrences(true)
-                .takes_value(true)
+                // .multiple_occurrences(true)
+                // .takes_value(true)
                 .help("Sets the level of verbosity")
         )
         .subcommand(new_config_cmd())
@@ -54,7 +54,8 @@ lazy_static! {
 
 pub fn run_app() {
     let matches = CLIAPP.clone().get_matches();
-    if let Some(c) = matches.value_of("config") {
+    if let Some(c) = matches.get_one::<String>("config") {
+        // if let Some(c) = matches.value_of("config") {
         println!("config path is:{}", c);
         set_config_file_path(c.to_string());
     }
@@ -116,34 +117,23 @@ pub fn process_exists(pid: &u32) -> bool {
 }
 
 fn cmd_match(matches: &ArgMatches) {
-    if let Some(c) = matches.value_of("config") {
+    if let Some(c) = matches.get_one::<String>("config") {
         set_config_file_path(c.to_string());
         set_config_from_file(&get_config_file_path());
     } else {
         set_config_from_file("");
     }
 
-    if matches.is_present("interact") {
+    if matches.get_flag("interact") {
         interact::run();
         return;
-    }
-
-    if let Some(ref matches) = matches.subcommand_matches("requestsample") {
-        if let Some(_) = matches.subcommand_matches("baidu") {
-            let rt = tokio::runtime::Runtime::new().unwrap();
-            let async_req = async {
-                let result = req::get_baidu().await;
-                println!("{:?}", result);
-            };
-            rt.block_on(async_req);
-        };
     }
 
     if let Some(ref compare) = matches.subcommand_matches("compare") {
         if let Some(sample) = compare.subcommand_matches("sample") {
             if let Some(single2single) = sample.subcommand_matches("single2single") {
                 let mut file = "./compare_sample_single2single.yml".to_string();
-                let file_arg = single2single.value_of("filepath");
+                let file_arg = single2single.get_one::<String>("filepath");
                 if let Some(arg) = file_arg {
                     file = arg.to_string();
                 }
@@ -159,7 +149,7 @@ fn cmd_match(matches: &ArgMatches) {
 
             if let Some(single2cluster) = sample.subcommand_matches("single2cluster") {
                 let mut file = "./compare_sample_single2cluster.yml".to_string();
-                let file_arg = single2cluster.value_of("filepath");
+                let file_arg = single2cluster.get_one::<String>("filepath");
                 if let Some(arg) = file_arg {
                     file = arg.to_string();
                 }
@@ -184,7 +174,7 @@ fn cmd_match(matches: &ArgMatches) {
 
             if let Some(cluster2cluster) = sample.subcommand_matches("cluster2cluster") {
                 let mut file = "./compare_sample_cluster2cluster.yml".to_string();
-                let file_arg = cluster2cluster.value_of("filepath");
+                let file_arg = cluster2cluster.get_one::<String>("filepath");
                 if let Some(arg) = file_arg {
                     file = arg.to_string();
                 }
@@ -225,7 +215,7 @@ fn cmd_match(matches: &ArgMatches) {
 
             if let Some(multisingle2single) = sample.subcommand_matches("multisingle2single") {
                 let mut file = "./compare_sample_multisingle2single.yml".to_string();
-                let file_arg = multisingle2single.value_of("filepath");
+                let file_arg = multisingle2single.get_one::<String>("filepath");
                 if let Some(arg) = file_arg {
                     file = arg.to_string();
                 }
@@ -298,7 +288,7 @@ fn cmd_match(matches: &ArgMatches) {
 
             if let Some(multisingle2cluster) = sample.subcommand_matches("multisingle2cluster") {
                 let mut file = "./compare_sample_multisingle2cluster.yml".to_string();
-                let file_arg = multisingle2cluster.value_of("filepath");
+                let file_arg = multisingle2cluster.get_one::<String>("filepath");
                 if let Some(arg) = file_arg {
                     file = arg.to_string();
                 }
@@ -376,7 +366,7 @@ fn cmd_match(matches: &ArgMatches) {
 
             if let Some(multisingle2single) = sample.subcommand_matches("multi2single") {
                 let mut file = "./compare_sample_multi2single.yml".to_string();
-                let file_arg = multisingle2single.value_of("filepath");
+                let file_arg = multisingle2single.get_one::<String>("filepath");
                 if let Some(arg) = file_arg {
                     file = arg.to_string();
                 }
@@ -449,7 +439,7 @@ fn cmd_match(matches: &ArgMatches) {
 
             if let Some(multisingle2cluster) = sample.subcommand_matches("multi2cluster") {
                 let mut file = "./compare_sample_multi2cluster.yml".to_string();
-                let file_arg = multisingle2cluster.value_of("filepath");
+                let file_arg = multisingle2cluster.get_one::<String>("filepath");
                 if let Some(arg) = file_arg {
                     file = arg.to_string();
                 }
@@ -527,7 +517,7 @@ fn cmd_match(matches: &ArgMatches) {
         }
 
         if let Some(execute) = compare.subcommand_matches("exec") {
-            let file = execute.value_of("file");
+            let file = execute.get_one::<String>("file");
             if let Some(path) = file {
                 let r = from_yaml_file_to_struct::<Compare>(path);
                 match r {
@@ -570,7 +560,7 @@ fn cmd_match(matches: &ArgMatches) {
 
         if let Some(gen_config) = config.subcommand_matches("gendefault") {
             let mut file = String::from("");
-            if let Some(path) = gen_config.value_of("filepath") {
+            if let Some(path) = gen_config.get_one::<String>("filepath") {
                 file.push_str(path);
             } else {
                 file.push_str("config_default.yml")
@@ -587,7 +577,7 @@ fn cmd_match(matches: &ArgMatches) {
         if let Some(bigkey) = gendata.subcommand_matches("bigkey") {
             if let Some(template) = bigkey.subcommand_matches("template") {
                 let mut file = String::from("bigkey_template.yml");
-                if let Some(path) = template.value_of("filepath") {
+                if let Some(path) = template.get_one::<String>("filepath") {
                     file = path.to_string();
                 }
 
@@ -608,7 +598,9 @@ fn cmd_match(matches: &ArgMatches) {
                 }
             }
             if let Some(from) = bigkey.subcommand_matches("from") {
-                let file = from.value_of("filepath").expect("flag filepath error");
+                let file = from
+                    .get_one::<String>("filepath")
+                    .expect("flag filepath error");
 
                 let r = from_yaml_file_to_struct::<GenerateBigKey>(file);
                 match r {
@@ -627,7 +619,7 @@ fn cmd_match(matches: &ArgMatches) {
         if let Some(continuous) = gendata.subcommand_matches("continuous") {
             if let Some(template) = continuous.subcommand_matches("template") {
                 let mut file = String::from("continuous_gen_data_template.yml");
-                if let Some(path) = template.value_of("filepath") {
+                if let Some(path) = template.get_one::<String>("filepath") {
                     file = path.to_string();
                 }
 
@@ -649,7 +641,7 @@ fn cmd_match(matches: &ArgMatches) {
             }
 
             if let Some(from) = continuous.subcommand_matches("from") {
-                if let Some(path) = from.value_of("filepath") {
+                if let Some(path) = from.get_one::<String>("filepath") {
                     println!("path is {}", path);
                     if let Ok(gbd) = from_yaml_file_to_struct::<GeneratorByDuration>(path) {
                         let r_exec = gbd.exec();

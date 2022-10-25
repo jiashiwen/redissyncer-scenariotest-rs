@@ -8,9 +8,9 @@ mod compare;
 mod configure;
 mod interact;
 mod logger;
-mod request;
-mod util;
+// mod request;
 mod redisdatagen;
+mod util;
 
 fn main() {
     init_log();

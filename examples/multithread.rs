@@ -32,7 +32,7 @@ fn main() -> Result<(), rayon::ThreadPoolBuildError> {
         s.spawn(move |_| delay_task(Duration::from_secs(10)));
         s.spawn(move |_| println!("end"));
     });
-    pool.scope(|s| {
+    pool.scope(|_| {
         println!("second scope");
     });
     // for i in 0..20 {

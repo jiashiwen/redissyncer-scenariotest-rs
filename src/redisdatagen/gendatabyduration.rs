@@ -14,8 +14,8 @@ pub struct GeneratorByDuration {
     pub redisinstance: RedisInstance,
     #[serde(default = "GeneratorByDuration::duration_default")]
     pub duration: usize,
-    #[serde(default = "GeneratorByDuration::redis_url_default")]
-    pub redis_url: String,
+    // #[serde(default = "GeneratorByDuration::redis_url_default")]
+    // pub redis_url: String,
     #[serde(default = "GeneratorByDuration::redis_version_default")]
     pub redis_version: String,
     #[serde(default = "GeneratorByDuration::threads_default")]
@@ -34,7 +34,7 @@ impl Default for GeneratorByDuration {
     fn default() -> Self {
         Self {
             duration: 0,
-            redis_url: "redis://:127.0.0.1:6379/?timeout=1s".to_string(),
+            // redis_url: "redis://:127.0.0.1:6379/?timeout=1s".to_string(),
             redis_version: "0".to_string(),
             threads: 1,
             key_len: 4,
@@ -51,9 +51,9 @@ impl GeneratorByDuration {
     fn duration_default() -> usize {
         0
     }
-    fn redis_url_default() -> String {
-        "redis://:127.0.0.1:6379/?timeout=1s".to_string()
-    }
+    // fn redis_url_default() -> String {
+    //     "redis://:127.0.0.1:6379/?timeout=1s".to_string()
+    // }
     fn redis_version_default() -> String {
         "4".to_string()
     }
@@ -197,7 +197,7 @@ mod test {
     fn test_generator_by_duration_exec() {
         init_log();
         let mut gbd = GeneratorByDuration::default();
-        gbd.redis_url = RURL.to_string();
+        // gbd.redis_url = RURL.to_string();
         gbd.duration = 3600;
         gbd.loopstep = 10;
         gbd.threads = 2;

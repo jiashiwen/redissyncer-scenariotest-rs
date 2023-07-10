@@ -29,7 +29,6 @@ lazy_static! {
                 .long("config")
                 .value_name("FILE")
                 .help("Sets a custom config file")
-                // .takes_value(true)
         )
         .arg(
             Arg::new("interact")
@@ -38,13 +37,7 @@ lazy_static! {
                 .action(ArgAction::SetTrue)
                 .help("run as interact mod")
         )
-        .arg(
-            Arg::new("v")
-                .short('v')
-                // .multiple_occurrences(true)
-                // .takes_value(true)
-                .help("Sets the level of verbosity")
-        )
+        .arg(Arg::new("v").short('v').help("Sets the level of verbosity"))
         .subcommand(new_config_cmd())
         .subcommand(new_compare_cmd())
         .subcommand(new_gendata_cmd())
@@ -55,7 +48,6 @@ lazy_static! {
 pub fn run_app() {
     let matches = CLIAPP.clone().get_matches();
     if let Some(c) = matches.get_one::<String>("config") {
-        // if let Some(c) = matches.value_of("config") {
         println!("config path is:{}", c);
         set_config_file_path(c.to_string());
     }
@@ -522,7 +514,6 @@ fn cmd_match(matches: &ArgMatches) {
                 let r = from_yaml_file_to_struct::<Compare>(path);
                 match r {
                     Ok(compare) => {
-                        // compare.exec_scenario();
                         compare.exec();
                     }
                     Err(e) => {

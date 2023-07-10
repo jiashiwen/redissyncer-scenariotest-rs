@@ -4,7 +4,7 @@ use serde::{Deserialize, Serialize};
 
 use std::{
     fs::{File, OpenOptions},
-    io::{BufRead, BufReader, LineWriter, Read, Write},
+    io::{LineWriter, Read, Write},
 };
 
 #[derive(Debug, PartialEq, Deserialize, Serialize)]

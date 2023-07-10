@@ -6,7 +6,7 @@ source:
      dbmapper:
        3: 4
        5: 5
-         #0: 2  
+       0: 2  
 target:
   urls:
     - "redis://:redistest0102@114.67.76.82:16377/"

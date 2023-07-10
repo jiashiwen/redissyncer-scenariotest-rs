@@ -1,17 +1,20 @@
-use super::comparekey::Comparer;
-use crate::compare::{CompareDB, CompareDBReverse};
-use crate::util::{rand_string, RedisClientWithDB};
-use crate::util::{RedisClient, RedisKey};
+use crate::compare::{compare_from_file, CompareDB, CompareDBReverse};
+use crate::util::RedisClient;
+use crate::util::{rand_lettter_number_string, rand_string, RedisClientWithDB};
 use anyhow::{anyhow, Result};
 use chrono::prelude::Local;
 use redis::cluster::ClusterClientBuilder;
 use redis::RedisResult;
-use rmp_serde::Serializer;
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
-use std::fs::{self, create_dir, remove_dir_all, File, OpenOptions};
+use std::ffi::OsString;
+use std::fs::{self, create_dir, remove_dir_all, File, OpenOptions, ReadDir};
 use std::io::{LineWriter, Read, Write};
+use std::ops::Sub;
+use std::str::FromStr;
 use std::vec;
+
+pub const COMPARE_STATUS_FILE_NAME: &str = ".compare_status";
 
 #[derive(Debug, PartialEq, Serialize, Deserialize, Clone)]
 #[serde(rename_all = "lowercase")]
@@ -23,36 +26,6 @@ pub enum ScenarioType {
     Multisingle2cluster,
 }
 
-#[derive(Debug, Serialize, Deserialize, Clone)]
-pub struct CompareFailKeys {
-    pub source_instance: RedisInstance,
-    pub target_instance: RedisInstance,
-    pub source_db: usize,
-    pub target_db: usize,
-    pub keys: Vec<RedisKey>,
-    // 是否为反向校验
-    pub reverse: bool,
-}
-
-impl CompareFailKeys {
-    pub fn to_vec(&self) -> Result<Vec<u8>> {
-        let mut buf = Vec::new();
-        self.serialize(&mut Serializer::new(&mut buf))?;
-        Ok(buf)
-    }
-
-    pub fn write_to_file(&self, path: &str) -> Result<()> {
-        let mut buf = Vec::new();
-        self.serialize(&mut Serializer::new(&mut buf))?;
-        write_result_file(path, &buf)?;
-        Ok(())
-    }
-
-    // 正向校验
-    pub fn compare(&self) {}
-
-    // 反向校验
-}
 #[derive(Debug, PartialEq, Eq, PartialOrd, Ord, Hash, Serialize, Deserialize, Clone)]
 #[serde(rename_all = "lowercase")]
 pub enum InstanceType {
@@ -177,7 +150,6 @@ impl RedisInstanceWithDB {
                             + "@"
                             + url_split_rs[1];
 
-                        // let cl = redis::Client::open(url_single)?;
                         let redis_instance = RedisInstance {
                             urls: vec![url_single],
                             password: String::from(""),
@@ -206,6 +178,7 @@ impl RedisInstanceWithDB {
         };
         instances
     }
+
     pub fn to_redis_client_with_db(&self) -> RedisResult<RedisClientWithDB> {
         let client = self.instance.to_redis_client()?;
         let rcwb = RedisClientWithDB {
@@ -213,33 +186,6 @@ impl RedisInstanceWithDB {
             db: self.db,
         };
         Ok(rcwb)
-    }
-    pub fn to_single_client_db_vec(&self) -> RedisResult<Vec<RedisClientWithDB>> {
-        let db_clients: Vec<RedisClientWithDB> = match self.instance.instance_type {
-            InstanceType::Single => {
-                let mut vec: Vec<RedisClientWithDB> = vec![];
-                let client = self.instance.to_redis_client()?;
-                let db_client = RedisClientWithDB {
-                    client,
-                    db: self.db,
-                };
-                vec.push(db_client);
-                vec
-            }
-            InstanceType::Cluster => {
-                let mut vec: Vec<RedisClientWithDB> = vec![];
-                let clients = self.instance.to_single_redis_clients()?;
-                for c in clients {
-                    let db_client = RedisClientWithDB {
-                        client: RedisClient::Single(c),
-                        db: self.db,
-                    };
-                    vec.push(db_client);
-                }
-                vec
-            }
-        };
-        Ok(db_clients)
     }
 }
 
@@ -362,12 +308,13 @@ impl Compare {
     }
 
     pub fn exec(&self) {
+        let mut compare_times_remainder = self.frequency;
         // 首次校验
         // 删除中间文件目录
         let _ = remove_result_dir();
         // 生成中间文件目录
 
-        let mut current_dir = match create_result_dir() {
+        let current_dir = match create_result_dir() {
             Ok(s) => s,
             Err(e) => {
                 log::error!("{}", e.to_string());
@@ -375,7 +322,7 @@ impl Compare {
             }
         };
         // 获取source to target 对应关系
-        let map_dbinstance_s_t = match self.map_dbinstance_source_target() {
+        let map_dbinstance_s_t = match self.map_dbinstance_source_to_target() {
             Ok(map) => map,
             Err(e) => {
                 log::error!("{}", e);
@@ -404,6 +351,7 @@ impl Compare {
                     batch: self.batch_size,
                     ttl_diff: self.ttl_diff,
                     compare_pool: self.compare_threads,
+                    result_store_dir: current_dir.clone(),
                 };
                 p.spawn(move |_| {
                     db_compare.exec();
@@ -416,7 +364,7 @@ impl Compare {
                 println!("执行反向校验");
 
                 // 获取 target 实例 与 source 实例的对应关系
-                let map = match self.map_dbinstance_target_source() {
+                let map = match self.map_dbinstance_target_to_source() {
                     Ok(m) => m,
                     Err(e) => {
                         log::error!("{}", e);
@@ -425,30 +373,7 @@ impl Compare {
                 };
 
                 for (t, s) in map {
-                    let t_clients = match t.to_single_client_db_vec() {
-                        Ok(tcs) => tcs,
-                        Err(e) => {
-                            log::error!("{}", e);
-                            return;
-                        }
-                    };
-
-                    // let mut s_clients: Vec<RedisClientWithDB> = vec![];
-                    // for s_instance in s {
-                    //     let redis_client = match s_instance.instance.to_redis_client() {
-                    //         Ok(rc) => rc,
-                    //         Err(e) => {
-                    //             log::error!("{}", e);
-                    //             return;
-                    //         }
-                    //     };
-                    //     let r_c_w_db = RedisClientWithDB {
-                    //         client: redis_client,
-                    //         db: s_instance.db,
-                    //     };
-                    //     s_clients.push(r_c_w_db);
-                    // }
-
+                    // 将 目标 redis instance 转化为但实例的的 redis instance 数组
                     for tc in t.to_single_redis_instance_with_db_vec() {
                         let compare_db_reverse = CompareDBReverse {
                             source: s.clone(),
@@ -456,24 +381,85 @@ impl Compare {
                             batch: self.batch_size,
                             ttl_diff: self.ttl_diff,
                             compare_pool: self.compare_threads,
+                            result_store_dir: current_dir.clone(),
                         };
                         compare_db_reverse.exec();
                     }
                 }
             }
         });
+        compare_times_remainder -= 1;
+        print!("compare_times_remainder:{}", compare_times_remainder);
 
         // 执行循环校验
-        if self.frequency > 1 {
+        loop {
+            if compare_times_remainder <= 0 {
+                return;
+            }
+            // Todo 增加错误处理逻辑
             println!("执行循环校验");
-            // walk_result_dir(&current_dir.clone());
+            // 获取上次校验结果的目录
+            let last_result_dir = match fs::read_to_string(COMPARE_STATUS_FILE_NAME) {
+                Ok(dir) => dir,
+                Err(e) => {
+                    log::error!("{}", e);
+                    return;
+                }
+            };
+            // 创建存储当前结果目录
+            let current_dir = create_result_dir().unwrap();
+            // 遍历目录，反序列化结果文件并重新校验,校验结果写入新的结果目录
+            let entries = match fs::read_dir(last_result_dir.as_str()) {
+                Ok(dir) => dir,
+                Err(e) => {
+                    log::error!("{}", e);
+                    return;
+                }
+            };
+            for e in entries {
+                if let Ok(de) = e {
+                    if let Ok(m) = de.metadata() {
+                        if m.is_file() {
+                            let name = match de.file_name().into_string() {
+                                Ok(s) => s,
+                                Err(_) => {
+                                    log::error!("convert OsString to String error");
+
+                                    continue;
+                                }
+                            };
+
+                            let path = last_result_dir.clone() + "/" + &name;
+                            let fk = match compare_from_file(path.as_str()) {
+                                Ok(fk) => fk,
+                                Err(e) => {
+                                    log::error!("{}", e);
+                                    // 复制文件到当前目录
+                                    continue;
+                                }
+                            };
+                            if !fk.iffy_keys.is_empty() {
+                                log::error!("{:?}", fk);
+                                if let Err(e) = fk.write_to_file(&current_dir) {
+                                    log::error!("{}", e);
+                                };
+                            }
+                        }
+                    }
+                };
+            }
+
+            // 清理上次校验生成的结果目录
+            fs::remove_dir_all(last_result_dir).unwrap();
+            compare_times_remainder -= 1;
+            print!("compare_times_remainder:{}", compare_times_remainder);
         }
     }
 }
 
 impl Compare {
     // source to target DBInstance 映射
-    fn map_dbinstance_source_target(
+    fn map_dbinstance_source_to_target(
         &self,
     ) -> Result<HashMap<RedisInstanceWithDB, RedisInstanceWithDB>> {
         let mut s_t_map: HashMap<RedisInstanceWithDB, RedisInstanceWithDB> = HashMap::new();
@@ -505,7 +491,7 @@ impl Compare {
 
     // 返回target DBInstance 与 source DBInstance 的映射关系
     // ToDo 从新思考
-    fn map_dbinstance_target_source(
+    fn map_dbinstance_target_to_source(
         &self,
     ) -> Result<HashMap<RedisInstanceWithDB, Vec<RedisInstanceWithDB>>> {
         return match self.target.instance_type {
@@ -584,20 +570,23 @@ impl Compare {
 fn create_result_dir() -> Result<String> {
     let dt = Local::now();
     let timestampe = dt.timestamp();
-    let dir = "cr_".to_owned() + &timestampe.to_string() + &"_".to_string() + &rand_string(4);
+    let dir = "cr_".to_owned()
+        + &timestampe.to_string()
+        + &"_".to_string()
+        + &rand_lettter_number_string(4);
     create_dir(dir.clone())?;
     // ".current_compare" 记录结果目录名称，便于后续处理
     let mut file = OpenOptions::new()
         .create(true)
         .write(true)
         .truncate(true)
-        .open(".current_compare")?;
+        .open(COMPARE_STATUS_FILE_NAME)?;
     file.write_all(dir.as_bytes())?;
     Ok(dir)
 }
 
 fn remove_result_dir() -> Result<()> {
-    let dir_name = fs::read_to_string(".current_compare")?;
+    let dir_name = fs::read_to_string(COMPARE_STATUS_FILE_NAME)?;
     remove_dir_all(dir_name)?;
     Ok(())
 }
@@ -613,209 +602,4 @@ fn write_result_file(path: &str, buf: &Vec<u8>) -> Result<()> {
         .open(file_name)?;
     file.write_all(buf)?;
     Ok(())
-}
-
-fn walk_result_dir(dir: &str) -> Result<()> {
-    let mut vec = vec![];
-    let entries = fs::read_dir(dir)?;
-    for e in entries {
-        if let Ok(de) = e {
-            if let Ok(m) = de.metadata() {
-                if m.is_file() {
-                    vec.push(de.file_name());
-                }
-            }
-        };
-    }
-
-    for fileanme in vec {
-        if let Ok(name) = fileanme.into_string() {
-            let path = dir.to_string().clone() + "/" + &name;
-            let file = fs::File::open(path);
-            match file {
-                Ok(mut f) => {
-                    let mut vec = vec![];
-                    let _ = f.read_to_end(&mut vec);
-                    let cfk = rmp_serde::from_slice::<CompareFailKeys>(&vec);
-                    if let Ok(cl) = cfk {
-                        println!("{:?}", cl);
-                    }
-                }
-                Err(e) => {
-                    log::error!("{}", e);
-                }
-            }
-        };
-    }
-
-    Ok(())
-}
-
-// 返回校验不成功的key
-fn compare_rediskeys(comparer: &mut Comparer, keys_vec: Vec<RedisKey>) -> Vec<RedisKey> {
-    let mut vec_keys = vec![];
-    for key in keys_vec {
-        let r = comparer.compare_key(key.clone());
-        if let Err(e) = r {
-            vec_keys.push(key.clone());
-            log::error!("{}", e);
-        }
-    }
-    vec_keys
-}
-
-fn write_to_file(f: &mut LineWriter<File>, buf: &Vec<u8>) {
-    f.write_all(buf);
-}
-
-#[cfg(test)]
-mod test {
-    use std::{
-        fs::{File, OpenOptions},
-        io::{LineWriter, Read, Write},
-        sync::{Arc, Mutex},
-    };
-
-    use crate::{
-        compare::{
-            rediscompare::{write_to_file, Compare, CompareFailKeys},
-            RedisInstance,
-        },
-        util::{RedisKey, RedisKeyType},
-    };
-
-    //cargo test compare::rediscompare::test::test_compare --  --nocapture
-    #[test]
-    fn test_compare() {
-        let file = "./a.yml";
-        let compare = crate::util::from_yaml_file_to_struct::<Compare>(file);
-        println!("{:?}", compare);
-    }
-
-    //cargo test compare::rediscompare::test::test_CompareErrorKeys --  --nocapture
-    #[test]
-    fn test_CompareErrorKeys() {
-        let _ = std::fs::remove_file("/tmp/write_one.bin");
-        let mut vec_keys = vec![];
-
-        for i in 0..10 {
-            let redis_key = RedisKey {
-                key_name: "key".to_string() + &i.to_string(),
-                key_type: RedisKeyType::TypeString,
-            };
-            vec_keys.push(redis_key);
-        }
-        let file = OpenOptions::new()
-            .create(true)
-            .write(true)
-            .append(true)
-            .open("/tmp/write_one.bin")
-            .unwrap();
-        let mut lw = LineWriter::new(&file);
-        for i in 0..5 {
-            let keys = CompareFailKeys {
-                source_instance: RedisInstance::default(),
-                target_instance: RedisInstance::default(),
-                source_db: i,
-                target_db: i + 1,
-                keys: vec_keys.clone(),
-                reverse: false,
-            };
-            let mut r = keys.to_vec().unwrap();
-            // 添加分隔符
-            r.push(10);
-
-            {
-                let f = &mut lw;
-                let buf = &r;
-                f.write_all(buf);
-            };
-        }
-    }
-    //cargo test compare::rediscompare::test::test_CompareErrorKeys_multi_threads --  --nocapture
-    #[test]
-    fn test_CompareErrorKeys_multi_threads() {
-        let pool = rayon::ThreadPoolBuilder::new()
-            .num_threads(4)
-            .build()
-            .map_err(|e| {
-                log::error!("{}", e);
-                return;
-            })
-            .unwrap();
-        let _ = std::fs::remove_file("/tmp/write_one.bin");
-
-        pool.scope(|s| {
-            let mut vec_keys = vec![];
-
-            for i in 0..10 {
-                let redis_key = RedisKey {
-                    key_name: "key".to_string() + &i.to_string(),
-                    key_type: RedisKeyType::TypeString,
-                };
-                vec_keys.push(redis_key);
-            }
-            let file = OpenOptions::new()
-                .create(true)
-                .write(true)
-                .append(true)
-                .open("/tmp/write_one.bin")
-                .unwrap();
-            let lw = LineWriter::new(file);
-            let lw_mutex = Mutex::new(lw);
-
-            let lock = Arc::new(lw_mutex);
-            for _ in 0..5 {
-                let vk = vec_keys.clone();
-                // let l = lw_mutex.get_mut();
-                let l = Arc::clone(&lock);
-                s.spawn(move |_| {
-                    let mut f = l.lock().unwrap();
-                    for i in 0..10 {
-                        let keys = CompareFailKeys {
-                            source_instance: RedisInstance::default(),
-                            target_instance: RedisInstance::default(),
-                            source_db: i,
-                            target_db: i + 1,
-                            keys: vk.clone(),
-                            reverse: false,
-                        };
-                        let mut r = keys.to_vec().unwrap();
-                        // 添加分隔符
-                        r.push(10);
-                        write_to_file(&mut f, &r);
-                    }
-                });
-            }
-        });
-    }
-
-    //cargo test compare::rediscompare::test::test_parse_CompareErrorKeys_file --  --nocapture
-    #[test]
-    fn test_parse_CompareErrorKeys_file() {
-        let mut v: Vec<u8> = vec![];
-        const BUFFER_LEN: usize = 32;
-        // let mut buffer = [0u8; BUFFER_LEN];
-        let mut read_file = File::open("/tmp/write_one.bin").unwrap();
-        let mut count = 0;
-        loop {
-            let mut buffer = [0u8; BUFFER_LEN];
-            let read_count = read_file.read(&mut buffer).unwrap();
-            for i in 0..read_count {
-                if buffer[i].eq(&10) {
-                    let h = rmp_serde::from_slice::<CompareFailKeys>(&v).unwrap();
-                    println!("{:?}", h);
-                    count += 1;
-                    println!("count is {}", count);
-                    v.clear();
-                } else {
-                    v.push(buffer[i]);
-                }
-            }
-
-            if read_count != BUFFER_LEN {
-                break;
-            }
-        }
-    }
 }

@@ -1,6 +1,5 @@
 use crate::util::{rand_string, RedisKeyType};
 use anyhow::{anyhow, Result};
-// use enum_iterator::Sequence;
 use redis::ToRedisArgs;
 use redis::{aio, RedisResult};
 use serde::{Deserialize, Serialize};

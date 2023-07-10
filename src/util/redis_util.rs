@@ -76,6 +76,24 @@ pub enum RedisConnection {
 }
 
 impl RedisConnection {
+    pub fn key_exists(&mut self, key: String) -> RedisResult<bool> {
+        let cmd_select = redis::cmd("select");
+        // let dyn_conn=
+        return match self {
+            RedisConnection::Single(sc) => {
+                // let exists = cmd_select.clone().arg(key).query::<bool>()?;
+                let v = sc.req_command(cmd_select.clone().arg(key))?;
+                let exists = FromRedisValue::from_redis_value(&v)?;
+                Ok(exists)
+            }
+            RedisConnection::Cluster(cc) => {
+                // let exists = cmd_select.clone().arg(key).query::<bool>(cc)?;
+                let v = cc.req_command(cmd_select.clone().arg(key))?;
+                let exists = FromRedisValue::from_redis_value(&v)?;
+                Ok(exists)
+            }
+        };
+    }
     pub fn get_dyn_connection(self) -> Box<dyn ConnectionLike> {
         let cl: Box<dyn ConnectionLike> = match self {
             RedisConnection::Single(s) => Box::new(s),

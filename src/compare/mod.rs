@@ -1,14 +1,10 @@
 mod compare_db;
 mod compare_error;
+mod compare_from_file;
 mod comparekey;
 mod rediscompare;
 
-pub use compare_db::CompareDB;
-pub use compare_db::CompareDBReverse;
-pub use compare_error::CompareError;
-pub use compare_error::Position;
-pub use rediscompare::Compare;
-pub use rediscompare::InstanceType;
-pub use rediscompare::RedisInstance;
-pub use rediscompare::ScenarioType;
-pub use rediscompare::SourceInstance;
+pub use compare_db::{CompareDB, CompareDBReverse, FailKeys};
+pub use compare_error::{CompareError, Position};
+pub use compare_from_file::compare_from_file;
+pub use rediscompare::{Compare, InstanceType, RedisInstance, ScenarioType, SourceInstance};

@@ -1,0 +1,586 @@
+use std::{fs::OpenOptions, io::Write};
+
+use anyhow::anyhow;
+use anyhow::Result;
+use chrono::Local;
+use redis::{ConnectionLike, RedisResult};
+use rmp_serde::Serializer;
+use serde::{Deserialize, Serialize};
+
+use crate::util::rand_lettter_number_string;
+use crate::util::{key_type, scan, RedisClientWithDB, RedisConnection, RedisKey};
+
+use super::{
+    compare_error::CompareErrorType,
+    comparekey::{Comparer, IffyKey},
+    rediscompare::RedisInstanceWithDB,
+    CompareError, InstanceType,
+};
+
+#[derive(Debug, Serialize, Deserialize, Clone)]
+pub struct FailKeys {
+    pub source: Vec<RedisInstanceWithDB>,
+    pub target: RedisInstanceWithDB,
+    pub iffy_keys: Vec<IffyKey>,
+    pub ttl_diff: usize,
+    pub batch: usize,
+    // 是否为反向校验
+    pub reverse: bool,
+}
+
+impl FailKeys {
+    pub fn to_vec(&self) -> Result<Vec<u8>> {
+        let mut buf = Vec::new();
+        self.serialize(&mut Serializer::new(&mut buf))?;
+        Ok(buf)
+    }
+
+    pub fn write_to_file(&self, path: &str) -> Result<()> {
+        let mut buf = Vec::new();
+        self.serialize(&mut Serializer::new(&mut buf))?;
+
+        let dt = Local::now();
+        let timestampe = dt.timestamp_nanos();
+        let file_name = path.to_owned()
+            + "/"
+            + &timestampe.to_string()
+            + "_"
+            + &rand_lettter_number_string(4)
+            + ".cr";
+        let mut file = OpenOptions::new()
+            .create(true)
+            .truncate(true)
+            .write(true)
+            .open(file_name)?;
+        file.write_all(&buf)?;
+        Ok(())
+    }
+
+    // 正向校验
+    pub fn compare(&self) -> Result<Vec<IffyKey>> {
+        let mut keys = vec![];
+        for iffy in &self.iffy_keys {
+            keys.push(iffy.key.clone());
+        }
+        return match self.reverse {
+            true => {
+                //执行反向校验
+                let t_conn = self
+                    .target
+                    .to_redis_client_with_db()?
+                    .get_redis_connection()?;
+
+                let mut s_conns = vec![];
+                for instace in &self.source {
+                    let client = instace.to_redis_client_with_db()?;
+                    let conn = client.get_redis_connection()?;
+                    s_conns.push(conn);
+                }
+
+                Ok(keys_exists_reverse(t_conn, s_conns, &keys))
+            }
+            false => {
+                // 执行正向校验
+                if !self.source.len().eq(&1) {
+                    return Err(anyhow!("source vec len must be 1"));
+                }
+
+                let s_client = self.source[0].to_redis_client_with_db()?;
+                let t_client = self.target.to_redis_client_with_db()?;
+
+                let s_conn = s_client.get_redis_connection()?;
+                let t_conn = t_client.get_redis_connection()?;
+
+                let mut s_dyn_conn = s_conn.get_dyn_connection();
+                let mut t_dyn_conn = t_conn.get_dyn_connection();
+
+                let comparer = Comparer {
+                    sconn: s_dyn_conn.as_mut(),
+                    tconn: t_dyn_conn.as_mut(),
+                    ttl_diff: self.ttl_diff,
+                    batch: self.batch,
+                };
+
+                Ok(comparer.compare_rediskeys(&keys))
+            }
+        };
+    }
+}
+
+// 给定 souce DBClient，target DBClient，执行正向校验，并输出日志和写入结果文件
+pub struct CompareDB {
+    pub source: RedisInstanceWithDB,
+    pub target: RedisInstanceWithDB,
+    pub batch: usize,
+    pub ttl_diff: usize,
+    pub compare_pool: usize,
+    pub result_store_dir: String,
+}
+
+impl CompareDB {
+    pub fn exec(&self) {
+        // 判断 source 是否为 单实例 redis，cluster 模式不支持 sacn
+        if let InstanceType::Cluster = self.source.instance.instance_type {
+            log::error!("source redis instance is not single redis instance");
+            return;
+        }
+
+        let s_client = match self.source.instance.to_redis_client() {
+            Ok(sc) => sc,
+            Err(e) => {
+                log::error!("{}", e);
+                return;
+            }
+        };
+
+        let pool_compare = match rayon::ThreadPoolBuilder::new()
+            .num_threads(self.compare_pool)
+            .build()
+        {
+            Ok(p) => p,
+            Err(e) => {
+                log::error!("{}", e);
+                return;
+            }
+        };
+
+        let t_client = match self.target.instance.to_redis_client() {
+            Ok(rc) => rc,
+            Err(e) => {
+                log::error!("{}", e);
+                return;
+            }
+        };
+
+        pool_compare.scope(move |pc| {
+            let s_scan_conn = match s_client.get_redis_connection() {
+                Ok(ssc) => ssc,
+                Err(e) => {
+                    log::error!("{}", e);
+                    return;
+                }
+            };
+
+            let mut sscan: Box<dyn ConnectionLike> = s_scan_conn.get_dyn_connection();
+            let redis_cmd_select = redis::cmd("select");
+            if let Err(e) = sscan
+                .as_mut()
+                .req_command(redis_cmd_select.clone().arg(self.source.db))
+            {
+                log::error!("{}", e);
+                return;
+            };
+
+            let scan_iter = match scan::<String>(sscan.as_mut()) {
+                Ok(iter) => iter,
+                Err(e) => {
+                    log::error!("{}", e);
+                    return;
+                }
+            };
+
+            let mut vec_keys: Vec<String> = Vec::new();
+            let mut count = 0 as usize;
+            for key in scan_iter {
+                if count < self.batch {
+                    vec_keys.push(key.clone());
+                    count += 1;
+                    continue;
+                }
+
+                let s_redis_conn = match s_client.get_redis_connection() {
+                    Ok(c) => c,
+                    Err(e) => {
+                        log::error!("{}", e);
+                        break;
+                    }
+                };
+
+                let t_redis_conn = match t_client.get_redis_connection() {
+                    Ok(tc) => tc,
+                    Err(e) => {
+                        log::error!("{}", e);
+                        break;
+                    }
+                };
+
+                let vk = vec_keys.clone();
+                pc.spawn(move |_| {
+                    self.compare_keys(s_redis_conn, t_redis_conn, vk);
+                });
+
+                count = 0;
+                vec_keys.clear();
+                vec_keys.push(key.clone());
+                count += 1;
+            }
+
+            if !vec_keys.is_empty() {
+                let s_redis_conn = match s_client.get_redis_connection() {
+                    Ok(c) => c,
+                    Err(e) => {
+                        log::error!("{}", e);
+                        return;
+                    }
+                };
+
+                let t_redis_conn = match t_client.get_redis_connection() {
+                    Ok(tc) => tc,
+                    Err(e) => {
+                        log::error!("{}", e);
+                        return;
+                    }
+                };
+
+                let vk = vec_keys;
+
+                pc.spawn(move |_| {
+                    self.compare_keys(s_redis_conn, t_redis_conn, vk);
+                });
+            }
+        });
+    }
+
+    /// .用与进行keys批量正向校验
+    /// 正向校验判断 key 在 target 是否存在，校验key的值是否相等以及source 和 target 的 ttl 差值是否在合理范围内
+    fn compare_keys(&self, source: RedisConnection, target: RedisConnection, keys: Vec<String>) {
+        let cmd_select = redis::cmd("select");
+        let mut sconn = source.get_dyn_connection();
+        let mut tconn: Box<dyn ConnectionLike> = target.get_dyn_connection();
+
+        if let Err(e) = sconn.req_command(cmd_select.clone().arg(self.source.db)) {
+            log::error!("{}", e);
+            return;
+        };
+
+        if let InstanceType::Single = self.target.instance.instance_type {
+            if let Err(e) = tconn.req_command(cmd_select.clone().arg(self.target.db)) {
+                log::error!("{}", e);
+                return;
+            };
+        }
+
+        let rediskeys = keys_type(keys, sconn.as_mut());
+        let comparer = Comparer {
+            sconn: sconn.as_mut(),
+            tconn: tconn.as_mut(),
+            ttl_diff: self.ttl_diff,
+            batch: self.batch,
+        };
+
+        // ToDo 错误输出内置到 compare_rediskeys 函数
+        let iffy_keys = comparer.compare_rediskeys(&rediskeys);
+        if !iffy_keys.is_empty() {
+            let cfk = FailKeys {
+                iffy_keys,
+                source: vec![self.source.clone()],
+                target: self.target.clone(),
+                reverse: false,
+                ttl_diff: self.ttl_diff,
+                batch: self.batch,
+            };
+            log::error!("{:?}", cfk);
+            if let Err(e) = cfk.write_to_file(&self.result_store_dir) {
+                log::error!("{}", e);
+            };
+        }
+    }
+}
+
+// 逆向校验
+// 校验 target 中的 key 是否在任意 source 中存在
+pub struct CompareDBReverse {
+    pub source: Vec<RedisInstanceWithDB>,
+    pub target: RedisInstanceWithDB,
+    pub batch: usize,
+    pub ttl_diff: usize,
+    pub compare_pool: usize,
+    pub result_store_dir: String,
+}
+
+impl CompareDBReverse {
+    pub fn exec(&self) {
+        let pool_compare = match rayon::ThreadPoolBuilder::new()
+            .num_threads(self.compare_pool)
+            .build()
+        {
+            Ok(p) => p,
+            Err(e) => {
+                log::error!("{}", e);
+                return;
+            }
+        };
+
+        pool_compare.scope(move |pc| {
+            // 判断 target client 是否为 Client，ClusterClient 不能scan
+            let t_client = match self.target.to_redis_client_with_db() {
+                Ok(tc) => tc,
+                Err(e) => {
+                    log::error!("{}", e);
+                    return;
+                }
+            };
+
+            let s_clients = match self.get_source_clients_with_db() {
+                Ok(s) => s,
+                Err(e) => {
+                    log::error!("{}", e);
+                    return;
+                }
+            };
+
+            let mut t_scan_conn = match t_client.get_redis_connection() {
+                Ok(tsc) => tsc,
+                Err(e) => {
+                    log::error!("{}", e);
+                    return;
+                }
+            }
+            .get_dyn_connection();
+
+            let t_scan_iter = match scan::<String>(t_scan_conn.as_mut()) {
+                Ok(iter) => iter,
+                Err(e) => {
+                    log::error!("{}", e);
+                    return;
+                }
+            };
+
+            let mut vec_keys: Vec<String> = Vec::new();
+            let mut count = 0 as usize;
+            for key in t_scan_iter {
+                if count < self.batch {
+                    vec_keys.push(key.clone());
+                    count += 1;
+                    continue;
+                }
+
+                let t_conn = match t_client.get_redis_connection() {
+                    Ok(tc) => tc,
+                    Err(e) => {
+                        log::error!("{}", e);
+                        return;
+                    }
+                };
+
+                let mut s_conns: Vec<RedisConnection> = vec![];
+                for sc in s_clients.clone() {
+                    let conn = match sc.get_redis_connection() {
+                        Ok(c) => c,
+                        Err(e) => {
+                            log::error!("{}", e);
+                            return;
+                        }
+                    };
+                    s_conns.push(conn);
+                }
+                let vk = vec_keys.clone();
+                pc.spawn(move |_| {
+                    self.compare_keys_reverse(t_conn, s_conns, vk);
+                });
+
+                count = 0;
+                vec_keys.clear();
+                vec_keys.push(key.clone());
+                count += 1;
+            }
+
+            if !vec_keys.is_empty() {
+                let t_conn = match t_client.get_redis_connection() {
+                    Ok(tc) => tc,
+                    Err(e) => {
+                        log::error!("{}", e);
+                        return;
+                    }
+                };
+
+                let mut s_conns: Vec<RedisConnection> = vec![];
+                for sc in s_clients {
+                    let conn = match sc.get_redis_connection() {
+                        Ok(c) => c,
+                        Err(e) => {
+                            log::error!("{}", e);
+                            return;
+                        }
+                    };
+                    s_conns.push(conn);
+                }
+                pc.spawn(move |_| {
+                    self.compare_keys_reverse(t_conn, s_conns, vec_keys);
+                });
+            }
+        });
+    }
+
+    pub fn compare_keys_reverse(
+        &self,
+        target_conn: RedisConnection,
+        source_conns: Vec<RedisConnection>,
+        keys: Vec<String>,
+    ) {
+        let mut t_conn = target_conn.get_dyn_connection();
+
+        let rediskeys = keys_type(keys, t_conn.as_mut());
+        let iffy_keys = keys_exists_any_connections(source_conns, &rediskeys);
+
+        if !iffy_keys.is_empty() {
+            let cfk = FailKeys {
+                iffy_keys,
+                source: self.source.clone(),
+                target: self.target.clone(),
+                reverse: true,
+                ttl_diff: self.ttl_diff,
+                batch: self.batch,
+            };
+            log::info!("{:?}", cfk);
+
+            if let Err(e) = cfk.write_to_file(&self.result_store_dir) {
+                log::error!("{}", e);
+            }
+        }
+    }
+
+    fn get_source_clients_with_db(&self) -> RedisResult<Vec<RedisClientWithDB>> {
+        let mut clients: Vec<RedisClientWithDB> = vec![];
+        for s in self.source.clone() {
+            let c = s.to_redis_client_with_db()?;
+            clients.push(c);
+        }
+        Ok(clients)
+    }
+}
+
+/// .批量获取key type
+fn keys_type(keys: Vec<String>, con: &mut dyn redis::ConnectionLike) -> Vec<RedisKey> {
+    let mut redis_key_vec = vec![];
+    for key in keys {
+        match key_type(key.clone(), con) {
+            Ok(kt) => {
+                let redis_key = RedisKey {
+                    key_name: key,
+                    key_type: kt,
+                };
+                redis_key_vec.push(redis_key);
+            }
+            Err(e) => {
+                log::error!("{}", e);
+            }
+        }
+    }
+    redis_key_vec
+}
+
+// 比较key在多个db中是否存在，在任意一个库中存在则返回true，key在所有key中都不存在返回false
+// 返回 检查结果为false 的 RedisKey
+fn keys_exists_any_connections(
+    mut conns: Vec<RedisConnection>,
+    keys: &Vec<RedisKey>,
+) -> Vec<IffyKey> {
+    let mut vec_iffykeys: Vec<IffyKey> = vec![];
+
+    for key in keys {
+        let mut key_existes = false;
+
+        for conn in &mut conns {
+            if let RedisConnection::Single(sc) = conn {
+                match redis::cmd("exists")
+                    .arg(key.key_name.clone())
+                    .query::<bool>(sc)
+                {
+                    Ok(exists) => {
+                        if exists {
+                            key_existes = exists;
+                        }
+                    }
+                    Err(_) => {}
+                }
+            }
+
+            if let RedisConnection::Cluster(cc) = conn {
+                match redis::cmd("exists").arg(key.key_name.clone()).query(cc) {
+                    Ok(exists) => {
+                        if exists {
+                            key_existes = exists;
+                        }
+                    }
+                    Err(_) => {}
+                }
+            }
+        }
+
+        if !key_existes {
+            let iffy = IffyKey {
+                key: key.clone(),
+                error: CompareError {
+                    message: Some("key not in any db".to_owned()),
+                    error_type: CompareErrorType::ExistsErr,
+                    reason: None,
+                },
+            };
+            vec_iffykeys.push(iffy);
+        }
+    }
+    vec_iffykeys
+}
+
+// 逆向校验 key 在 source 和 target 中的存在情况
+// 用于校验的可以是上一轮校验中再target中存在且在 source 任和一个实例中都不存在的key。在本次校验中如果 target 中一不存在 则跳过结果。
+// key 在任意一个库中存在，则在source 为 true
+fn keys_exists_reverse(
+    target_conn: RedisConnection,
+    mut source_conns: Vec<RedisConnection>,
+    keys: &Vec<RedisKey>,
+) -> Vec<IffyKey> {
+    let mut vec_iffykeys: Vec<IffyKey> = vec![];
+    let mut dyn_t_conn = target_conn.get_dyn_connection();
+    let mut cmd_select = redis::cmd("select");
+    for key in keys {
+        let t_exists = match cmd_select
+            .arg(key.key_name.clone())
+            .query::<bool>(dyn_t_conn.as_mut())
+        {
+            Ok(exists) => exists,
+            Err(_) => false,
+        };
+        if !t_exists {
+            continue;
+        }
+        let mut s_exists = false;
+        for conn in &mut source_conns {
+            if let RedisConnection::Single(sc) = conn {
+                match cmd_select.arg(key.key_name.clone()).query::<bool>(sc) {
+                    Ok(exists) => {
+                        if exists {
+                            s_exists = exists;
+                        }
+                    }
+                    Err(_) => {}
+                }
+            }
+
+            if let RedisConnection::Cluster(cc) = conn {
+                match cmd_select.arg(key.key_name.clone()).query(cc) {
+                    Ok(exists) => {
+                        if exists {
+                            s_exists = exists;
+                        }
+                    }
+                    Err(_) => {}
+                }
+            }
+        }
+
+        if !t_exists.eq(&s_exists) {
+            let iffy = IffyKey {
+                key: key.clone(),
+                error: CompareError {
+                    message: Some("key not in any db".to_owned()),
+                    error_type: CompareErrorType::ExistsErr,
+                    reason: None,
+                },
+            };
+            vec_iffykeys.push(iffy);
+        }
+    }
+    vec_iffykeys
+}

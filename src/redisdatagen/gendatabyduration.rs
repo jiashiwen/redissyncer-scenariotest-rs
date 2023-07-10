@@ -1,3 +1,4 @@
+use crate::compare::RedisInstance;
 use crate::redisdatagen::OptType;
 use crate::redisdatagen::RedisOpt;
 use crate::util::rand_string;
@@ -10,6 +11,7 @@ use std::time::{Duration, Instant};
 
 #[derive(Debug, PartialEq, Serialize, Deserialize, Clone)]
 pub struct GeneratorByDuration {
+    pub redisinstance: RedisInstance,
     #[serde(default = "GeneratorByDuration::duration_default")]
     pub duration: usize,
     #[serde(default = "GeneratorByDuration::redis_url_default")]
@@ -39,6 +41,7 @@ impl Default for GeneratorByDuration {
             loopstep: 1,
             expire: 1,
             log_out: false,
+            redisinstance: RedisInstance::default(),
         }
     }
 }
@@ -82,50 +85,101 @@ impl GeneratorByDuration {
             .build()
             .map_err(|err| anyhow!("{}", err.to_string()))?;
 
-        let client = redis::Client::open(self.redis_url.clone())?;
+        // let client = redis::Client::open(self.redis_url.clone())?;
+        let client = self.redisinstance.to_redis_client();
         let deadline = Instant::now() + Duration::from_secs(self.duration as u64);
-
-        pool.scope(|s| {
-            for i in 0..self.threads {
-                let r_conn = client.get_connection();
-                match r_conn {
-                    Ok(mut conn) => {
-                        s.spawn(move |_| {
-                            loop {
-                                select! {
-                                    recv(at(deadline)) -> _ => {
-                                        break;
-                                    },
-                                    default => {
-                                        // do your task
-                                        let subffix = rand_string(self.key_len);
-                                        let db = conn.get_db();
-                                        let mut opt = RedisOpt {
-                                            redis_conn: &mut conn,
-                                            redis_version: self.redis_version.clone(),
-                                            opt_type: OptType::OptAppend,
-                                            key_suffix: subffix,
-                                            loopstep: self.loopstep,
-                                            expire: self.expire,
-                                            db: db as usize,
-                                            log_out: self.log_out,
-                                        };
-                                        opt.exec_all();
-                                        thread::sleep(Duration::from_secs(1));
+        match client {
+            Ok(c) => {
+                pool.scope(|s| {
+                    for i in 0..self.threads {
+                        let r_conn = c.get_redis_connection();
+                        match r_conn {
+                            Ok(mut conn) => {
+                                s.spawn(move |_| {
+                                    loop {
+                                        select! {
+                                            recv(at(deadline)) -> _ => {
+                                                break;
+                                            },
+                                            default => {
+                                                // do your task
+                                                let cmd_select = redis::cmd("select");
+                                                // conn.req_packed_command(cmd_select,);
+                                                let subffix = rand_string(self.key_len);
+                                                let db = conn.get_db();
+                                                let mut opt = RedisOpt {
+                                                    redis_conn: &mut conn,
+                                                    redis_version: self.redis_version.clone(),
+                                                    opt_type: OptType::OptAppend,
+                                                    key_suffix: subffix,
+                                                    loopstep: self.loopstep,
+                                                    expire: self.expire,
+                                                    db: db as usize,
+                                                    log_out: self.log_out,
+                                                };
+                                                opt.exec_all();
+                                                thread::sleep(Duration::from_secs(1));
+                                            }
+                                        }
                                     }
-                                }
+                                    if self.log_out {
+                                        log::info!("generate by duration thread {} end", i);
+                                    }
+                                });
                             }
-                            if self.log_out {
-                                log::info!("generate by duration thread {} end", i);
+                            Err(e) => {
+                                log::error!("{}", e);
                             }
-                        });
+                        }
                     }
-                    Err(e) => {
-                        log::error!("{}", e);
-                    }
-                }
+                });
             }
-        });
+            Err(e) => {
+                log::error!("{}", e);
+            }
+        }
+
+        // pool.scope(|s| {
+        //     for i in 0..self.threads {
+        //         let r_conn = client.get_connection();
+        //         match r_conn {
+        //             Ok(mut conn) => {
+        //                 s.spawn(move |_| {
+        //                     loop {
+        //                         select! {
+        //                             recv(at(deadline)) -> _ => {
+        //                                 break;
+        //                             },
+        //                             default => {
+        //                                 // do your task
+        //                                 let subffix = rand_string(self.key_len);
+        //                                 let db = conn.get_db();
+        //                                 let mut opt = RedisOpt {
+        //                                     redis_conn: &mut conn,
+        //                                     redis_version: self.redis_version.clone(),
+        //                                     opt_type: OptType::OptAppend,
+        //                                     key_suffix: subffix,
+        //                                     loopstep: self.loopstep,
+        //                                     expire: self.expire,
+        //                                     db: db as usize,
+        //                                     log_out: self.log_out,
+        //                                 };
+        //                                 opt.exec_all();
+        //                                 thread::sleep(Duration::from_secs(1));
+        //                             }
+        //                         }
+        //                     }
+        //                     if self.log_out {
+        //                         log::info!("generate by duration thread {} end", i);
+        //                     }
+        //                 });
+        //             }
+        //             Err(e) => {
+        //                 log::error!("{}", e);
+        //             }
+        //         }
+        //     }
+        // });
 
         Ok(())
     }

@@ -55,6 +55,18 @@ impl Default for RedisInstance {
 }
 
 impl RedisInstance {
+    pub fn default_cluster() -> Self {
+        Self {
+            urls: vec![
+                "redis://127.0.0.1:6379".to_string(),
+                "redis://127.0.0.1:6380".to_string(),
+                "redis://127.0.0.1:6381".to_string(),
+            ],
+            password: "".to_string(),
+            instance_type: InstanceType::Cluster,
+        }
+    }
+
     pub fn urls_default() -> Vec<String> {
         vec!["redis://127.0.0.1:6379".to_string()]
     }

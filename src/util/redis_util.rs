@@ -74,7 +74,47 @@ pub enum RedisConnection {
     Single(redis::Connection),
     Cluster(redis::cluster::ClusterConnection),
 }
+impl ConnectionLike for RedisConnection {
+    fn req_packed_command(&mut self, cmd: &[u8]) -> RedisResult<Value> {
+        match self {
+            RedisConnection::Single(s) => s.req_packed_command(cmd),
+            RedisConnection::Cluster(c) => c.req_packed_command(cmd),
+        }
+    }
 
+    fn req_packed_commands(
+        &mut self,
+        cmd: &[u8],
+        offset: usize,
+        count: usize,
+    ) -> RedisResult<Vec<Value>> {
+        match self {
+            RedisConnection::Single(s) => s.req_packed_commands(cmd, offset, count),
+            RedisConnection::Cluster(c) => c.req_packed_commands(cmd, offset, count),
+        }
+    }
+
+    fn get_db(&self) -> i64 {
+        match self {
+            RedisConnection::Single(s) => s.get_db(),
+            RedisConnection::Cluster(c) => c.get_db(),
+        }
+    }
+
+    fn check_connection(&mut self) -> bool {
+        match self {
+            RedisConnection::Single(s) => s.check_connection(),
+            RedisConnection::Cluster(c) => c.check_connection(),
+        }
+    }
+
+    fn is_open(&self) -> bool {
+        match self {
+            RedisConnection::Single(s) => s.is_open(),
+            RedisConnection::Cluster(c) => c.is_open(),
+        }
+    }
+}
 impl RedisConnection {
     pub fn key_exists(&mut self, key: String) -> RedisResult<bool> {
         let cmd_select = redis::cmd("select");
@@ -101,6 +141,13 @@ impl RedisConnection {
         };
         cl
     }
+
+    // pub fn get_db(self) -> i64 {
+    //     match self {
+    //         RedisConnection::Single(s) => s.get_db(),
+    //         RedisConnection::Cluster(c) => c.get_db(),
+    //     }
+    // }
 }
 
 impl RedisClient {}

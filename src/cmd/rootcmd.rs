@@ -609,6 +609,43 @@ fn cmd_match(matches: &ArgMatches) {
         }
         if let Some(continuous) = gendata.subcommand_matches("continuous") {
             if let Some(template) = continuous.subcommand_matches("template") {
+                if let Some(single) = template.subcommand_matches("single") {
+                    println!("template single redis");
+                    let template = GeneratorByDuration::default();
+                    let yml = serde_yaml::to_string(&template);
+                    match yml {
+                        Ok(y) => {
+                            // let r = fs::write(file.clone(), y);
+                            // if let Err(e) = r {
+                            //     println!("{}", e);
+                            //     return;
+                            // }
+                            // println!("gen key continuous template,file is {}", file);
+                            println!("{}", y);
+                        }
+                        Err(e) => {
+                            eprintln!("{}", e);
+                        }
+                    }
+                    return;
+                }
+
+                if let Some(cluster) = template.subcommand_matches("cluster") {
+                    println!("template cluster redis");
+                    let mut template = GeneratorByDuration::default();
+                    template.redisinstance = RedisInstance::default_cluster();
+                    let yml = serde_yaml::to_string(&template);
+                    match yml {
+                        Ok(y) => {
+                            println!("{}", y);
+                        }
+                        Err(e) => {
+                            eprintln!("{}", e);
+                        }
+                    }
+                    return;
+                }
+
                 let mut file = String::from("continuous_gen_data_template.yml");
                 if let Some(path) = template.get_one::<String>("filepath") {
                     file = path.to_string();

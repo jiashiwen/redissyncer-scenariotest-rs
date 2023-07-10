@@ -197,8 +197,11 @@ impl<'a> RedisOpt<'a> {
     pub fn exec_all(&mut self) {
         let opttype = self.opt_type.clone();
         for ot in OptType::iter() {
+            // println!("{:?}", ot);
             self.opt_type = ot;
+
             let _ = self.exec();
+            // println!("{:?}", self.exec());
         }
 
         self.opt_type = opttype;

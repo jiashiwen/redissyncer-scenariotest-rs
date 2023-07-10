@@ -112,7 +112,39 @@ impl RedisInstance {
     pub fn to_redis_client(&self) -> RedisResult<RedisClient> {
         return match self.instance_type {
             InstanceType::Single => {
-                let cl = redis::Client::open(self.urls[0].as_str())?;
+                // let cl = redis::Client::open(self.urls[0].as_str())?;
+                let cl = match !self.password.is_empty() {
+                    true => {
+                        let url = self.urls[0].clone();
+                        let url_split_rs = url.split(r#"//"#).collect::<Vec<&str>>();
+                        let url_single = url_split_rs[0].to_string()
+                            + "//"
+                            + ":"
+                            + &self.password
+                            + "@"
+                            + url_split_rs[1];
+
+                        let cl = redis::Client::open(url_single)?;
+                        cl
+                    }
+                    false => {
+                        let cl = redis::Client::open(self.urls[0].clone())?;
+                        cl
+                    } //         let url_split_rs = self.urls[0].split(r#"//"#).collect::<Vec<&str>>();
+                      //         let url_single = url_split_rs[0].to_string()
+                      //             + "//"
+                      //             + ":"
+                      //             + &self.password
+                      //             + "@"
+                      //             + url_split_rs[1];
+
+                      //         let cl = redis::Client::open(url_single)?;
+                      //         vec_client.push(cl);
+                      //     } else {
+                      //         let cl = redis::Client::open(url)?;
+                      //         vec_client.push(cl);
+                };
+
                 Ok(RedisClient::Single(cl))
             }
             InstanceType::Cluster => {

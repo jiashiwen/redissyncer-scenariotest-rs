@@ -1,9 +1,0 @@
----
-duration: 0
-redis_url: "redis://:127.0.0.1:6379/?timeout=1s"
-redis_version: "0"
-threads: 1
-key_len: 4
-loopstep: 1
-expire: 1
-log_out: false

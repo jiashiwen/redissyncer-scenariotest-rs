@@ -117,6 +117,7 @@ impl GeneratorByDuration {
                                                     db: db as usize,
                                                     log_out: self.log_out,
                                                 };
+
                                                 opt.exec_all();
                                                 thread::sleep(Duration::from_secs(1));
                                             }
